@@ -1,4 +1,3 @@
-import add_parent_path
 import longview as lv
 
 def on_event(obj):
