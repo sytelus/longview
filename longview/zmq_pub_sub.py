@@ -20,6 +20,11 @@ class ZmqPubSub:
             ZmqPubSub._thread.start()
             ZmqPubSub._start_event.wait()
 
+    @staticmethod
+    def close():
+        if ZmqPubSub._thread is not None:
+            ZmqPubSub._ioloop.add_callback(ZmqPubSub._ioloop.stop)
+            ZmqPubSub._thread = None
 
     @staticmethod
     def _run_io_loop():
@@ -30,7 +35,7 @@ class ZmqPubSub:
             asyncio.set_event_loop(asyncio.new_event_loop())
         #ioloop.IOLoop.current().start()
         ZmqPubSub._ioloop = ioloop.IOLoop()
-        while True:
+        while ZmqPubSub._thread is not None:
             try:
                 ZmqPubSub._start_event.set()
                 ZmqPubSub._ioloop.start()

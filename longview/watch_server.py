@@ -12,6 +12,7 @@ class WatchServer:
 
         self._publication = ZmqPubSub.Publication(port = pubsub_port)
         self._clisrv = ZmqPubSub.ClientServer(cliesrv_port, True, callback=self._clisrv_callback)
+        self._log_globals = {}
         print("WatchServer started")
 
     def _clisrv_callback(self, clisrv, clisrv_req):
@@ -21,6 +22,9 @@ class WatchServer:
             return self.del_stream(clisrv_req.req_data)
         else:
             raise ValueError('ClientServer Request Type {} is not recognized'.format(clisrv_req))
+
+    def log_globals(self, **vars):
+        self._log_globals.update(vars)
 
     def log_event(self, event_name:str='', **vars) -> None:
         event_index = self.get_event_index(event_name)
@@ -33,7 +37,7 @@ class WatchServer:
             if stream_req.eval_end < event_index:
                 self._end_stream_req(stream_req)
             else:
-                event_data = EventData(**vars)
+                event_data = EventData(self._log_globals, **vars)
                 self._eval_event_send(stream_req, event_data)
 
     def get_event_index(self, event_name:str):
@@ -87,6 +91,9 @@ class WatchServer:
             stream_reqs[stream_req.stream_name] = stream_req
 
         return stream_req.stream_num
+
+    def close(self):
+
 
     def send_text(self, text:str, topic=""):
         self._publication.send_obj(text, topic)

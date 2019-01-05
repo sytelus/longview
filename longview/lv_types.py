@@ -2,7 +2,10 @@ from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, 
 
 
 class EventData:
-    def __init__(self, **vars):
+    def __init__(self, globals, **vars):
+        if globals is not None:
+            for key in globals:
+                setattr(self, key, globals[key])
         for key in vars:
             setattr(self, key, vars[key])
 
