@@ -5,15 +5,33 @@ from .lv_types import *
 from .evaler import Evaler
 
 class WatchServer:
-    def __init__(self, pubsub_port=40859, cliesrv_port=40860):
+    def __init__(self, pubsub_port:int=40859, cliesrv_port:int=40860):
+        self._reset()
+        self.open(pubsub_port, cliesrv_port)
+        #print("WatchServer started")
+
+    def open(self, pubsub_port:int=40859, cliesrv_port:int=40860):
+        if self.closed:
+            self._publication = ZmqPubSub.Publication(port = pubsub_port)
+            self._clisrv = ZmqPubSub.ClientServer(cliesrv_port, True, callback=self._clisrv_callback)
+            self.closed = False
+        else:
+            raise RuntimeError("WatchServer is already open and must be closed before opne() call")
+
+    def _reset(self):
         self._event_streams:Dict[str, StreamRequests] = {}
         self._event_counts:Dict[str, int] = {}
         self._stream_req_count = 0
-
-        self._publication = ZmqPubSub.Publication(port = pubsub_port)
-        self._clisrv = ZmqPubSub.ClientServer(cliesrv_port, True, callback=self._clisrv_callback)
         self._log_globals = {}
-        print("WatchServer started")
+
+        self._publication = None 
+        self._clisrv = None
+        self.closed = True
+
+    def __enter__(self):
+        return self
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.close()
 
     def _clisrv_callback(self, clisrv, clisrv_req):
         if clisrv_req.req_type == CliSrvReqTypes.create_stream:
@@ -93,7 +111,9 @@ class WatchServer:
         return stream_req.stream_num
 
     def close(self):
-
+        if self.closed:
+            ZmqPubSub.close()
+            self._reset()
 
     def send_text(self, text:str, topic=""):
         self._publication.send_obj(text, topic)

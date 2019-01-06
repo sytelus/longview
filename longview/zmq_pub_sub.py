@@ -25,6 +25,7 @@ class ZmqPubSub:
         if ZmqPubSub._thread is not None:
             ZmqPubSub._ioloop.add_callback(ZmqPubSub._ioloop.stop)
             ZmqPubSub._thread = None
+            ZmqPubSub._ioloop = None
 
     @staticmethod
     def _run_io_loop():
