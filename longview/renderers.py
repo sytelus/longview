@@ -3,7 +3,7 @@ from .lv_types import *
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-class ScatterPlotRenderer():
+class LinePlot():
     def __init__(self):
         self.x_data = []
         self.y_data = []
@@ -30,7 +30,7 @@ class ScatterPlotRenderer():
             stream.subscribe(self._add_eval_result)
         return plt.show()
 
-class ScatterTextRenderer():
+class TextPrinter():
     def __init__(self, prefix=None):
         self.prefix = prefix
     def _add_eval_result(self, eval_result:EvalResult):
