@@ -69,7 +69,7 @@ class LinePlot():
              color=None, x_f=None, y_f=None, xlim=None, ylim=None, throttle=None):
         self._show_init()
         if stream is not None:
-            plot_info = LinePlot.PlotInfo(stream, x_f, y_f)
+            plot_info = LinePlot.PlotInfo(stream, x_f, y_f, throttle)
             if len(self._plot_infos) == 0:
                 plot_info.ax = self.ax_main
             else:
