@@ -17,17 +17,20 @@ class ClientServerRequest:
         self.req_data = req_data
 
 class EvalResult:
-    def __init__(self, event_name:str, event_index:int, result:Any, stream_name:str, ended:bool=False):
+    def __init__(self, event_name:str, event_index:int, result:Any, 
+            stream_name:str, ended:bool=False, x:float=None):
         self.event_name = event_name
         self.result = result
         self.stream_name = stream_name
         self.event_index = event_index
         self.ended = ended
+        self.x = x
 
 EventEvalFunc = Callable[[EventsData], EvalResult]
 
 class StreamRequest:
-    def __init__(self, event_name:str, eval_f_s:str, stream_name:str, eval_start:int, eval_end:int):
+    def __init__(self, event_name:str, eval_f_s:str, stream_name:str, 
+            eval_start:int, eval_end:int, skip_mod:int=1):
         self.event_name = event_name
         self.eval_f_s = eval_f_s
         self.stream_name = stream_name
@@ -37,6 +40,7 @@ class StreamRequest:
         self.eval_f:EventEvalFunc = None
         self.ended = False
         self._evaler = None
+        self.skip_mod = skip_mod
 
 StreamRequests = Dict[str, StreamRequest] 
 

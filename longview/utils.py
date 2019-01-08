@@ -6,7 +6,7 @@ import os
 import inspect
 import types
 import re
-
+from collections import abc
 
 def string_to_uint8_array(bstr):
     return np.fromstring(bstr, np.uint8)
@@ -20,6 +20,8 @@ def list_to_2d_float_array(flst, width, height):
 def get_pfm_array(response):
     return list_to_2d_float_array(response.image_data_float, response.width, response.height)
 
+def is_list_like(obj, allow_string=False):
+    return isinstance(obj, abc.Sequence) and not isinstance(obj, (str, abc.ByteString))
     
 def get_public_fields(obj):
     return [attr for attr in dir(obj)

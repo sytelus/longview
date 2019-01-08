@@ -47,7 +47,7 @@ class WatchServer:
     def log_globals(self, **vars):
         self._log_globals.update(vars)
 
-    def log_event(self, event_name:str='', **vars) -> None:
+    def log_event(self, event_name:str='', x_f=None, **vars) -> None:
         event_index = self.get_event_index(event_name)
         self._event_counts[event_name] = event_index + 1
 
@@ -58,8 +58,9 @@ class WatchServer:
             if stream_req.eval_end < event_index:
                 self._end_stream_req(stream_req)
             else:
-                event_data = EventData(self._log_globals, **vars)
-                self._eval_event_send(stream_req, event_data)
+                if stream_req.skip_mod <= 1 or event_index % stream_req.skip_mod == 0:
+                    event_data = EventData(self._log_globals, **vars)
+                    self._eval_event_send(stream_req, event_data, x_f)
 
     def get_event_index(self, event_name:str):
         return self._event_counts.get(event_name, -1)
@@ -84,16 +85,19 @@ class WatchServer:
         stream_req = stream_reqs[stream_req.stream_name]
         stream_req.ended = True
         stream_req._evaler.abort()
-        del stream_reqs[stream_req.stream_name]
+        #TODO: to enable delete we need to protect iteration in log_event
+        #del stream_reqs[stream_req.stream_name]
         print("{} stream deleted".format(stream_req.stream_name))
         return stream_req.stream_num
 
-    def _eval_event_send(self, stream_req:StreamRequest, event_data:EventData):
+    def _eval_event_send(self, stream_req:StreamRequest, event_data:EventData, x_f:None):
         result, has_result = stream_req._evaler.post(event_data)
         if has_result:
             event_name = stream_req.event_name
-            eval_result = EvalResult(event_name, self.get_event_index(event_name),
-                result, stream_req.stream_name)
+            event_index = self.get_event_index(event_name)
+            x = None if x_f is None else x_f(event_data, result, event_name, event_index)
+            eval_result = EvalResult(event_name, event_index,
+                result, stream_req.stream_name, x=x)
             self._publication.send_obj(eval_result, TopicNames.event_eval)
 
     def create_stream(self, stream_req:StreamRequest) -> int:
