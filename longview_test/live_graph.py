@@ -12,16 +12,16 @@ class LiveGraph:
         self.animation = FuncAnimation(self.figure, self.update, interval=1000)
         self.th = Thread(target=self.thread_f, daemon=True)
         self.th.start()
-		
+
     def update(self, frame):
         self.line.set_data(self.x_data, self.y_data)
         self.figure.gca().relim()
         self.figure.gca().autoscale_view()
         return self.line,
-		
+
     def show(self):
         plt.show()
-		
+
     def thread_f(self):
         x = 0
         while True:

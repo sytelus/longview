@@ -48,7 +48,7 @@ class LinePlot():
             plot_info.ax.relim()
             plot_info.ax.autoscale_view()
 
-    def show(self, stream, xlabel='', ylabel='', label='', final_show=True, color=None):
+    def show(self, stream, xlabel='', ylabel='', label=None, final_show=True, color=None):
         self._show_init()
         if stream is not None:
             plot_info = LinePlot.PlotInfo(stream)
@@ -57,6 +57,7 @@ class LinePlot():
             else:
                 plot_info.ax = self.ax_main.twinx()
             color = color or plt.cm.viridis(1.0/(1+len(self._plot_infos)))
+            label = label or ylabel
             plot_info.line = matplotlib.lines.Line2D(plot_info.xdata, plot_info.ydata, 
                 label=label, color=color, linewidth=3)
             plot_info.ax.add_line(plot_info.line)
