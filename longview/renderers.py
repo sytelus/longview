@@ -1,34 +1,82 @@
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from .lv_types import *
 import matplotlib.pyplot as plt
+import matplotlib.lines
 from matplotlib.animation import FuncAnimation
 
 class LinePlot():
-    def __init__(self):
-        self.x_data = []
-        self.y_data = []
+    class PlotInfo:
+        def __init__(self, stream):
+            self.xdata = []
+            self.ydata = []
+            self.ax = None
+            self.line = None
+            self.stream = stream
+
+    def __init__(self, title=None):
+        self._init_done = False
+        self._is_shown = False
+        self.title = title
+        self._plot_infos = {}
+
+    def _show_init(self):
+        if self._init_done:
+            return
         self.figure = plt.figure()
-        self.line, = plt.plot(self.x_data, self.y_data)
-        self.animation = FuncAnimation(self.figure, self._on_update, interval=200) #ms
+        self.ax_main = self.figure.add_subplot(111)
+        self.ax_main.grid(True)
+        # change the color of the top and right spines to opaque gray
+        self.ax_main.spines['right'].set_color((.8,.8,.8))
+        self.ax_main.spines['top'].set_color((.8,.8,.8))
+        if self.title is not None:
+            title = self.ax_main.set_title(self.title)
+            title.set_weight('bold')
+        self.animation = FuncAnimation(self.figure, self._on_update, interval=1000) #ms
+        self._init_done = True
 
     def _add_eval_result(self, eval_result:EvalResult):
-        if not eval_result.ended:
-            self.x_data.append(eval_result.event_index)
-            self.y_data.append(eval_result.result)
+        plot_info = self._plot_infos.get(eval_result.stream_name, None)
+        if plot_info is not None and not eval_result.ended:
+            plot_info.xdata.append(eval_result.event_index)
+            plot_info.ydata.append(eval_result.result)
         #else:
         #    self.animation.event_source.stop()
 
     def _on_update(self, frame):
-        print('on update')
-        self.line.set_data(self.x_data, self.y_data)
-        self.figure.gca().relim()
-        self.figure.gca().autoscale_view()
-        return self.line,
+        for plot_info in self._plot_infos.values():
+            plot_info.line.set_data(plot_info.xdata, plot_info.ydata)
+            plot_info.ax.relim()
+            plot_info.ax.autoscale_view()
 
-    def show(self, *streams):
-        for stream in streams:
+    def show(self, stream, xlabel='', ylabel='', label='', final_show=True, color=None):
+        self._show_init()
+        if stream is not None:
+            plot_info = LinePlot.PlotInfo(stream)
+            if len(self._plot_infos) == 0:
+                plot_info.ax = self.ax_main
+            else:
+                plot_info.ax = self.ax_main.twinx()
+            color = color or plt.cm.viridis(1.0/(1+len(self._plot_infos)))
+            plot_info.line = matplotlib.lines.Line2D(plot_info.xdata, plot_info.ydata, 
+                label=label, color=color, linewidth=3)
+            plot_info.ax.add_line(plot_info.line)
+
+            if len(self._plot_infos) > 2:
+                pos = (len(self._plot_infos)-2) * 60
+                plot_info.ax.spines['right'].set_position(('outward', pos))
+
+            self._plot_infos[stream.stream_name] = plot_info
+            plot_info.ax.set_xlabel(xlabel)
+            plot_info.ax.set_ylabel(ylabel)
+            plot_info.ax.yaxis.label.set_color(color)
+            plot_info.ax.yaxis.label.set_style('italic')
+            plot_info.ax.xaxis.label.set_style('italic')
+            #plot_info.ax.yaxis.label.set_size(10)
+            self.figure.legend(loc=1)
             stream.subscribe(self._add_eval_result)
-        return plt.show()
+        if final_show and not self._is_shown:
+            self._is_shown = True
+            return plt.show() #must be done only once
 
 class TextPrinter():
     def __init__(self, prefix=None):

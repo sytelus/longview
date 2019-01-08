@@ -42,7 +42,7 @@ class WatchClient:
         def subscribe(self, callback):
             self._callbacks[callback] = callback
         def unsubscribe(self, callback):
-            self._callbacks.pop(callback, Nothing)
+            self._callbacks.pop(callback, None)
 
         def close(self):
             if not self.closed:

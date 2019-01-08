@@ -8,7 +8,7 @@ class WatchServer:
     def __init__(self, pubsub_port:int=40859, cliesrv_port:int=40860):
         self._reset()
         self.open(pubsub_port, cliesrv_port)
-        #print("WatchServer started")
+        print("WatchServer started")
 
     def open(self, pubsub_port:int=40859, cliesrv_port:int=40860):
         if self.closed:
@@ -71,6 +71,7 @@ class WatchServer:
         event_name = stream_req.event_name
         if disable_stream:
             stream_req.ended = True
+            print("{} stream disabled".format(stream_req.stream_name))
         eval_result = EvalResult(event_name, self.get_event_index(event_name), 
             result, stream_req.stream_name, ended=True)
         self._publication.send_obj(eval_result, TopicNames.event_eval)
@@ -81,6 +82,7 @@ class WatchServer:
         stream_req.ended = True
         stream_req._evaler.abort()
         del stream_reqs[stream_req.stream_name]
+        print("{} stream deleted".format(stream_req.stream_name))
         return stream_req.stream_num
 
     def _eval_event_send(self, stream_req:StreamRequest, event_data:EventData):
@@ -111,9 +113,10 @@ class WatchServer:
         return stream_req.stream_num
 
     def close(self):
-        if self.closed:
+        if not self.closed:
             ZmqPubSub.close()
             self._reset()
+            print("WatchServer is closed")
 
     def send_text(self, text:str, topic=""):
         self._publication.send_obj(text, topic)

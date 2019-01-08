@@ -2,6 +2,18 @@ import longview as lv
 import time
 import math
 
+def show_graph_test():
+    cli = lv.WatchClient()
+
+    plot = lv.LinePlot()
+
+    s1 = cli.create_stream("LossEvent", 'map(lambda v:math.sqrt(v.loss), l)')
+    plot.show(s1, 'i', 'sl', 'SqrtLoss', False)
+
+    s2 = cli.create_stream("Loss2Event", 'map(lambda v:v.loss2*v.loss2, l)')
+    plot.show(s2, 'i', 'l', 'Loss2')
+
+
 def show_stream_test():
     cli = lv.WatchClient()
 
@@ -24,6 +36,7 @@ def read_stream_test():
     print('done')
     lv.wait_key()
 
+show_graph_test()
 read_stream_test()  
 show_stream_test()
 
