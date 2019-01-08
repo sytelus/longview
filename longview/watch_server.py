@@ -5,15 +5,18 @@ from .lv_types import *
 from .evaler import Evaler
 
 class WatchServer:
-    def __init__(self, pubsub_port:int=40859, cliesrv_port:int=40860):
+    _port_start = 40859
+    def __init__(self, pubsub_port:int=None, cliesrv_port:int=None):
         self._reset()
         self.open(pubsub_port, cliesrv_port)
         print("WatchServer started")
 
-    def open(self, pubsub_port:int=40859, cliesrv_port:int=40860):
+    def open(self, pubsub_port:int=None, cliesrv_port:int=None):
         if self.closed:
-            self._publication = ZmqPubSub.Publication(port = pubsub_port)
-            self._clisrv = ZmqPubSub.ClientServer(cliesrv_port, True, callback=self._clisrv_callback)
+            self._publication = ZmqPubSub.Publication(port = pubsub_port or WatchServer._port_start)
+            self._clisrv = ZmqPubSub.ClientServer(cliesrv_port or WatchServer._port_start+1, 
+                True, callback=self._clisrv_callback)
+            WatchServer._port_start += 2
             self.closed = False
         else:
             raise RuntimeError("WatchServer is already open and must be closed before opne() call")
