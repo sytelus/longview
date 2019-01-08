@@ -3,16 +3,18 @@ from .lv_types import *
 import matplotlib.pyplot as plt
 import matplotlib.lines
 from matplotlib.animation import FuncAnimation
+import time
 from . import utils
 
 class LinePlot():
     class PlotInfo:
-        def __init__(self, stream, x_f, y_f, skip_mod):
+        def __init__(self, stream, x_f, y_f, throttle):
             self.xdata, self.ydata = [], []
             self.line = self.ax = None
             self.stream = stream
             self.x_f, self.y_f = x_f or self.get_x, y_f or self.get_y
-            self.skip_mod = skip_mod
+            self.throttle = throttle
+            self.last_update = time.time()
 
         def get_x(self, eval_result):
             if utils.is_list_like(eval_result.result) and len(eval_result.result) > 1:
@@ -51,11 +53,11 @@ class LinePlot():
     def _add_eval_result(self, eval_result:EvalResult):
         plot_info = self._plot_infos.get(eval_result.stream_name, None)
         if plot_info is not None and not eval_result.ended and eval_result.result is not None:
-            if plot_info.skip_mod <= 1 or eval_result.event_index % plot_info.skip_mod == 0:
+            if plot_info.throttle is None or \
+                    time.time() - plot_info.last_update >= plot_info.throttle:
                 plot_info.xdata.append(plot_info.x_f(eval_result))
                 plot_info.ydata.append(plot_info.y_f(eval_result))
-        #else:
-        #    self.animation.event_source.stop()
+                plot_info.last_update = time.time()
 
     def _on_update(self, frame):
         for plot_info in self._plot_infos.values():
@@ -64,10 +66,10 @@ class LinePlot():
             plot_info.ax.autoscale_view()
 
     def show(self, stream, xlabel='', ylabel='', label=None, final_show=True, 
-             color=None, x_f=None, y_f=None, skip_mod=1, xlim=None, ylim=None):
+             color=None, x_f=None, y_f=None, xlim=None, ylim=None, throttle=None):
         self._show_init()
         if stream is not None:
-            plot_info = LinePlot.PlotInfo(stream, x_f, y_f, skip_mod)
+            plot_info = LinePlot.PlotInfo(stream, x_f, y_f)
             if len(self._plot_infos) == 0:
                 plot_info.ax = self.ax_main
             else:

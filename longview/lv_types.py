@@ -30,7 +30,7 @@ EventEvalFunc = Callable[[EventsData], EvalResult]
 
 class StreamRequest:
     def __init__(self, event_name:str, eval_f_s:str, stream_name:str, 
-            eval_start:int, eval_end:int, skip_mod:int=1):
+            eval_start:int, eval_end:int):
         self.event_name = event_name
         self.eval_f_s = eval_f_s
         self.stream_name = stream_name
@@ -40,7 +40,6 @@ class StreamRequest:
         self.eval_f:EventEvalFunc = None
         self.ended = False
         self._evaler = None
-        self.skip_mod = skip_mod
 
 StreamRequests = Dict[str, StreamRequest] 
 

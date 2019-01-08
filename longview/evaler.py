@@ -1,10 +1,14 @@
 import dill
 import math
-import numpy as np
 import queue
 import threading
 from functools import *
 from collections.abc import Iterable, Iterator
+
+from itertools import *
+from statistics import *
+import numpy as np
+from .lv_itertools import *
 
 class Evaler:
     class PostableIterator:
