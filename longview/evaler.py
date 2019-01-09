@@ -8,7 +8,7 @@ from collections.abc import Iterable, Iterator
 from itertools import *
 from statistics import *
 import numpy as np
-from .lv_itertools import *
+from .evaler_utils import *
 
 class Evaler:
     class PostableIterator:
@@ -87,6 +87,8 @@ class Evaler:
         r, b = self.result, self.has_result
         self.rwait.set()
         self.continue_thread = continue_thread
+        if isinstance(r, Iterator):
+            r = list(r)
         return r, b
 
     def join(self):

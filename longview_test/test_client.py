@@ -2,6 +2,15 @@ import longview as lv
 import time
 import math
 
+def show_grads_test():
+    cli = lv.WatchClient()
+
+    grads = cli.create_stream('batch', 'map(lambda d:avg_abs_grads(d.model), l)', throttle=5)
+    grad_plot = lv.LinePlot()
+    grad_plot.show(grads, 'Epoch', 'Gradients', redraw_keep=20)
+
+    lv.wait_key()
+
 def show_graph_test():
     cli = lv.WatchClient()
 
@@ -36,6 +45,7 @@ def read_stream_test():
     print('done')
     lv.wait_key()
 
+show_grads_test()
 show_graph_test()
 read_stream_test()  
 show_stream_test()

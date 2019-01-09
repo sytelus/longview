@@ -3,6 +3,7 @@ from .zmq_pub_sub import ZmqPubSub
 import threading
 from .lv_types import *
 from .evaler import Evaler
+import time
 
 class WatchServer:
     _port_start = 40859
@@ -58,8 +59,12 @@ class WatchServer:
             if stream_req.eval_end < event_index:
                 self._end_stream_req(stream_req)
             else:
-                event_data = EventData(self._log_globals, **vars)
-                self._eval_event_send(stream_req, event_data, x)
+                # throttle should be applied before eval
+                if stream_req.throttle is None or stream_req.last_sent is None or \
+                        time.time() - stream_req.last_sent >= stream_req.throttle:
+                    event_data = EventData(self._log_globals, **vars)
+                    self._eval_event_send(stream_req, event_data, x)
+                    stream_req.last_sent = time.time()
 
     def get_event_index(self, event_name:str):
         return self._event_counts.get(event_name, -1)
@@ -97,7 +102,7 @@ class WatchServer:
             eval_result = EvalResult(event_name, event_index,
                 result, stream_req.stream_name, x=x)
             self._publication.send_obj(eval_result, TopicNames.event_eval)
-
+                
     def create_stream(self, stream_req:StreamRequest) -> int:
         stream_req._evaler = Evaler(stream_req.eval_f_s)
         stream_req.stream_num = self._stream_req_count

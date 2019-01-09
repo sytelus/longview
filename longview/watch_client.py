@@ -13,11 +13,12 @@ class WatchClient:
     class Stream:
         def __init__(self, clisrv, streams, event_name:str, eval_f_s:str,
                 callback:Callable[[EvalResult], None]=None, stream_name:str=None, 
-                eval_start:int=0, eval_end:int=sys.maxsize):
+                eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
             self.closed = True
             self.stream_name = stream_name or str(uuid.uuid4())
             self.clisrv = clisrv
-            self.stream_req = StreamRequest(event_name, eval_f_s, self.stream_name, eval_start, eval_end)
+            self.stream_req = StreamRequest(event_name, eval_f_s, self.stream_name, 
+                eval_start, eval_end, throttle)
             clisrv_req = ClientServerRequest(CliSrvReqTypes.create_stream, self.stream_req)
             self.clisrv.request(clisrv_req)
             self.closed = False
@@ -97,10 +98,10 @@ class WatchClient:
             #print("Stream {} not handled".format(eval_result.stream_name))
 
     def create_stream(self, event_name:str, eval_f_s:str, callback:Callable[[EvalResult], None]=None,
-            stream_name:str=None, eval_start:int=0, eval_end:int=sys.maxsize):
+            stream_name:str=None, eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
 
         stream = WatchClient.Stream(self._clisrv, self._streams, event_name, eval_f_s, callable, 
-            stream_name, eval_start, eval_end)
+            stream_name, eval_start, eval_end, throttle)
 
         return stream
 

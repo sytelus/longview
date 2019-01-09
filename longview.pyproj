@@ -20,7 +20,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="longview\evaler.py" />
-    <Compile Include="longview\lv_itertools.py">
+    <Compile Include="longview\evaler_utils.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="longview\lv_types.py" />

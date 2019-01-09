@@ -20,9 +20,30 @@ def list_to_2d_float_array(flst, width, height):
 def get_pfm_array(response):
     return list_to_2d_float_array(response.image_data_float, response.width, response.height)
 
-def is_list_like(obj, allow_string=False):
-    return isinstance(obj, abc.Sequence) and not isinstance(obj, (str, abc.ByteString))
-    
+def is_array_like(obj, allow_string=False, allow_tuple=True):
+    result = isinstance(obj, abc.Sequence) 
+    if result and not allow_string and isinstance(obj, (str, abc.ByteString)):
+        result = False
+    if result and not allow_tuple and isinstance(obj, tuple):
+        result = False
+    return result
+
+def is_scalar(x):
+    return x is None or np.isscalar(x)
+
+def is_scaler_array(x): #detects (x,y) or [x, y]
+    if is_array_like(x):
+        if len(x) > 0:
+            return len(x) if is_scalar(x[0]) else -1
+        else:
+            return 0
+    else:
+        return -1
+
+def is_array_of_2d_array_like(x):
+    return is_array_like(x) and (len(x) == 0 or \
+        (len(x) > 0 and is_2d_scaler_array_like(x[0])))
+
 def get_public_fields(obj):
     return [attr for attr in dir(obj)
                             if not (attr.startswith("_") 
