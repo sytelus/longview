@@ -163,7 +163,7 @@ class LinePlot():
                 plot_info.ax.set_ylim(*ylim)
 
             #plot_info.ax.yaxis.label.set_size(10)
-            self.figure.legend(loc='center right')
+            self.figure.legend(loc='center left', bbox_to_anchor=(1, 0.5))
             stream.subscribe(self._add_eval_result)
         if final_show and not self._is_shown:
             self._is_shown = True
