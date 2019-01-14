@@ -66,7 +66,7 @@ def read_stream_test():
     print('done')
     lv.wait_key()
 
-show_mnist_grads_test()
+#show_mnist_grads_test()
 show_mnist_test()
 show_graph_test()
 read_stream_test()  

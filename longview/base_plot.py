@@ -115,7 +115,7 @@ class BasePlot:
         """(for derived class) Plot the data in given axes"""
         pass
 
-    def init_plot_info(self, stream, plot_info, **kwargs):
+    def init_plot_info(self, stream, plot_info):
         """(for derived class) Create new plot info for this stream"""
         pass
 

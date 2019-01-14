@@ -5,29 +5,16 @@ from .base_plot import *
 
 
 class ImagePlot(BasePlot):
-    def __init__(self, title=None):
-        self.figure = plt.figure()
-        self._is_shown = False
-        self.ax = []
+    def init_plot_info(self, stream, plot_info, 
+            rows=2, columns=5):
+        plot_info.columns = columns
+        #plot_info.rows = rows
+        plot_info.axs = [] 
 
-    def show(self, stream, cols = 5, throttle=None, clear_on_end=False, redraw_keep=0):
-        items = list(stream)
-        for i, data in enumerate(items):
-            ax = self.figure.add_subplot()
-            self.ax.append()
-        if not self._is_shown:
-            self._is_shown = True
-            return plt.show() #must be done only once
 
 class LinePlot(BasePlot):
-    def init_plot_info(self, stream, plot_info, **kwargs):
-        xlabel = kwargs.get('xlabel', '')
-        ylabel = kwargs.get('ylabel', '')
-        color = kwargs.get('color', None)
-        alpha = kwargs.get('alpha', 1)
-        xlim = kwargs.get('xlim', None)
-        ylim = kwargs.get('ylim', None)
-
+    def init_plot_info(self, stream, plot_info, 
+            xlabel='', ylabel='', color=None, alpha=1, xlim=None, ylim=None):
         plot_info.xdata, plot_info.ydata = [], []
         plot_info.line = plot_info.ax = None
         plot_info.xylabel_texts = {}
