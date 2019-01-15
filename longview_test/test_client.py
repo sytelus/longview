@@ -2,14 +2,35 @@ import longview as lv
 import time
 import math
 
-def show_grads_test():
+def show_worst_in_class():
     cli = lv.WatchClient()
 
-    grads = cli.create_stream('batch', 'map(lambda d:avg_abs_grads(d.model), l)', throttle=5)
+    grads = cli.create_stream('batch', 'worst_in_class(lambda d:(d.input, d.output, d.label, d.loss), l)', throttle=3)
     grad_plot = lv.LinePlot()
     grad_plot.show(grads, 'Layers', 'Gradients', redraw_keep=20)
 
     lv.wait_key()
+
+def show_mnist_grads_test():
+    cli = lv.WatchClient()
+
+    grads = cli.create_stream('batch', 'map(lambda d:avg_abs_grads(d.model), l)', throttle=3)
+    grad_plot = lv.LinePlot()
+    grad_plot.show(grads, xlabel='Epoch', ylabel='Gradients', redraw_keep=20)
+
+    lv.wait_key()
+
+def show_mnist_test():
+    cli = lv.WatchClient()
+
+    plot = lv.LinePlot()
+
+    s1 = cli.create_stream("batch", 'map(lambda v:math.sqrt(v.loss), l)')
+    plot.show(s1, xlabel='i', ylabel='sqrt_loss', label='SqrtLoss', final_show=False)
+    
+    s1 = cli.create_stream("batch", 'map(lambda v:v.metrics.batch_accuracy, l)')
+    plot.show(s1, xlabel='i', ylabel='acc', label='Accuracy')
+
 
 def show_graph_test():
     cli = lv.WatchClient()
@@ -45,7 +66,8 @@ def read_stream_test():
     print('done')
     lv.wait_key()
 
-show_grads_test()
+show_mnist_grads_test()
+show_mnist_test()
 show_graph_test()
 read_stream_test()  
 show_stream_test()

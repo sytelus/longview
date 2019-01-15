@@ -83,12 +83,13 @@ class WatchClient:
     _port_start = 40859
 
     def __init__(self, pubsub_port=None, cliesrv_port=None, host="localhost"):
+        self._streams = {}
+        self._renderers = {}
+        
         self._sub = ZmqPubSub.Subscription(pubsub_port or WatchClient._port_start, 
             TopicNames.event_eval, self._on_event_eval)
         self._clisrv = ZmqPubSub.ClientServer(cliesrv_port or WatchClient._port_start+1, False)
         WatchClient._port_start += 2
-        self._streams = {}
-        self._renderers = {}
 
     def _on_event_eval(self, eval_result:EvalResult):
         if eval_result.stream_name in self._streams:
