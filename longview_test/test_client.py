@@ -5,9 +5,10 @@ import math
 def show_worst_in_class():
     cli = lv.WatchClient()
 
-    grads = cli.create_stream('batch', 'worst_in_class(lambda d:(d.input, d.output, d.label, d.loss), l)', throttle=3)
+    grads = cli.create_stream('batch', 
+        'worst_in_class(lambda d:(d.input, d.output, d.label, d.loss), l)', throttle=3)
     grad_plot = lv.LinePlot()
-    grad_plot.show(grads, 'Layers', 'Gradients', redraw_keep=20)
+    grad_plot.show(grads, 'Layers', 'Gradients', redraw_after=0)
 
     lv.wait_key()
 
@@ -16,7 +17,7 @@ def show_mnist_grads_test():
 
     grads = cli.create_stream('batch', 'map(lambda d:avg_abs_grads(d.model), l)', throttle=3)
     grad_plot = lv.LinePlot()
-    grad_plot.show(grads, xlabel='Epoch', ylabel='Gradients', redraw_keep=20)
+    grad_plot.show(grads, xlabel='Epoch', ylabel='Gradients', redraw_after=0, keep_old=20, dim_old=True)
 
     lv.wait_key()
 
@@ -66,8 +67,8 @@ def read_stream_test():
     print('done')
     lv.wait_key()
 
-show_mnist_grads_test()
 show_mnist_test()
+show_mnist_grads_test()
 show_graph_test()
 read_stream_test()  
 show_stream_test()

@@ -2,7 +2,7 @@ from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, 
 from .lv_types import *
 from . import utils
 from .base_plot import *
-
+import numpy as np
 
 class ImagePlot(BasePlot):
     def init_stream_plot(self, stream, stream_plot, 
@@ -15,23 +15,24 @@ class ImagePlot(BasePlot):
 class LinePlot(BasePlot):
     def init_stream_plot(self, stream, stream_plot, 
             xlabel='', ylabel='', color=None, alpha=1, xlim=None, ylim=None):
-        stream_plot.xdata, stream_plot.ydata = [], []
-        stream_plot.line = stream_plot.ax = None
-        stream_plot.xylabel_texts = {}
-        stream_plot.xylabel_refs = {}
+        stream_plot.xylabel_refs = [] # annotation references
 
+        # add main subplot
         if len(self._stream_plots) == 0:
             stream_plot.ax = self.get_main_axis()
         else:
             stream_plot.ax = self.get_main_axis().twinx()
+
         color = color or plt.cm.hsv(1.0/(1+len(self._stream_plots)))
         stream_plot.label = stream_plot.label or ylabel
 
-        stream_plot.line = matplotlib.lines.Line2D(stream_plot.xdata, stream_plot.ydata, 
+        # add default line in subplot
+        stream_plot.line = matplotlib.lines.Line2D([], [], 
             label=stream_plot.label, color=color) #, linewidth=3
         stream_plot.line.set_alpha(alpha)
         stream_plot.ax.add_line(stream_plot.line)
 
+        # if more than 2 y-axis then place additional outside
         if len(self._stream_plots) > 2:
             pos = (len(self._stream_plots)-2) * 160
             stream_plot.ax.spines['right'].set_position(('outward', pos))
@@ -48,103 +49,58 @@ class LinePlot(BasePlot):
             stream_plot.ax.set_ylim(*ylim)
 
         # redo the legend
-        self.figure.legend(loc='center right', bbox_to_anchor=(1, 0.5))
+        self.figure.legend(loc='center right', bbox_to_anchor=(1.5, 0.5))
 
-    def on_eval_result(self, stream_plot, vals, eval_result):
-        if stream_plot.redraw_keep > 0:
-            self.clear(stream_plot)     
-            
-        # dim previous lines and then add new line
-        if stream_plot.redraw_keep > 1 and stream_plot.line is not None:
-            lines = stream_plot.ax.get_lines()
-            for i in range(len(lines)-1, -1, -1):
-                if i >= stream_plot.redraw_keep:
-                    lines[i].remove()
-                    lines.pop(0)
-                else:
-                    lines[i].set_alpha(0.5/(len(lines)-i))
-
-            line = matplotlib.lines.Line2D(stream_plot.xdata, stream_plot.ydata, 
-                color=stream_plot.line.get_color()) #, linewidth=3
-            stream_plot.line = line
-            stream_plot.ax.add_line(stream_plot.line)
-
-    def on_eval_each_result(self, stream_plot, val, eval_result):
-        x = eval_result.x or eval_result.event_index
-        y = val
-        pt_label = None
-
-        # if val turns out to be array like, extract x,y
-        val_l = utils.is_scaler_array(val)
-        if val_l >= 2:
-            x, y = val[0], val[1]
-        if val_l > 2:
-            pt_label = str(val[2])
-
-        xi = len(stream_plot.xdata)
-        if pt_label is not None:
-            stream_plot.xylabel_texts[xi] = pt_label
-        elif xi in stream_plot.xylabel_texts:
-            del stream_plot.xylabel_texts[xi]
-
-        stream_plot.xdata.append(x)
-        stream_plot.ydata.append(y)
-
-    def render_stream_plot(self, stream_plot):
-        pending_count = len(stream_plot.pending_vals)
-        if pending_count == 0:
-            return
+    def clear_stream_plot(self, stream_plot):
         lines = stream_plot.ax.get_lines() 
-        line = lines[-1] # current line
-
-        # remove extra lines
-        if stream_plot.redraw_after is not None:
-            # remove excessive pending items
-            for _ in range(pending_count - stream_plot.keep_old - 1):
-                stream_plot.pending_vals.get()
-            pending_count = len(stream_plot.pending_vals)
-
-            # remove old lines
-            for _ in range(len(lines) - (stream_plot.keep_old + 1 - pending_count)):
+        # if we need to keep history
+        if stream_plot.keep_old > 0:
+            while len(lines) > stream_plot.keep_old:
                 lines.pop(0).remove()
-
             # dim old lines
             if stream_plot.dim_old:
-                for i, line in enumerate(lines):
-                    line.set_alpha(0.5/(len(lines)-i))
-
+                alphas = np.linspace(0.05, 1, len(lines))
+                for line, alpha in zip(lines, alphas):
+                    line.set_alpha(alpha)
+                    line.set_linewidth(1)
             # add new line
-            line = matplotlib.lines.Line2D([], [], 
-                color=line.get_color())
+            line = matplotlib.lines.Line2D([], [], linewidth=3)
             stream_plot.ax.add_line(line)
-            lines = stream_plot.ax.get_lines() 
+        else: #clear current line
+            lines[-1].set_data([], [])
 
-        # update data in line
-        stream_plot.line.set_data(stream_plot.xdata, stream_plot.ydata)
+        # remove annotations
+        for label_info in stream_plot.xylabel_refs:
+            label_info.set_visible(False)
+            label_info.remove()
+        stream_plot.xylabel_refs.clear()
 
-        # sync xylabels
-        for i, xylabel in stream_plot.xylabel_texts.items():
-            if i in stream_plot.xylabel_refs:
-                stream_plot.xylabel_refs[i].set_text(xylabel)
-                stream_plot.xylabel_refs[i].set_position( \
-                    (stream_plot.xdata[i], stream_plot.ydata[i]))
-            else:
-                stream_plot.xylabel_refs[i] = stream_plot.ax.text( \
-                    stream_plot.xdata[i], stream_plot.ydata[i], xylabel)
-        for i in list(stream_plot.xylabel_refs.keys()):
-            if i not in stream_plot.xylabel_texts:
-                label_info = stream_plot.xylabel_refs[i]
-                label_info.set_visible(False)
-                label_info.remove()
-                del stream_plot.xylabel_refs[i]
+    def render_stream_plot(self, stream_plot, vals, eval_result):
+        line = stream_plot.ax.get_lines()[-1]
+        for val in vals:
+            x = eval_result.x or eval_result.event_index
+            y = val
+            pt_label = None
 
-        stream_plot.ax.relim()
-        stream_plot.ax.autoscale_view()
+            # if val turns out to be array like, extract x,y
+            val_l = utils.is_scaler_array(val)
+            if val_l >= 2:
+                x, y = val[0], val[1]
+            if val_l > 2:
+                pt_label = str(val[2])
 
-    def clear(self, stream_plot):
-        stream_plot.xdata.clear()
-        stream_plot.ydata.clear()
-        stream_plot.xylabel_texts.clear()
+            xdata, ydata = line.get_data()
+            xdata.append(x)
+            ydata.append(y)
+            line.set_data(xdata, ydata)
+
+            # add annotation
+            if pt_label:
+                stream_plot.xylabel_refs.append(stream_plot.ax.text( \
+                    x, y, pt_label))
+
+            stream_plot.ax.relim()
+            stream_plot.ax.autoscale_view()
 
 class TextPrinter():
     def __init__(self, prefix=None):
