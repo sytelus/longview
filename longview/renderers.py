@@ -52,7 +52,9 @@ class LinePlot(BasePlot):
 
     def on_eval_result(self, stream_plot, vals, eval_result):
         if stream_plot.redraw_keep > 0:
-            self.clear(stream_plot)       
+            self.clear(stream_plot)     
+            
+        # dim previous lines and then add new line
         if stream_plot.redraw_keep > 1 and stream_plot.line is not None:
             lines = stream_plot.ax.get_lines()
             for i in range(len(lines)-1, -1, -1):
@@ -84,10 +86,40 @@ class LinePlot(BasePlot):
             stream_plot.xylabel_texts[xi] = pt_label
         elif xi in stream_plot.xylabel_texts:
             del stream_plot.xylabel_texts[xi]
+
         stream_plot.xdata.append(x)
         stream_plot.ydata.append(y)
 
     def render_stream_plot(self, stream_plot):
+        pending_count = len(stream_plot.pending_vals)
+        if pending_count == 0:
+            return
+        lines = stream_plot.ax.get_lines() 
+        line = lines[-1] # current line
+
+        # remove extra lines
+        if stream_plot.redraw_after is not None:
+            # remove excessive pending items
+            for _ in range(pending_count - stream_plot.keep_old - 1):
+                stream_plot.pending_vals.get()
+            pending_count = len(stream_plot.pending_vals)
+
+            # remove old lines
+            for _ in range(len(lines) - (stream_plot.keep_old + 1 - pending_count)):
+                lines.pop(0).remove()
+
+            # dim old lines
+            if stream_plot.dim_old:
+                for i, line in enumerate(lines):
+                    line.set_alpha(0.5/(len(lines)-i))
+
+            # add new line
+            line = matplotlib.lines.Line2D([], [], 
+                color=line.get_color())
+            stream_plot.ax.add_line(line)
+            lines = stream_plot.ax.get_lines() 
+
+        # update data in line
         stream_plot.line.set_data(stream_plot.xdata, stream_plot.ydata)
 
         # sync xylabels

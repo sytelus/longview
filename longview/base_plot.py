@@ -6,27 +6,34 @@ import matplotlib.lines
 from matplotlib.animation import FuncAnimation
 import time
 import threading
+import queue
 
 from . import utils
 
 class BasePlot:
     class StreamPlot:
-        def __init__(self, stream, throttle, clear_on_end, redraw_keep, label):
+        def __init__(self, stream, throttle, clear_on_end, label, 
+                redraw_after=sys.maxsize, keep_old=0, dim_old=True):
             self.stream = stream
             self.throttle = throttle
             self.clear_on_end = clear_on_end
             self.label = label
-            self.redraw_keep = redraw_keep
             self.last_update = None
-
+            self.pending_vals = queue.Queue()
+            self.redraw_after = redraw_after
+            self.keep_old = keep_old
+            self.dim_old = dim_old
+            
     def __init__(self, title=None):
         self._fig_init_done = False
         self._is_shown = False
         self.title = title
-        self.figure = None
-        self._ax_main = None
         self._stream_plots = {}
         self.lock = threading.Lock()
+        # graph objects
+        self.figure = None
+        self._ax_main = None
+        self.animation = None
 
     def init_fig(self, anim_interval:float=1.0):
         """(for derived class) Initializes matplotlib figure"""
@@ -64,17 +71,8 @@ class BasePlot:
                     # check throttle
                     if stream_plot.throttle is None or stream_plot.last_update is None or \
                             time.time() - stream_plot.last_update >= stream_plot.throttle:
-                        # if we got set of values as result then break it down
-                        if utils.is_array_like(eval_result.result, allow_tuple=False):
-                            vals = eval_result.result
-                        else:
-                            vals = [eval_result.result]
 
-                        # do we need to redraw at each eval?
-                        if not self.on_eval_result(stream_plot, vals, eval_result):
-                            # for each value we received, call derived class method
-                            for val in vals:
-                                self.on_eval_each_result(stream_plot, val, eval_result)
+                        self.pending_vals.put(eval_result)
 
                         # update for throttle
                         stream_plot.last_update = time.time()
@@ -91,12 +89,14 @@ class BasePlot:
                 self.render_stream_plot(stream_plot)
 
     def show(self, stream, label=None, final_show=True, 
-             throttle=None, clear_on_end=False, redraw_keep=0, **kwargs):
+             throttle=None, clear_on_end=False, redraw_after=None, 
+             keep_old=0, dim_old=True, **kwargs):
         # make sure figure is initialized
         self.init_fig()
 
         if stream:
-            stream_plot = BasePlot.StreamPlot(stream, throttle, clear_on_end, redraw_keep, label)
+            stream_plot = BasePlot.StreamPlot(stream, throttle, clear_on_end, label, 
+                redraw_after, keep_old, dim_old)
             self.init_stream_plot(stream, stream_plot, **kwargs) 
             self._stream_plots[stream.stream_name] = stream_plot
             stream.subscribe(self._add_eval_result)
@@ -104,23 +104,15 @@ class BasePlot:
             self._is_shown = True
             return plt.show() #must be done only once
 
-    def clear(self, stream_plot):
-        """(for derived class) Clears the data in plot, without removing axes"""
-        pass
-
-    def on_eval_result(self, stream_plot, vals, eval_result):
-        """(for derived class) Callback for derived class whenever EvalResult becomes available"""
-        pass
-
-    def on_eval_each_result(self, stream_plot, val, eval_result):
-        """(for derived class) Callback for derived class whenever EvalResult becomes available"""
-        pass
-
-    def render_stream_plot(self, stream_plot):
-        """(for derived class) Plot the data in given axes"""
-        pass
 
     def init_stream_plot(self, stream, stream_plot):
         """(for derived class) Create new plot info for this stream"""
         pass
 
+    def clear(self, stream_plot):
+        """(for derived class) Clears the data in specified plot before new data is redrawn"""
+        pass
+
+    def render_stream_plot(self, stream_plot):
+        """(for derived class) Plot the data in given axes"""
+        pass
