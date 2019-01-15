@@ -7,7 +7,7 @@ def show_grads_test():
 
     grads = cli.create_stream('batch', 'map(lambda d:avg_abs_grads(d.model), l)', throttle=5)
     grad_plot = lv.LinePlot()
-    grad_plot.show(grads, 'Epoch', 'Gradients', redraw_keep=20)
+    grad_plot.show(grads, 'Layers', 'Gradients', redraw_keep=20)
 
     lv.wait_key()
 
