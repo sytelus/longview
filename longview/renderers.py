@@ -102,8 +102,8 @@ class LinePlot(BasePlot):
         for i in list(stream_plot.xylabel_refs.keys()):
             if i not in stream_plot.xylabel_texts:
                 label_info = stream_plot.xylabel_refs[i]
-                label_info[i].set_visible(False)
-                label_info[i].remove()
+                label_info.set_visible(False)
+                label_info.remove()
                 del stream_plot.xylabel_refs[i]
 
         stream_plot.ax.relim()

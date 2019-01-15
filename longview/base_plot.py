@@ -41,7 +41,7 @@ class BasePlot:
         self._fig_init_done = True
         return True
 
-    def get_main_axis():
+    def get_main_axis(self):
         if not self._ax_main:
             self._ax_main = self.figure.add_subplot(111)
             self._ax_main.grid(True)
