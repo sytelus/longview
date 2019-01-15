@@ -5,69 +5,69 @@ from .base_plot import *
 
 
 class ImagePlot(BasePlot):
-    def init_plot_info(self, stream, plot_info, 
+    def init_stream_plot(self, stream, stream_plot, 
             rows=2, columns=5):
-        plot_info.columns = columns
-        #plot_info.rows = rows
-        plot_info.axs = [] 
+        stream_plot.columns = columns
+        #stream_plot.rows = rows
+        stream_plot.axs = [] 
 
 
 class LinePlot(BasePlot):
-    def init_plot_info(self, stream, plot_info, 
+    def init_stream_plot(self, stream, stream_plot, 
             xlabel='', ylabel='', color=None, alpha=1, xlim=None, ylim=None):
-        plot_info.xdata, plot_info.ydata = [], []
-        plot_info.line = plot_info.ax = None
-        plot_info.xylabel_texts = {}
-        plot_info.xylabel_refs = {}
+        stream_plot.xdata, stream_plot.ydata = [], []
+        stream_plot.line = stream_plot.ax = None
+        stream_plot.xylabel_texts = {}
+        stream_plot.xylabel_refs = {}
 
-        if len(self._plot_infos) == 0:
-            plot_info.ax = self.ax_main
+        if len(self._stream_plots) == 0:
+            stream_plot.ax = self.get_main_axis()
         else:
-            plot_info.ax = self.ax_main.twinx()
-        color = color or plt.cm.hsv(1.0/(1+len(self._plot_infos)))
-        plot_info.label = plot_info.label or ylabel
+            stream_plot.ax = self.get_main_axis().twinx()
+        color = color or plt.cm.hsv(1.0/(1+len(self._stream_plots)))
+        stream_plot.label = stream_plot.label or ylabel
 
-        plot_info.line = matplotlib.lines.Line2D(plot_info.xdata, plot_info.ydata, 
-            label=plot_info.label, color=color) #, linewidth=3
-        plot_info.line.set_alpha(alpha)
-        plot_info.ax.add_line(plot_info.line)
+        stream_plot.line = matplotlib.lines.Line2D(stream_plot.xdata, stream_plot.ydata, 
+            label=stream_plot.label, color=color) #, linewidth=3
+        stream_plot.line.set_alpha(alpha)
+        stream_plot.ax.add_line(stream_plot.line)
 
-        if len(self._plot_infos) > 2:
-            pos = (len(self._plot_infos)-2) * 160
-            plot_info.ax.spines['right'].set_position(('outward', pos))
+        if len(self._stream_plots) > 2:
+            pos = (len(self._stream_plots)-2) * 160
+            stream_plot.ax.spines['right'].set_position(('outward', pos))
 
-        self._plot_infos[stream.stream_name] = plot_info
-        plot_info.ax.set_xlabel(xlabel)
-        plot_info.ax.set_ylabel(ylabel)
-        plot_info.ax.yaxis.label.set_color(color)
-        plot_info.ax.yaxis.label.set_style('italic')
-        plot_info.ax.xaxis.label.set_style('italic')
+        self._stream_plots[stream.stream_name] = stream_plot
+        stream_plot.ax.set_xlabel(xlabel)
+        stream_plot.ax.set_ylabel(ylabel)
+        stream_plot.ax.yaxis.label.set_color(color)
+        stream_plot.ax.yaxis.label.set_style('italic')
+        stream_plot.ax.xaxis.label.set_style('italic')
         if xlim is not None:
-            plot_info.ax.set_xlim(*xlim)
+            stream_plot.ax.set_xlim(*xlim)
         if ylim is not None:
-            plot_info.ax.set_ylim(*ylim)
+            stream_plot.ax.set_ylim(*ylim)
 
         # redo the legend
         self.figure.legend(loc='center right', bbox_to_anchor=(1, 0.5))
 
-    def on_eval_result(self, plot_info, vals, eval_result):
-        if plot_info.redraw_keep > 0:
-            self.clear(plot_info)       
-        if plot_info.redraw_keep > 1 and plot_info.line is not None:
-            lines = plot_info.ax.get_lines()
+    def on_eval_result(self, stream_plot, vals, eval_result):
+        if stream_plot.redraw_keep > 0:
+            self.clear(stream_plot)       
+        if stream_plot.redraw_keep > 1 and stream_plot.line is not None:
+            lines = stream_plot.ax.get_lines()
             for i in range(len(lines)-1, -1, -1):
-                if i >= plot_info.redraw_keep:
+                if i >= stream_plot.redraw_keep:
                     lines[i].remove()
                     lines.pop(0)
                 else:
                     lines[i].set_alpha(0.5/(len(lines)-i))
 
-            line = matplotlib.lines.Line2D(plot_info.xdata, plot_info.ydata, 
-                color=plot_info.line.get_color()) #, linewidth=3
-            plot_info.line = line
-            plot_info.ax.add_line(plot_info.line)
+            line = matplotlib.lines.Line2D(stream_plot.xdata, stream_plot.ydata, 
+                color=stream_plot.line.get_color()) #, linewidth=3
+            stream_plot.line = line
+            stream_plot.ax.add_line(stream_plot.line)
 
-    def on_eval_each_result(self, plot_info, val, eval_result):
+    def on_eval_each_result(self, stream_plot, val, eval_result):
         x = eval_result.x or eval_result.event_index
         y = val
         pt_label = None
@@ -79,40 +79,40 @@ class LinePlot(BasePlot):
         if val_l > 2:
             pt_label = str(val[2])
 
-        xi = len(plot_info.xdata)
+        xi = len(stream_plot.xdata)
         if pt_label is not None:
-            plot_info.xylabel_texts[xi] = pt_label
-        elif xi in plot_info.xylabel_texts:
-            del plot_info.xylabel_texts[xi]
-        plot_info.xdata.append(x)
-        plot_info.ydata.append(y)
+            stream_plot.xylabel_texts[xi] = pt_label
+        elif xi in stream_plot.xylabel_texts:
+            del stream_plot.xylabel_texts[xi]
+        stream_plot.xdata.append(x)
+        stream_plot.ydata.append(y)
 
-    def render_plot_info(self, plot_info):
-        plot_info.line.set_data(plot_info.xdata, plot_info.ydata)
+    def render_stream_plot(self, stream_plot):
+        stream_plot.line.set_data(stream_plot.xdata, stream_plot.ydata)
 
         # sync xylabels
-        for i, xylabel in plot_info.xylabel_texts.items():
-            if i in plot_info.xylabel_refs:
-                plot_info.xylabel_refs[i].set_text(xylabel)
-                plot_info.xylabel_refs[i].set_position( \
-                    (plot_info.xdata[i], plot_info.ydata[i]))
+        for i, xylabel in stream_plot.xylabel_texts.items():
+            if i in stream_plot.xylabel_refs:
+                stream_plot.xylabel_refs[i].set_text(xylabel)
+                stream_plot.xylabel_refs[i].set_position( \
+                    (stream_plot.xdata[i], stream_plot.ydata[i]))
             else:
-                plot_info.xylabel_refs[i] = plot_info.ax.text( \
-                    plot_info.xdata[i], plot_info.ydata[i], xylabel)
-        for i in list(plot_info.xylabel_refs.keys()):
-            if i not in plot_info.xylabel_texts:
-                label_info = plot_info.xylabel_refs[i]
+                stream_plot.xylabel_refs[i] = stream_plot.ax.text( \
+                    stream_plot.xdata[i], stream_plot.ydata[i], xylabel)
+        for i in list(stream_plot.xylabel_refs.keys()):
+            if i not in stream_plot.xylabel_texts:
+                label_info = stream_plot.xylabel_refs[i]
                 label_info[i].set_visible(False)
                 label_info[i].remove()
-                del plot_info.xylabel_refs[i]
+                del stream_plot.xylabel_refs[i]
 
-        plot_info.ax.relim()
-        plot_info.ax.autoscale_view()
+        stream_plot.ax.relim()
+        stream_plot.ax.autoscale_view()
 
-    def clear(self, plot_info):
-        plot_info.xdata.clear()
-        plot_info.ydata.clear()
-        plot_info.xylabel_texts.clear()
+    def clear(self, stream_plot):
+        stream_plot.xdata.clear()
+        stream_plot.ydata.clear()
+        stream_plot.xylabel_texts.clear()
 
 class TextPrinter():
     def __init__(self, prefix=None):
