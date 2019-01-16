@@ -59,7 +59,7 @@ class Evaler:
         
     def _runner(self):
         while True:
-            l = self.g.get_vals()
+            l = self.g.get_vals() # this var will be used by eval
             eval_result = eval(self.eval_f_s)
             if isinstance(eval_result, Iterator):
                 for self.result in eval_result:

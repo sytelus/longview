@@ -6,7 +6,6 @@ import uuid
 import queue
 import dill
 from .lv_types import *
-from .renderers import *
 
 
 class WatchClient:

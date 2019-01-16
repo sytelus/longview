@@ -2,6 +2,8 @@ from .watch_client import *
 from .watch_server import *
 from .lv_types import *
 from .utils import *
-from .renderers import *
+from .line_plot import *
+from .image_plot import *
+from .text_printer import *
 from .evaler import *
 from .zmq_pub_sub import *

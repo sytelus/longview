@@ -3,12 +3,14 @@ import time
 import math
 
 def show_worst_in_class():
+    cli_train = lv.WatchClient()
     cli = lv.WatchClient()
 
-    grads = cli.create_stream('batch', 
-        'worst_in_class(lambda d:(d.input, d.output, d.label, d.loss), l)', throttle=3)
-    grad_plot = lv.LinePlot()
-    grad_plot.show(grads, 'Layers', 'Gradients', redraw_after=0)
+
+    imgs = cli.create_stream('batch', 
+        'worst_in_class(lambda d:(d.input, d.output, d.label, d.loss_all), l)', throttle=3)
+    img_plot = lv.ImagePlot()
+    img_plot.show(imgs)
 
     lv.wait_key()
 
@@ -67,6 +69,7 @@ def read_stream_test():
     print('done')
     lv.wait_key()
 
+show_worst_in_class()
 show_mnist_test()
 show_mnist_grads_test()
 show_graph_test()

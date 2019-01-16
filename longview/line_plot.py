@@ -1,16 +1,9 @@
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from .lv_types import *
 from . import utils
+
 from .base_plot import *
 import numpy as np
-
-class ImagePlot(BasePlot):
-    def init_stream_plot(self, stream, stream_plot, 
-            rows=2, columns=5):
-        stream_plot.columns = columns
-        #stream_plot.rows = rows
-        stream_plot.axs = [] 
-
 
 class LinePlot(BasePlot):
     def init_stream_plot(self, stream, stream_plot, 
@@ -102,13 +95,5 @@ class LinePlot(BasePlot):
             stream_plot.ax.relim()
             stream_plot.ax.autoscale_view()
 
-class TextPrinter():
-    def __init__(self, prefix=None):
-        self.prefix = prefix
-    def _add_eval_result(self, eval_result:EvalResult):
-        print(self.prefix, eval_result.event_index, eval_result.ended, eval_result.result)
-    def show(self, *streams):
-        for stream in streams:
-            stream.subscribe(self._add_eval_result)
 
    

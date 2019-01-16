@@ -26,8 +26,14 @@
     <Compile Include="longview\evaler_utils.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="longview\image_plot.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="longview\lv_types.py" />
-    <Compile Include="longview\renderers.py" />
+    <Compile Include="longview\line_plot.py" />
+    <Compile Include="longview\text_printer.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="longview\utils.py" />
     <Compile Include="longview\watch_client.py" />
     <Compile Include="longview\watch_server.py" />
