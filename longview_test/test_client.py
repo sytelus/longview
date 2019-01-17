@@ -2,6 +2,17 @@ import longview as lv
 import time
 import math
 
+def show_dlc_output():
+    cli = cli_train = lv.WatchClient()
+    #cli = lv.WatchClient()
+    
+    imgs = cli.create_stream('batch', 
+        "top(regim_extract, l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=10, order='rnd')", throttle=3)
+    img_plot = lv.ImagePlot()
+    img_plot.show(imgs, img_width=39, img_height=69)
+
+    lv.wait_key()
+
 def show_worst_in_class():
     cli_train = lv.WatchClient()
     cli = lv.WatchClient()
@@ -69,6 +80,7 @@ def read_stream_test():
     print('done')
     lv.wait_key()
 
+show_dlc_output()
 show_worst_in_class()
 show_mnist_test()
 show_mnist_grads_test()
