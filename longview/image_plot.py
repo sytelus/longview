@@ -45,15 +45,18 @@ class ImagePlot(BasePlot):
         for val in vals:
             val = val if isinstance(val, tuple) else (val,)
             unpacker = lambda a0,a1=None,a2=None,a3=None:(a0,a1,a2,a3)
-            img_in, label_in, img_out, label_out = unpacker(*val)
-            img_in, img_out = ImagePlot.linear_to_2d(stream_plot, img_in), \
-                ImagePlot.linear_to_2d(stream_plot, img_out)
+            img_in, label_in, img_out, img_trh = unpacker(*val)
+            img_in, img_out, img_trh = ImagePlot.linear_to_2d(stream_plot, img_in), \
+                ImagePlot.linear_to_2d(stream_plot, img_out), \
+                ImagePlot.linear_to_2d(stream_plot, img_trh)
 
             # combine in out images
-            if img_out is not None:
+            if img_out is not None and img_trh is not None:
+                img_in = np.hstack((img_in, img_out, img_trh))
+            elif img_out is not None:
                 img_in = np.hstack((img_in, img_out))
-            if label_out is not None:
-                label_in = label_in + ' ' + label_out
+            elif img_trh is not None:
+                img_in = np.hstack((img_in, np.zeros_like(img_trh), img_trh))
 
             ax = stream_plot.axs[row][col]
             if ax is None:

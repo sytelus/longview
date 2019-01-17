@@ -34,7 +34,8 @@ def pyt_img_img_out_xform(t):
     input, output, truth, loss = t
     input = input.data.cpu().numpy()
     output = output.data.cpu().numpy()
-    return(input, "L:{:4f}".format(loss), output, "")
+    truth = truth.data.cpu().numpy()
+    return(input, "L:{:4f}".format(loss), output, truth)
 
 def pyt_in_xform(t):
     input, output, truth, loss = t
@@ -61,6 +62,7 @@ def top(extract_f, l, topk=1, order='dsc', group_key=None, out_xform=lambda x:x)
         # group by class - by default group by truth value
         group_key = group_key or (lambda t: t[2])
         by_class = groupby2(flattened, group_key)
+
         # pick the first values for each class after sorting by loss
         reverse, sf, ls_cmp = True, lambda t: t[3], False
         if order=='asc':
@@ -71,6 +73,7 @@ def top(extract_f, l, topk=1, order='dsc', group_key=None, out_xform=lambda x:x)
             pass
         else:
             raise ValueError('order parameter must be dsc, asc or rnd')
+
         s = ((k, list(islice(sorted(v, key=sf, reverse=reverse), topk))) \
            for k,v in by_class)
         changed = False
@@ -80,7 +83,7 @@ def top(extract_f, l, topk=1, order='dsc', group_key=None, out_xform=lambda x:x)
                 min_result[k] = va
             else:
                 for i, ((_,_,_,ls), (_,_,_,lsc)) in enumerate(zip(va, cur_min)):
-                    if ls_cmp or lsc < ls:
+                    if ls_cmp or (reverse and lsc < ls) or (not reverse and lsc > ls):
                         cur_min[i] = va[i]
                         changed = True
         if changed:
