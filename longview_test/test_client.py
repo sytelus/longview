@@ -8,7 +8,7 @@ def show_worst_in_class():
 
 
     imgs = cli.create_stream('batch', 
-        'worst_in_class(lambda d:(d.input, d.output, d.label, d.loss_all), l)', throttle=3)
+        'top(regim_extract, l, out_xform=pyt_img_cl_out_xform)', throttle=3)
     img_plot = lv.ImagePlot()
     img_plot.show(imgs)
 

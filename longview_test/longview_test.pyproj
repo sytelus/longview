@@ -23,7 +23,6 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="add_parent_path.py" />
     <Compile Include="test_client.py">
       <SubType>Code</SubType>
     </Compile>
