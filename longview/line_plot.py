@@ -86,7 +86,6 @@ class LinePlot(BasePlot):
             xdata.append(x)
             ydata.append(y)
             line.set_data(xdata, ydata)
-
             # add annotation
             if pt_label:
                 stream_plot.xylabel_refs.append(stream_plot.ax.text( \
