@@ -38,9 +38,18 @@ def show_worst_in_class():
 def show_mnist_grads_test():
     train_cli = lv.WatchClient()
 
-    grads = train_cli.create_stream('batch', 'map(lambda d:avg_abs_grads(d.model), l)', throttle=3)
+    grads = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
     grad_plot = lv.LinePlot()
-    grad_plot.show(grads, xlabel='Epoch', ylabel='Gradients', redraw_after=0, keep_old=20, dim_old=True)
+    grad_plot.show(grads, xlabel='Epoch', ylabel='Gradients', redraw_after=0, keep_old=40, dim_old=True)
+
+    lv.wait_key()
+
+def show_mnist_params_test():
+    train_cli = lv.WatchClient()
+
+    params = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.abs().mean().item()), l)', throttle=1)
+    params_plot = lv.LinePlot()
+    params_plot.show(params, xlabel='Epoch', ylabel='avg |params|', redraw_after=0, keep_old=40, dim_old=True)
 
     lv.wait_key()
 
@@ -103,11 +112,11 @@ def read_stream_test():
     print('done')
     lv.wait_key()
 
+show_mnist_grads_test()
 show_mnist_epoch_loss_acc_test()
 show_find_lr()
 show_dlc_output()
 show_worst_in_class()
-show_mnist_grads_test()
 show_graph_test()
 read_stream_test()  
 show_stream_test()

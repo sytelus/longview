@@ -16,12 +16,12 @@ def groupby2(l, key=lambda x:x, val=lambda x:x, agg=lambda x:x, sort=True):
         aggx = ((k, agg(v)) for k,v in valx)
     return aggx
 
-def avg_abs_grads(model, weight_or_bias=True):
+def agg_params(model, p2v, weight_or_bias=True):
     for i, (n, p) in enumerate(model.named_parameters()):
         if p.requires_grad:
             is_bias = 'bias' in n
             if (weight_or_bias and not is_bias) or (not weight_or_bias and is_bias):
-                yield i, p.grad.abs().mean().item(), n
+                yield i, p2v(p), n
 
 def pyt_img_cl_out_xform(t):
     input, output, truth, loss = t
