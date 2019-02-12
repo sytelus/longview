@@ -20,11 +20,18 @@ def list_to_2d_float_array(flst, width, height):
 def get_pfm_array(response):
     return list_to_2d_float_array(response.image_data_float, response.width, response.height)
 
-def is_array_like(obj, allow_string=False, allow_tuple=True):
-    result = isinstance(obj, abc.Sequence) 
-    if result and not allow_string and isinstance(obj, (str, abc.ByteString)):
+# creates same list as len of seq filled with val - if val is already not a list of same size
+def fill_like(val, seq):
+    l = len(seq)
+    if is_array_like(val) and len(val) == l:
+        return val
+    return [val] * len(seq)
+
+def is_array_like(obj, string_is_array=False, tuple_is_array=True):
+    result = hasattr(obj, "__len__") and hasattr(obj, '__getitem__') 
+    if result and not string_is_array and isinstance(obj, (str, abc.ByteString)):
         result = False
-    if result and not allow_tuple and isinstance(obj, tuple):
+    if result and not tuple_is_array and isinstance(obj, tuple):
         result = False
     return result
 
@@ -68,6 +75,9 @@ def write_file(filename, bstr):
 # helper method for converting getOrientation to roll/pitch/yaw
 # https:#en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
     
+def has_method(o, name):
+    return callable(getattr(o, name, None))
+
 def to_eularian_angles(q):
     z = q.z_val
     y = q.y_val

@@ -44,19 +44,24 @@ class ImagePlot(BasePlot):
         row, col, i = 0, 0, 0
         for val in vals:
             val = val if isinstance(val, tuple) else (val,)
-            unpacker = lambda a0,a1=None,a2=None,a3=None:(a0,a1,a2,a3)
-            img_in, label_in, img_out, img_trh = unpacker(*val)
-            img_in, img_out, img_trh = ImagePlot.linear_to_2d(stream_plot, img_in), \
+            unpacker = lambda a0,a1=None,a2=None,a3=None,a4=None:(a0,a1,a2,a3,a4)
+            img_in, label_in, img_tar, img_out, img_tar_weights = unpacker(*val)
+            img_in, img_tar, img_out, img_tar_weights = ImagePlot.linear_to_2d(stream_plot, img_in), \
+                ImagePlot.linear_to_2d(stream_plot, img_tar), \
                 ImagePlot.linear_to_2d(stream_plot, img_out), \
-                ImagePlot.linear_to_2d(stream_plot, img_trh)
+                ImagePlot.linear_to_2d(stream_plot, img_tar_weights)
 
             # combine in out images
-            if img_out is not None and img_trh is not None:
-                img_in = np.hstack((img_in, img_out, img_trh))
+            if img_out is not None and img_tar is not None and img_tar_weights is not None:
+                img_in = np.hstack((img_in, img_out, img_tar, img_tar_weights))
+            elif img_out is not None and img_tar is not None:
+                img_in = np.hstack((img_in, img_out, img_tar))
             elif img_out is not None:
                 img_in = np.hstack((img_in, img_out))
-            elif img_trh is not None:
-                img_in = np.hstack((img_in, np.zeros_like(img_trh), img_trh))
+            elif img_tar is not None:
+                img_in = np.hstack((img_in, np.zeros_like(img_tar), img_tar))
+            elif img_tar is not None:
+                img_in = np.hstack((img_in, np.zeros_like(img_tar), img_tar))
 
             ax = stream_plot.axs[row][col]
             if ax is None:

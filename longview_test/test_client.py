@@ -12,30 +12,31 @@ def show_find_lr():
     lv.wait_key()
 
 
-def show_dlc_output():
+def dlc_show_rand_outputs():
     cli = cli_train = lv.WatchClient()
     #cli = lv.WatchClient()
     
     imgs = cli.create_stream('batch', 
-        "top(regim_extract, l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=10, order='rnd')", throttle=3)
+        "top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=10, order='rnd')", 
+        throttle=1)
     img_plot = lv.ImagePlot()
     img_plot.show(imgs, img_width=39, img_height=69)
 
     lv.wait_key()
 
-def show_worst_in_class():
+def mnist_worst_in_class():
     cli_train = lv.WatchClient()
     cli = lv.WatchClient()
 
 
-    imgs = cli.create_stream('batch', 
-        'top(regim_extract, l, out_xform=pyt_img_cl_out_xform)', throttle=3)
+    imgs = cli_train.create_stream('batch', 
+        'top(l, out_xform=pyt_img_class_out_xform)', throttle=1)
     img_plot = lv.ImagePlot()
     img_plot.show(imgs)
 
     lv.wait_key()
 
-def show_mnist_grads_test():
+def mnist_plot_grads():
     train_cli = lv.WatchClient()
 
     grads = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
@@ -44,7 +45,7 @@ def show_mnist_grads_test():
 
     lv.wait_key()
 
-def show_mnist_params_test():
+def mnist_plot_weight():
     train_cli = lv.WatchClient()
 
     params = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.abs().mean().item()), l)', throttle=1)
@@ -53,7 +54,7 @@ def show_mnist_params_test():
 
     lv.wait_key()
 
-def show_mnist_epoch_loss_acc_test():
+def mnist_show_epoch_stats():
     train_cli = lv.WatchClient()
     test_cli = lv.WatchClient()
 
@@ -66,19 +67,19 @@ def show_mnist_epoch_loss_acc_test():
     plot.show(test_acc, xlabel='Epoch', ylabel='Test Accuracy', ylim=(0,1))
 
 
-def show_mnist_batch_loss_acc_test():
+def mnist_show_batch_stats():
     train_cli = lv.WatchClient()
     test_cli = lv.WatchClient()
 
     plot = lv.LinePlot()
 
-    train_loss = train_cli.create_stream("batch", 'map(lambda v:v.loss, l)')
+    train_loss = train_cli.create_stream("batch", 'map(lambda v:v.metrics.batch_loss, l)')
     plot.show(train_loss, xlabel='Epoch', ylabel='Train Loss', final_show=False)
     
     test_acc = test_cli.create_stream("batch", 'map(lambda v:v.metrics.batch_accuracy, l)')
     plot.show(test_acc, xlabel='Epoch', ylabel='Test Accuracy')
 
-def show_graph_test():
+def basic_show_graph():
     cli = lv.WatchClient()
 
     plot = lv.LinePlot()
@@ -90,7 +91,7 @@ def show_graph_test():
     plot.show(s2, 'i', 'l', 'Loss2')
 
 
-def show_stream_test():
+def basic_show_stream():
     cli = lv.WatchClient()
 
     s1 = cli.create_stream("LossEvent", 'map(lambda v:math.sqrt(v.loss), l)')
@@ -103,7 +104,7 @@ def show_stream_test():
     
     lv.wait_key()
 
-def read_stream_test():
+def basic_read_stream():
     cli = lv.WatchClient()
 
     with cli.create_stream("Loss2Event", 'map(lambda v:math.sqrt(v.loss2), l)') as s1:
@@ -112,14 +113,17 @@ def read_stream_test():
     print('done')
     lv.wait_key()
 
-show_mnist_grads_test()
-show_mnist_epoch_loss_acc_test()
+dlc_show_rand_outputs()
 show_find_lr()
-show_dlc_output()
-show_worst_in_class()
-show_graph_test()
-read_stream_test()  
-show_stream_test()
+mnist_show_batch_stats()
+mnist_show_epoch_stats()
+mnist_plot_grads()
+mnist_plot_weight()
+mnist_worst_in_class()
+
+basic_show_graph()
+basic_read_stream()  
+basic_show_stream()
 
 
 

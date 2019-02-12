@@ -2,20 +2,24 @@ from itertools import *
 import torch
 import math
 import random
+from . import utils
+
 
 def skip_mod(mod, g):
     for index, item in enumerate(g):
         if index % mod == 0:
             yield item
 
+# sort keys, group by key, apply val function to each value in group, aggregate values
 def groupby2(l, key=lambda x:x, val=lambda x:x, agg=lambda x:x, sort=True):
     if sort:
         l = sorted(l, key=key)
-        grp = ((k,v) for k,v in groupby(l, key=key))
-        valx = ((k, (val(x) for x in v)) for k,v in grp)
-        aggx = ((k, agg(v)) for k,v in valx)
+    grp = ((k,v) for k,v in groupby(l, key=key))
+    valx = ((k, (val(x) for x in v)) for k,v in grp)
+    aggx = ((k, agg(v)) for k,v in valx)
     return aggx
 
+# aggregate weights or biases, use p2v to transform tensor to scaler
 def agg_params(model, p2v, weight_or_bias=True):
     for i, (n, p) in enumerate(model.named_parameters()):
         if p.requires_grad:
@@ -23,48 +27,44 @@ def agg_params(model, p2v, weight_or_bias=True):
             if (weight_or_bias and not is_bias) or (not weight_or_bias and is_bias):
                 yield i, p2v(p), n
 
-def pyt_img_cl_out_xform(t):
-    input, output, truth, loss = t
-    input = input.data.cpu().numpy()
-    output = torch.max(output,0)
-    return(input, "T:{},Pb:{:4f},pd:{},L:{:4f}".format(truth, math.exp(output[0]), \
-       output[1], loss), None, "")
+# use this for image to class problems
+def pyt_img_class_out_xform(item): # (input, target, in_weight, out_weight, output, loss)
+    input = item[0].data.cpu().numpy()
+    # turn log-probabilities in to (max log-probability, class ID)
+    output = torch.max(item[4],0)
+    # return image, text
+    return(input, "T:{},Pb:{:4f},pd:{},L:{:4f}".\
+        format(item[1], math.exp(output[0]), output[1], item[5]))
 
-def pyt_img_img_out_xform(t):
-    input, output, truth, loss = t
-    input = input.data.cpu().numpy()
-    output = output.data.cpu().numpy()
-    truth = truth.data.cpu().numpy()
-    return(input, "L:{:4f}".format(loss), output, truth)
+# use this for image to image translation problems
+def pyt_img_img_out_xform(item): # (input, target, in_weight, out_weight, output, loss)
+    input = item[0].data.cpu().numpy()
+    output = item[4].data.cpu().numpy()
+    target = item[1].data.cpu().numpy()
+    tar_weight = item[3].data.cpu().numpy() if item[3] is not None else None
 
-def pyt_in_xform(t):
-    input, output, truth, loss = t
-    return (input, output, truth.item() if len(truth.shape)==0 else truth, loss.item())
+    # return in-image, text, out-image, target-image
+    return(input, "L:{:4f}".format(item[5]), target, output, tar_weight)
 
-def regim_extract(batch_data):
-    input, output, truth, loss = \
-        batch_data.input, batch_data.output, batch_data.label, batch_data.loss_all
+def cols2rows(batch):
+    in_weight = utils.fill_like(batch.in_weight, batch.input)
+    tar_weight = utils.fill_like(batch.tar_weight, batch.input)
+    losses = [l.mean() for l in batch.loss_all]
+    targets = [t.item() if len(t.shape)==0 else t for t in batch.target]
 
-    if len(loss.shape) == 0:
-        loss = torch.Tensor((truth.shape[0],)).fill_(loss)
-    elif len(loss.shape) > 2 or (len(loss.shape) == 2 and loss.shape[1] > 1):
-        loss = [x.mean() for x in loss]
+    return list(zip(batch.input, targets, in_weight, tar_weight,
+               batch.output, losses))
 
-    # each batch item, get tuple
-    flattened = (pyt_in_xform(t) for t in \
-        zip(input, output, truth, loss))
-    return flattened
-
-def top(extract_f, l, topk=1, order='dsc', group_key=None, out_xform=lambda x:x):
+def top(l, topk=1, order='dsc', group_key=None, out_xform=lambda x:x):
     min_result = {}
-    for batch_data in l:
-        flattened = extract_f(batch_data)
-        # group by class - by default group by truth value
-        group_key = group_key or (lambda t: t[2])
-        by_class = groupby2(flattened, group_key)
+    for event_data in l:
+        batch = cols2rows(event_data.batch)
+        # by default group items in batch by target value
+        group_key = group_key or (lambda b: b[1]) #target
+        by_class = groupby2(batch, group_key)
 
         # pick the first values for each class after sorting by loss
-        reverse, sf, ls_cmp = True, lambda t: t[3], False
+        reverse, sf, ls_cmp = True, lambda b: b[5], False
         if order=='asc':
             reverse = False
         elif order=='rnd':
@@ -74,19 +74,30 @@ def top(extract_f, l, topk=1, order='dsc', group_key=None, out_xform=lambda x:x)
         else:
             raise ValueError('order parameter must be dsc, asc or rnd')
 
+        # sort grouped objects by sort function then
+        # take first k values in each group
+        # create (key, topk-sized list) tuples for each group
         s = ((k, list(islice(sorted(v, key=sf, reverse=reverse), topk))) \
            for k,v in by_class)
+
+        # for each group, maintain global k values for each keys
         changed = False
         for k,va in s:
+            # get global k values for this key, if it doesn't exist
+            # then put current in global min
             cur_min = min_result.get(k, None)
             if cur_min is None:
                 min_result[k] = va
+                changed = True
             else:
-                for i, ((_,_,_,ls), (_,_,_,lsc)) in enumerate(zip(va, cur_min)):
-                    if ls_cmp or (reverse and lsc < ls) or (not reverse and lsc > ls):
+                # for each k value in this group, we will compare
+                for i, (va_k, cur_k) in enumerate(zip(va, cur_min)):
+                    if ls_cmp or (reverse and cur_k[5] < va_k[5]) \
+                        or (not reverse and cur_k[5] > va_k[5]):
                         cur_min[i] = va[i]
                         changed = True
         if changed:
-            yield (out_xform(t) for t in va for va in min_result.values())
+            # flatten each list in dictionary value
+            yield (out_xform(t) for va in min_result.values() for t in va)
 
 

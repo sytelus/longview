@@ -98,7 +98,7 @@ class BasePlot:
                         else:
                             stream_plot.redraw_countdown -= 1
                         vals = eval_result.result
-                        if not utils.is_array_like(eval_result.result, allow_tuple=False):
+                        if not utils.is_array_like(eval_result.result, tuple_is_array=False):
                             vals = [vals]
                         self.render_stream_plot(stream_plot, vals, eval_result)
                     else:
