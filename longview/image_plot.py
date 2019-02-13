@@ -53,15 +53,15 @@ class ImagePlot(BasePlot):
 
             # combine in out images
             if img_out is not None and img_tar is not None and img_tar_weights is not None:
-                img_in = np.hstack((img_in, img_out, img_tar, img_tar_weights))
+                img_in = np.hstack((img_in, img_tar, img_out, img_tar_weights))
             elif img_out is not None and img_tar is not None:
-                img_in = np.hstack((img_in, img_out, img_tar))
+                img_in = np.hstack((img_in, img_tar, img_out))
             elif img_out is not None:
                 img_in = np.hstack((img_in, img_out))
             elif img_tar is not None:
-                img_in = np.hstack((img_in, np.zeros_like(img_tar), img_tar))
+                img_in = np.hstack((img_in, img_tar, np.zeros_like(img_tar)))
             elif img_tar is not None:
-                img_in = np.hstack((img_in, np.zeros_like(img_tar), img_tar))
+                img_in = np.hstack((img_in, img_tar, np.zeros_like(img_tar)))
 
             ax = stream_plot.axs[row][col]
             if ax is None:
