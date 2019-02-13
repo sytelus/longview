@@ -53,7 +53,9 @@ class WatchServer:
         self._event_counts[event_name] = event_index + 1
 
         stream_reqs = self._event_streams.get(event_name, {})
-        for stream_req in stream_reqs.values():
+        # TODO: remove list() call - currently needed because of error dictionary
+        # can't be changed - happens when multiple clients gets started
+        for stream_req in list(stream_reqs.values()):
             if stream_req.ended:
                 continue
             if stream_req.eval_end < event_index:

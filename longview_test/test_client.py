@@ -20,7 +20,7 @@ def dlc_show_rand_outputs():
         "top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=10, order='rnd')", 
         throttle=1)
     img_plot = lv.ImagePlot()
-    img_plot.show(imgs, img_width=39, img_height=69)
+    img_plot.show(imgs, img_width=39, img_height=69, viz_img_scale=10)
 
     lv.wait_key()
 

@@ -4,14 +4,16 @@ from . import utils
 import math
 from .base_plot import *
 import numpy as np
+import skimage.transform
 
 class ImagePlot(BasePlot):
     def init_stream_plot(self, stream, stream_plot, 
             rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
-            colormap=None):
+            colormap=None, viz_img_scale=None):
         stream_plot.rows, stream_plot.cols = rows, cols
         stream_plot.img_channels, stream_plot.colormap = img_channels, colormap
         stream_plot.img_width, stream_plot.img_height = img_width, img_height
+        stream_plot.viz_img_scale = viz_img_scale
         # subplots holding each image
         stream_plot.axs = [[None for _ in range(cols)] for _ in range(rows)] 
         # axis image
@@ -53,15 +55,15 @@ class ImagePlot(BasePlot):
 
             # combine in out images
             if img_out is not None and img_tar is not None and img_tar_weights is not None:
-                img_in = np.hstack((img_in, img_tar, img_out, img_tar_weights))
+                img_viz = np.hstack((img_in, img_tar, img_out, img_tar_weights))
             elif img_out is not None and img_tar is not None:
-                img_in = np.hstack((img_in, img_tar, img_out))
+                img_viz = np.hstack((img_in, img_tar, img_out))
             elif img_out is not None:
-                img_in = np.hstack((img_in, img_out))
+                img_viz = np.hstack((img_in, img_out))
             elif img_tar is not None:
-                img_in = np.hstack((img_in, img_tar, np.zeros_like(img_tar)))
+                img_viz = np.hstack((img_in, img_tar, np.zeros_like(img_tar)))
             elif img_tar is not None:
-                img_in = np.hstack((img_in, img_tar, np.zeros_like(img_tar)))
+                img_viz = np.hstack((img_in, img_tar, np.zeros_like(img_tar)))
 
             ax = stream_plot.axs[row][col]
             if ax is None:
@@ -69,19 +71,26 @@ class ImagePlot(BasePlot):
                     self.figure.add_subplot(stream_plot.rows, stream_plot.cols, i+1)
                 ax.set_xticks([])
                 ax.set_yticks([]) 
-            if img_in is not None:
-                dim = len(img_in.shape)
+
+            if img_viz is not None:
+                dim = len(img_viz.shape)
                 if dim == 1: # linearized pixels
                     channels = stream_plot.img_channels or 2
-                    dim0 = dim1 = int(math.pow(img_in.shape[0], 1/channels))
+                    dim0 = dim1 = int(math.pow(img_viz.shape[0], 1/channels))
                     if channels > 2:
-                        dim2 = img_in.shape[0] - dim0 - dim1
-                        img_in = img_in.reshape((dim0, dim1, dim2))
+                        dim2 = img_viz.shape[0] - dim0 - dim1
+                        img_viz = img_viz.reshape((dim0, dim1, dim2))
                     else:
-                        img_in = img_in.reshape((dim0, dim1))
+                        img_viz = img_viz.reshape((dim0, dim1))
                 cmap = 'Greys' if stream_plot.colormap is None and \
-                    (dim == 2 or (dim == 3 and img_in.shape[2] == 1)) else stream_plot.colormap
-                stream_plot.ax_imgs[row][col] = ax.imshow(img_in, interpolation="none", cmap=cmap)
+                    (dim == 2 or (dim == 3 and img_viz.shape[2] == 1)) else stream_plot.colormap
+
+                if stream_plot.viz_img_scale is not None:
+                    img_viz = skimage.transform.resize(img_viz, 
+                        tuple(img_viz.shape * np.array(stream_plot.viz_img_scale)))
+
+                stream_plot.ax_imgs[row][col] = ax.imshow(img_viz, interpolation="none", cmap=cmap)
+
             ax.set_title(label_in)
 
             row = row+1 if row < stream_plot.rows-1 else 0
