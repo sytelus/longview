@@ -28,18 +28,24 @@ class ImagePlot(BasePlot):
                     img.set_data(np.zeros(x, y))
 
     @staticmethod
-    def linear_to_2d(stream_plot, img_in):
-        if img_in is not None and len(img_in.shape) == 1: # linearized pixels
-            channels = stream_plot.img_channels or 2
-            if stream_plot.img_width:
-                dim0, dim1 = stream_plot.img_width, stream_plot.img_height
+    def to_2d(stream_plot, img_in):
+        if img_in is not None:
+            if len(img_in.shape) == 1: # linearized pixels
+                channels = stream_plot.img_channels or 2
+                if stream_plot.img_width:
+                    dim0, dim1 = stream_plot.img_width, stream_plot.img_height
+                else:
+                    dim0 = dim1 = int(math.pow(img_in.shape[0], 1/channels))
+                if channels > 2:
+                    dim2 = img_in.shape[0] - dim0 - dim1
+                    img_in = img_in.reshape((dim0, dim1, dim2))
+                else:
+                    img_in = img_in.reshape((dim0, dim1))
+            elif len(img_in.shape) == 2:
+                img_in = np.swapaxes(img_in, 0, 1) # transpose H,W for imshow
             else:
-                dim0 = dim1 = int(math.pow(img_in.shape[0], 1/channels))
-            if channels > 2:
-                dim2 = img_in.shape[0] - dim0 - dim1
-                img_in = img_in.reshape((dim0, dim1, dim2))
-            else:
-                img_in = img_in.reshape((dim0, dim1))
+                img_in = np.swapaxes(img_in, 2, 1) # transpose H,W for imshow
+
         return img_in
 
     def render_stream_plot(self, stream_plot, vals, eval_result):
@@ -48,10 +54,10 @@ class ImagePlot(BasePlot):
             val = val if isinstance(val, tuple) else (val,)
             unpacker = lambda a0,a1=None,a2=None,a3=None,a4=None:(a0,a1,a2,a3,a4)
             img_in, label_in, img_tar, img_out, img_tar_weights = unpacker(*val)
-            img_in, img_tar, img_out, img_tar_weights = ImagePlot.linear_to_2d(stream_plot, img_in), \
-                ImagePlot.linear_to_2d(stream_plot, img_tar), \
-                ImagePlot.linear_to_2d(stream_plot, img_out), \
-                ImagePlot.linear_to_2d(stream_plot, img_tar_weights)
+            img_in, img_tar, img_out, img_tar_weights = ImagePlot.to_2d(stream_plot, img_in), \
+                ImagePlot.to_2d(stream_plot, img_tar), \
+                ImagePlot.to_2d(stream_plot, img_out), \
+                ImagePlot.to_2d(stream_plot, img_tar_weights)
 
             # combine in out images
             if img_out is not None and img_tar is not None and img_tar_weights is not None:
@@ -82,12 +88,26 @@ class ImagePlot(BasePlot):
                         img_viz = img_viz.reshape((dim0, dim1, dim2))
                     else:
                         img_viz = img_viz.reshape((dim0, dim1))
+                elif dim == 3:
+                    if img_viz.shape[0] == 1:
+                        img_viz = np.squeeze(img_viz, axis=0)
+                        dim = 2
+                    else:
+                        img_viz = np.swapaxes(img_viz, 0, 2)
+                img_viz = np.swapaxes(img_viz, 1, 0)  # transpose H,W for imshow
+
+
+                # else leave things as-is
+
                 cmap = 'Greys' if stream_plot.colormap is None and \
-                    (dim == 2 or (dim == 3 and img_viz.shape[2] == 1)) else stream_plot.colormap
+                    dim == 2 else stream_plot.colormap
 
                 if stream_plot.viz_img_scale is not None:
-                    img_viz = skimage.transform.resize(img_viz, 
-                        tuple(img_viz.shape * np.array(stream_plot.viz_img_scale)))
+                    if len(img_viz.shape) > 2:
+                        scaled_shape = (*(img_viz.shape[:-1]*np.array(stream_plot.viz_img_scale)), img_viz.shape[-1])
+                    else:
+                        scaled_shape = tuple(img_viz.shape * np.array(stream_plot.viz_img_scale))
+                    img_viz = skimage.transform.resize(img_viz, scaled_shape)
 
                 stream_plot.ax_imgs[row][col] = ax.imshow(img_viz, interpolation="none", cmap=cmap)
 

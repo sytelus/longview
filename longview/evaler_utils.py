@@ -44,7 +44,8 @@ def pyt_img_img_out_xform(item): # (input, target, in_weight, out_weight, output
     tar_weight = item[3].data.cpu().numpy() if item[3] is not None else None
 
     # return in-image, text, out-image, target-image
-    return(input, "L:{:4f}".format(item[5]), target, output, tar_weight)
+    return(input, "L:{:4f}, S:{:4f}, {:4f}-{:4f}, {:4f}-{:4f}".format(item[5], input.std(), input.min(), input.max(), output.min(), output.max()), 
+           target, output, tar_weight)
 
 def cols2rows(batch):
     in_weight = utils.fill_like(batch.in_weight, batch.input)
