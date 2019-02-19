@@ -22,51 +22,14 @@ class WatchServer:
         else:
             raise RuntimeError("WatchServer is already open and must be closed before opne() call")
 
-    def _reset(self):
-        self._event_streams:Dict[str, StreamRequests] = {}
-        self._event_counts:Dict[str, int] = {}
-        self._stream_req_count = 0
-        self._log_globals = {}
-
-        self._publication = None 
-        self._clisrv = None
-        self.closed = True
-
-    def __enter__(self):
-        return self
-    def __exit__(self, exception_type, exception_value, traceback):
-        self.close()
-
-    def _clisrv_callback(self, clisrv, clisrv_req):
-        if clisrv_req.req_type == CliSrvReqTypes.create_stream:
-            return self.create_stream(clisrv_req.req_data)
-        elif clisrv_req.req_type == CliSrvReqTypes.del_stream:
-            return self.del_stream(clisrv_req.req_data)
+    def set_vars(self, event_name:str=None, **vars) -> None:
+        if event_name is None:
+            self._global_vars.update(vars)
         else:
-            raise ValueError('ClientServer Request Type {} is not recognized'.format(clisrv_req))
-
-    def log_globals(self, **vars):
-        self._log_globals.update(vars)
-
-    def log_event(self, event_name:str='', x=None, **vars) -> None:
-        event_index = self.get_event_index(event_name)
-        self._event_counts[event_name] = event_index + 1
-
-        stream_reqs = self._event_streams.get(event_name, {})
-        # TODO: remove list() call - currently needed because of error dictionary
-        # can't be changed - happens when multiple clients gets started
-        for stream_req in list(stream_reqs.values()):
-            if stream_req.ended:
-                continue
-            if stream_req.eval_end < event_index:
-                self._end_stream_req(stream_req)
-            else:
-                # throttle should be applied before eval
-                if stream_req.throttle is None or stream_req.last_sent is None or \
-                        time.time() - stream_req.last_sent >= stream_req.throttle:
-                    event_data = EventData(self._log_globals, **vars)
-                    self._eval_event_send(stream_req, event_data, x)
-                    stream_req.last_sent = time.time()
+            event_vars = self._event_vars.get(event_name, {})
+            event_vars.update(vars)
+            self._event_vars[event_name] = event_vars
+            self._exec_event(event_name)
 
     def get_event_index(self, event_name:str):
         return self._event_counts.get(event_name, -1)
@@ -75,36 +38,17 @@ class WatchServer:
         stream_reqs = self._event_streams.get(event_name, {})
         for stream_req in stream_reqs.values():
             self._end_stream_req(stream_req, disable_streams)
-     
-    def _end_stream_req(self, stream_req:StreamRequest, disable_stream:bool):
-        result, has_result = stream_req._evaler.post(ended=True, continue_thread=disable_stream)
-        event_name = stream_req.event_name
-        if disable_stream:
-            stream_req.ended = True
-            print("{} stream disabled".format(stream_req.stream_name))
-        eval_result = EvalResult(event_name, self.get_event_index(event_name), 
-            result, stream_req.stream_name, ended=True)
-        self._publication.send_obj(eval_result, TopicNames.event_eval)
 
     def del_stream(self, stream_req:StreamRequest):
         stream_reqs = self._event_streams.get(stream_req.event_name, {})
         stream_req = stream_reqs[stream_req.stream_name]
         stream_req.ended = True
         stream_req._evaler.abort()
-        #TODO: to enable delete we need to protect iteration in log_event
+        #TODO: to enable delete we need to protect iteration in set_vars
         #del stream_reqs[stream_req.stream_name]
         print("{} stream deleted".format(stream_req.stream_name))
         return stream_req.stream_num
 
-    def _eval_event_send(self, stream_req:StreamRequest, event_data:EventData, x=None):
-        result, has_result = stream_req._evaler.post(event_data)
-        if has_result:
-            event_name = stream_req.event_name
-            event_index = self.get_event_index(event_name)
-            eval_result = EvalResult(event_name, event_index,
-                result, stream_req.stream_name, x=x)
-            self._publication.send_obj(eval_result, TopicNames.event_eval)
-                
     def create_stream(self, stream_req:StreamRequest) -> int:
         stream_req._evaler = Evaler(stream_req.eval_f_s)
         stream_req.stream_num = self._stream_req_count
@@ -132,3 +76,67 @@ class WatchServer:
 
     def send_text(self, text:str, topic=""):
         self._publication.send_obj(text, topic)
+
+    def _reset(self):
+        self._event_streams:Dict[str, StreamRequests] = {}
+        self._event_counts:Dict[str, int] = {}
+        self._stream_req_count = 0
+        self._global_vars = {}
+        self._event_vars = {}
+
+        self._publication = None 
+        self._clisrv = None
+        self.closed = True
+
+    def __enter__(self):
+        return self
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.close()
+
+    def _clisrv_callback(self, clisrv, clisrv_req):
+        if clisrv_req.req_type == CliSrvReqTypes.create_stream:
+            return self.create_stream(clisrv_req.req_data)
+        elif clisrv_req.req_type == CliSrvReqTypes.del_stream:
+            return self.del_stream(clisrv_req.req_data)
+        else:
+            raise ValueError('ClientServer Request Type {} is not recognized'.format(clisrv_req))
+     
+    def _exec_event(self, event_name:str):
+        event_index = self.get_event_index(event_name)
+        self._event_counts[event_name] = event_index + 1
+
+        stream_reqs = self._event_streams.get(event_name, {})
+        # TODO: remove list() call - currently needed because of error dictionary
+        # can't be changed - happens when multiple clients gets started
+        for stream_req in list(stream_reqs.values()):
+            if stream_req.ended:
+                continue
+            if stream_req.eval_end < event_index:
+                self._end_stream_req(stream_req)
+            else:
+                # throttle should be applied before eval
+                if stream_req.throttle is None or stream_req.last_sent is None or \
+                        time.time() - stream_req.last_sent >= stream_req.throttle:
+                    event_data = EventData(self._global_vars, **self._event_vars[event_name])
+                    self._eval_event_send(stream_req, event_data)
+                    stream_req.last_sent = time.time()
+
+    def _end_stream_req(self, stream_req:StreamRequest, disable_stream:bool):
+        result, has_result = stream_req._evaler.post(ended=True, continue_thread=disable_stream)
+        event_name = stream_req.event_name
+        if disable_stream:
+            stream_req.ended = True
+            print("{} stream disabled".format(stream_req.stream_name))
+        eval_result = EvalResult(event_name, self.get_event_index(event_name), 
+            result, stream_req.stream_name, ended=True)
+        self._publication.send_obj(eval_result, TopicNames.event_eval)
+
+    def _eval_event_send(self, stream_req:StreamRequest, event_data:EventData):
+        result, has_result = stream_req._evaler.post(event_data)
+        if has_result:
+            event_name = stream_req.event_name
+            event_index = self.get_event_index(event_name)
+            eval_result = EvalResult(event_name, event_index,
+                result, stream_req.stream_name)
+            self._publication.send_obj(eval_result, TopicNames.event_eval)
+                

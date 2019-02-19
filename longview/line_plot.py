@@ -71,7 +71,7 @@ class LinePlot(BasePlot):
     def render_stream_plot(self, stream_plot, vals, eval_result):
         line = stream_plot.ax.get_lines()[-1]
         for val in vals:
-            x = eval_result.x or eval_result.event_index
+            x = eval_result.event_index
             y = val
             pt_label = None
 

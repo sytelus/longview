@@ -11,7 +11,6 @@ def show_find_lr():
     
     lv.wait_key()
 
-
 def dlc_show_rand_outputs():
     cli = cli_train = lv.WatchClient()
     #cli = lv.WatchClient()
@@ -121,8 +120,8 @@ mnist_plot_grads()
 mnist_plot_weight()
 mnist_worst_in_class()
 
-basic_show_graph()
 basic_read_stream()  
+basic_show_graph()
 basic_show_stream()
 
 
