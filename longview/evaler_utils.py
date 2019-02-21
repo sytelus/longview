@@ -33,7 +33,7 @@ def pyt_img_class_out_xform(item): # (input, target, in_weight, out_weight, outp
     # turn log-probabilities in to (max log-probability, class ID)
     output = torch.max(item[4],0)
     # return image, text
-    return(input, "T:{},Pb:{:4f},pd:{},L:{:4f}".\
+    return(input, "T:{},Pb:{:2f},pd:{:.2f},L:{:4f}".\
         format(item[1], math.exp(output[0]), output[1], item[5]))
 
 # use this for image to image translation problems

@@ -11,8 +11,7 @@ from .lv_types import *
 class WatchClient:
     class Stream:
         def __init__(self, clisrv, streams, event_name:str, eval_f_s:str,
-                callback:Callable[[EvalResult], None]=None, stream_name:str=None, 
-                eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
+                stream_name:str=None, eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
             self.closed = True
             self.stream_name = stream_name or str(uuid.uuid4())
             self.clisrv = clisrv
@@ -25,9 +24,6 @@ class WatchClient:
             self._streams = streams
 
             self._callbacks = {}
-            if callback is not None:
-                self._callbacks[callback] = callback
-
             self._streams[self.stream_name] = self
 
         def on_event_eval(self, eval_result:EvalResult):
@@ -97,10 +93,10 @@ class WatchClient:
             pass
             #print("Stream {} not handled".format(eval_result.stream_name))
 
-    def create_stream(self, event_name:str, eval_f_s:str, callback:Callable[[EvalResult], None]=None,
-            stream_name:str=None, eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
+    def create_stream(self, event_name:str, eval_f_s:str, stream_name:str=None, 
+        eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
 
-        stream = WatchClient.Stream(self._clisrv, self._streams, event_name, eval_f_s, callable, 
+        stream = WatchClient.Stream(self._clisrv, self._streams, event_name, eval_f_s,
             stream_name, eval_start, eval_end, throttle)
 
         return stream

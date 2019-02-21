@@ -44,6 +44,8 @@ class ImagePlot(BasePlot):
             elif len(img_in.shape) == 2:
                 img_in = np.swapaxes(img_in, 0, 1) # transpose H,W for imshow
             else:
+                if img_in.shape[0] > 3:
+                    img_in = img_in[0:1,:,:] # TODO allow config
                 img_in = np.swapaxes(img_in, 2, 1) # transpose H,W for imshow
 
         return img_in
@@ -70,6 +72,8 @@ class ImagePlot(BasePlot):
                 img_viz = np.hstack((img_in, img_tar, np.zeros_like(img_tar)))
             elif img_tar is not None:
                 img_viz = np.hstack((img_in, img_tar, np.zeros_like(img_tar)))
+            else:
+                img_viz = img_in
 
             ax = stream_plot.axs[row][col]
             if ax is None:

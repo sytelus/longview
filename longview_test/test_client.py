@@ -27,7 +27,6 @@ def mnist_worst_in_class():
     cli_train = lv.WatchClient()
     cli = lv.WatchClient()
 
-
     imgs = cli_train.create_stream('batch', 
         'top(l, out_xform=pyt_img_class_out_xform)', throttle=1)
     img_plot = lv.ImagePlot()
@@ -112,13 +111,14 @@ def basic_read_stream():
     print('done')
     lv.wait_key()
 
+mnist_worst_in_class()
+
 dlc_show_rand_outputs()
 show_find_lr()
 mnist_show_batch_stats()
 mnist_show_epoch_stats()
 mnist_plot_grads()
 mnist_plot_weight()
-mnist_worst_in_class()
 
 basic_read_stream()  
 basic_show_graph()
