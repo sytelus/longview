@@ -23,6 +23,17 @@ def dlc_show_rand_outputs():
 
     lv.wait_key()
 
+def img2img_rnd():
+    cli_train = lv.WatchClient()
+    cli = lv.WatchClient()
+
+    imgs = cli_train.create_stream('batch', 
+        "top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=2, order='rnd')", throttle=1)
+    img_plot = lv.ImagePlot()
+    img_plot.show(imgs, img_width=100, img_height=100, viz_img_scale=3, cols=1)
+
+    lv.wait_key()
+
 def mnist_worst_in_class():
     cli_train = lv.WatchClient()
     cli = lv.WatchClient()
@@ -111,7 +122,8 @@ def basic_read_stream():
     print('done')
     lv.wait_key()
 
-mnist_worst_in_class()
+
+img2img_rnd()
 
 dlc_show_rand_outputs()
 show_find_lr()
@@ -119,6 +131,7 @@ mnist_show_batch_stats()
 mnist_show_epoch_stats()
 mnist_plot_grads()
 mnist_plot_weight()
+mnist_worst_in_class()
 
 basic_read_stream()  
 basic_show_graph()

@@ -98,6 +98,7 @@ class ImagePlot(BasePlot):
                         dim = 2
                     else:
                         img_viz = np.swapaxes(img_viz, 0, 2)
+                        img_viz = np.swapaxes(img_viz, 1, 0)
                 img_viz = np.swapaxes(img_viz, 1, 0)  # transpose H,W for imshow
 
 
