@@ -16,6 +16,11 @@ class ClientServerRequest:
         self.req_type = req_type
         self.req_data = req_data
 
+class ServerMgmtMeg:
+    def __init__(self, event_name:str, event_args:Any=None):
+        self.event_name = event_name
+        self.event_args = event_args
+
 class EvalResult:
     def __init__(self, event_name:str, event_index:int, result:Any, 
             stream_name:str, ended:bool=False):
@@ -39,17 +44,17 @@ class StreamRequest:
 
         # below will be set by server side
         self.eval_f:EventEvalFunc = None
-        self.ended = False
+        self.disabled = False
         self._evaler = None
         self.throttle = throttle
         self.last_sent=None
 
 StreamRequests = Dict[str, StreamRequest] 
 
-
-
 class TopicNames:
     event_eval = 'EventEval'
+    srv_mgmt = 'ServerMgmt'
+
 class CliSrvReqTypes:
     create_stream = 'CreateStream'
     del_stream = 'DeleteStream'

@@ -44,7 +44,7 @@ class WatchServer:
     def del_stream(self, stream_req:StreamRequest):
         stream_reqs = self._event_streams.get(stream_req.event_name, {})
         stream_req = stream_reqs[stream_req.stream_name]
-        stream_req.ended = True
+        stream_req.disabled = True
         stream_req._evaler.abort()
         #TODO: to enable delete we need to protect iteration in set_vars
         #del stream_reqs[stream_req.stream_name]
@@ -119,7 +119,7 @@ class WatchServer:
         # TODO: remove list() call - currently needed because of error dictionary
         # can't be changed - happens when multiple clients gets started
         for stream_req in list(stream_reqs.values()):
-            if stream_req.ended:
+            if stream_req.disabled:
                 continue
             if stream_req.eval_end < event_index:
                 self._end_stream_req(stream_req)
@@ -145,7 +145,7 @@ class WatchServer:
         result, has_result = stream_req._evaler.post(ended=True, continue_thread=disable_stream)
         event_name = stream_req.event_name
         if disable_stream:
-            stream_req.ended = True
+            stream_req.disabled = True
             utils.debug_log("{} stream disabled".format(stream_req.stream_name), verbosity=1)
 
         eval_result = EvalResult(event_name, self.get_event_index(event_name), 
