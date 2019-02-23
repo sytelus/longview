@@ -101,3 +101,7 @@ class WatchClient:
 
         return stream
 
+    def print_to_srv(msg):
+        clisrv_req = ClientServerRequest(CliSrvReqTypes.print_msg, msg)
+        self._clisrv.request(clisrv_req)
+

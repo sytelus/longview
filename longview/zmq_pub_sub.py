@@ -190,8 +190,8 @@ class ZmqPubSub:
             else:
                 host = host or "localhost"
                 self._socket = context.socket(zmq.REQ)
-                self._socket.setsockopt(zmq.ZMQ_REQ_CORRELATE, 1)
-                self._socket.setsockopt(zmq.ZMQ_REQ_RELAXED, 1)
+                self._socket.setsockopt(zmq.REQ_CORRELATE, 1)
+                self._socket.setsockopt(zmq.REQ_RELAXED, 1)
 
                 utils.debug_log("Client connecting...", verbosity=1)
                 self._socket.connect("tcp://%s:%d" % (host, port))

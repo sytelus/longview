@@ -4,6 +4,7 @@ import threading
 from .lv_types import *
 from .evaler import Evaler
 import time
+from . import utils
 
 class WatchServer:
     _port_start = 40859
@@ -98,6 +99,9 @@ class WatchServer:
             return self.create_stream(clisrv_req.req_data)
         elif clisrv_req.req_type == CliSrvReqTypes.del_stream:
             return self.del_stream(clisrv_req.req_data)
+        elif clisrv_req.req_type == CliSrvReqTypes.print_msg:
+            print(clisrv_req.req_data)
+            return None
         else:
             raise ValueError('ClientServer Request Type {} is not recognized'.format(clisrv_req))
      

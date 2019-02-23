@@ -51,3 +51,4 @@ class TopicNames:
 class CliSrvReqTypes:
     create_stream = 'CreateStream'
     del_stream = 'DeleteStream'
+    print_msg = 'PrintMsg'
