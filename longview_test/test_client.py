@@ -122,6 +122,9 @@ def basic_read_stream():
     print('done')
     lv.wait_key()
 
+lv.set_debug_verbosity(10)
+
+mnist_show_batch_stats()
 
 img2img_rnd()
 

@@ -6,17 +6,18 @@ import uuid
 import queue
 import dill
 from .lv_types import *
+from . import utils
 
 
 class WatchClient:
     class Stream:
-        def __init__(self, clisrv, streams, event_name:str, eval_f_s:str,
+        def __init__(self, client_id:str, clisrv, streams, event_name:str, eval_f_s:str,
                 stream_name:str=None, eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
             self.closed = True
             self.stream_name = stream_name or str(uuid.uuid4())
             self.clisrv = clisrv
             self.stream_req = StreamRequest(event_name, eval_f_s, self.stream_name, 
-                eval_start, eval_end, throttle)
+                eval_start, eval_end, throttle, client_id)
             clisrv_req = ClientServerRequest(CliSrvReqTypes.create_stream, self.stream_req)
             self.clisrv.request(clisrv_req)
             self.closed = False
@@ -27,6 +28,7 @@ class WatchClient:
             self._streams[self.stream_name] = self
 
         def on_event_eval(self, eval_result:EvalResult):
+            utils.debug_log("Event eval received", eval_result.event_name)
             if self.closed:
                 return
             for callback in self._callbacks.keys():
@@ -78,13 +80,16 @@ class WatchClient:
     _port_start = 40859
 
     def __init__(self, pubsub_port=None, cliesrv_port=None, host="localhost"):
+        self.client_id = str(uuid.uuid4())
         self._streams = {}
         self._renderers = {}
-        
+        self._heartbeat_timer = threading.Timer(1, self._send_heartbeat)
+
         self._sub = ZmqPubSub.Subscription(pubsub_port or WatchClient._port_start, 
             TopicNames.event_eval, self._on_event_eval)
         self._clisrv = ZmqPubSub.ClientServer(cliesrv_port or WatchClient._port_start+1, False)
         WatchClient._port_start += 2
+        self._heartbeat_timer.start()
 
     def _on_event_eval(self, eval_result:EvalResult):
         if eval_result.stream_name in self._streams:
@@ -93,15 +98,19 @@ class WatchClient:
             pass
             #print("Stream {} not handled".format(eval_result.stream_name))
 
+    def _send_heartbeat(self):
+        clisrv_req = ClientServerRequest(CliSrvReqTypes.heartbeat, self.client_id)
+        self._clisrv.send_obj(clisrv_req)
+
     def create_stream(self, event_name:str, eval_f_s:str, stream_name:str=None, 
         eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
 
-        stream = WatchClient.Stream(self._clisrv, self._streams, event_name, eval_f_s,
+        stream = WatchClient.Stream(self.client_id, self._clisrv, self._streams, event_name, eval_f_s,
             stream_name, eval_start, eval_end, throttle)
 
         return stream
 
-    def print_to_srv(msg):
+    def print_to_srv(self, msg):
         clisrv_req = ClientServerRequest(CliSrvReqTypes.print_msg, msg)
         self._clisrv.request(clisrv_req)
 

@@ -4,6 +4,7 @@ import threading
 from .lv_types import *
 from .evaler import Evaler
 import time
+import sys
 from . import utils
 
 class WatchServer:
@@ -11,7 +12,7 @@ class WatchServer:
     def __init__(self, pubsub_port:int=None, cliesrv_port:int=None):
         self._reset()
         self.open(pubsub_port, cliesrv_port)
-        print("WatchServer started")
+        utils.debug_log("WatchServer started", verbosity=1)
 
     def open(self, pubsub_port:int=None, cliesrv_port:int=None):
         if self.closed:
@@ -47,7 +48,7 @@ class WatchServer:
         stream_req._evaler.abort()
         #TODO: to enable delete we need to protect iteration in set_vars
         #del stream_reqs[stream_req.stream_name]
-        print("{} stream deleted".format(stream_req.stream_name))
+        utils.debug_log("{} stream deleted".format(stream_req.stream_name), verbosity=1)
         return stream_req.stream_num
 
     def create_stream(self, stream_req:StreamRequest) -> int:
@@ -73,7 +74,7 @@ class WatchServer:
         if not self.closed:
             ZmqPubSub.close()
             self._reset()
-            print("WatchServer is closed")
+            utils.debug_log("WatchServer is closed", verbosity=1)
 
     def send_text(self, text:str, topic=""):
         self._publication.send_obj(text, topic)
@@ -84,10 +85,12 @@ class WatchServer:
         self._stream_req_count = 0
         self._global_vars = {}
         self._event_vars = {}
+        self._heartbeats = {}
 
         self._publication = None 
         self._clisrv = None
         self.closed = True
+        utils.debug_log("WatchServer resetted", verbosity=1)
 
     def __enter__(self):
         return self
@@ -97,6 +100,9 @@ class WatchServer:
     def _clisrv_callback(self, clisrv, clisrv_req):
         if clisrv_req.req_type == CliSrvReqTypes.create_stream:
             return self.create_stream(clisrv_req.req_data)
+        elif clisrv_req.req_type == CliSrvReqTypes.heartbeat:
+            self._heartbeats[clisrv_req.req_data] = time.time()
+            return None
         elif clisrv_req.req_type == CliSrvReqTypes.del_stream:
             return self.del_stream(clisrv_req.req_data)
         elif clisrv_req.req_type == CliSrvReqTypes.print_msg:
@@ -121,16 +127,27 @@ class WatchServer:
                 # throttle should be applied before eval
                 if stream_req.throttle is None or stream_req.last_sent is None or \
                         time.time() - stream_req.last_sent >= stream_req.throttle:
-                    event_data = EventData(self._global_vars, **self._event_vars[event_name])
-                    self._eval_event_send(stream_req, event_data)
-                    stream_req.last_sent = time.time()
+
+                    # check if client is still alive
+                    last_hb = self._heartbeats.get(stream_req.client_id, 0)
+                    if time.time() - last_hb > 3: #TODO: make configurable
+                        utils.debug_log("Event not sent because no heartbeat since {} from ".format(last_hb, 
+                                        stream_req.client_id), event_name, verbosity=4)
+                    else:
+                        stream_req.last_sent = time.time()
+                        event_data = EventData(self._global_vars, **self._event_vars[event_name])
+                        utils.debug_log("Sending event data", event_name)
+                        self._eval_event_send(stream_req, event_data)
+                else:
+                    utils.debug_log("Throttled", event_name, verbosity=5)
 
     def _end_stream_req(self, stream_req:StreamRequest, disable_stream:bool):
         result, has_result = stream_req._evaler.post(ended=True, continue_thread=disable_stream)
         event_name = stream_req.event_name
         if disable_stream:
             stream_req.ended = True
-            print("{} stream disabled".format(stream_req.stream_name))
+            utils.debug_log("{} stream disabled".format(stream_req.stream_name), verbosity=1)
+
         eval_result = EvalResult(event_name, self.get_event_index(event_name), 
             result, stream_req.stream_name, ended=True)
         self._publication.send_obj(eval_result, TopicNames.event_eval)
