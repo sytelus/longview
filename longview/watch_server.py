@@ -5,7 +5,9 @@ from .lv_types import *
 from .evaler import Evaler
 import time
 import sys
+import uuid
 from . import utils
+from .repeated_timer import RepeatedTimer
 
 class WatchServer:
     _port_start = 40859
@@ -21,8 +23,11 @@ class WatchServer:
                 True, callback=self._clisrv_callback)
             WatchServer._port_start += 2
             self.closed = False
+
+            self._heartbeat_timer = RepeatedTimer(1, self._send_heartbeat)
+            self._heartbeat_timer.start()
         else:
-            raise RuntimeError("WatchServer is already open and must be closed before opne() call")
+            raise RuntimeError("WatchServer is already open and must be closed before open() call")
 
     def set_vars(self, event_name:str=None, **vars) -> None:
         if event_name is None:
@@ -42,6 +47,7 @@ class WatchServer:
             self._end_stream_req(stream_req, disable_streams)
 
     def del_stream(self, stream_req:StreamRequest):
+        utils.debug_log("deleting stream", stream_req.stream_name)
         stream_reqs = self._event_streams.get(stream_req.event_name, {})
         stream_req = stream_reqs[stream_req.stream_name]
         stream_req.disabled = True
@@ -85,8 +91,9 @@ class WatchServer:
         self._stream_req_count = 0
         self._global_vars = {}
         self._event_vars = {}
-        self._heartbeats = {}
-
+        self._client_heartbeats = {}
+        self.server_id = str(uuid.uuid4())
+        
         self._publication = None 
         self._clisrv = None
         self.closed = True
@@ -101,7 +108,7 @@ class WatchServer:
         if clisrv_req.req_type == CliSrvReqTypes.create_stream:
             return self.create_stream(clisrv_req.req_data)
         elif clisrv_req.req_type == CliSrvReqTypes.heartbeat:
-            self._heartbeats[clisrv_req.req_data] = time.time()
+            self._client_heartbeats[clisrv_req.req_data] = time.time()
             return None
         elif clisrv_req.req_type == CliSrvReqTypes.del_stream:
             return self.del_stream(clisrv_req.req_data)
@@ -114,42 +121,48 @@ class WatchServer:
     def _exec_event(self, event_name:str):
         event_index = self.get_event_index(event_name)
         self._event_counts[event_name] = event_index + 1
-
         stream_reqs = self._event_streams.get(event_name, {})
+
+        if len(stream_reqs) == 0:
+            utils.debug_log("Executing event but no streams", event_name, verbosity=3)
+        else:
+            utils.debug_log("Executing event", event_name, verbosity=3)
+
         # TODO: remove list() call - currently needed because of error dictionary
         # can't be changed - happens when multiple clients gets started
         for stream_req in list(stream_reqs.values()):
             if stream_req.disabled:
                 continue
             if stream_req.eval_end < event_index:
-                self._end_stream_req(stream_req)
+                self._end_stream_req(stream_req, True)
             else:
                 # throttle should be applied before eval
                 if stream_req.throttle is None or stream_req.last_sent is None or \
                         time.time() - stream_req.last_sent >= stream_req.throttle:
 
                     # check if client is still alive
-                    last_hb = self._heartbeats.get(stream_req.client_id, 0)
+                    last_hb = self._client_heartbeats.get(stream_req.client_id, 0)
                     if time.time() - last_hb > 3: #TODO: make configurable
-                        utils.debug_log("Event not sent because no heartbeat since {} from ".format(last_hb, 
-                                        stream_req.client_id), event_name, verbosity=4)
+                        utils.debug_log("Event but no heartbeat since {} from ".format(last_hb, 
+                                        stream_req.client_id), event_name, verbosity=3)
                     else:
                         stream_req.last_sent = time.time()
                         event_data = EventData(self._global_vars, **self._event_vars[event_name])
                         utils.debug_log("Sending event data", event_name)
                         self._eval_event_send(stream_req, event_data)
                 else:
-                    utils.debug_log("Throttled", event_name, verbosity=5)
+                    utils.debug_log("Throttled", event_name, verbosity=3)
 
     def _end_stream_req(self, stream_req:StreamRequest, disable_stream:bool):
-        result, has_result = stream_req._evaler.post(ended=True, continue_thread=disable_stream)
+        result, has_result = stream_req._evaler.post(ended=True, 
+                                                     continue_thread=not disable_stream)
         event_name = stream_req.event_name
         if disable_stream:
             stream_req.disabled = True
             utils.debug_log("{} stream disabled".format(stream_req.stream_name), verbosity=1)
 
         eval_result = EvalResult(event_name, self.get_event_index(event_name), 
-            result, stream_req.stream_name, ended=True)
+            result, stream_req.stream_name, self.server_id, ended=True)
         self._publication.send_obj(eval_result, TopicNames.event_eval)
 
     def _eval_event_send(self, stream_req:StreamRequest, event_data:EventData):
@@ -158,6 +171,10 @@ class WatchServer:
             event_name = stream_req.event_name
             event_index = self.get_event_index(event_name)
             eval_result = EvalResult(event_name, event_index,
-                result, stream_req.stream_name)
+                result, stream_req.stream_name, self.server_id)
             self._publication.send_obj(eval_result, TopicNames.event_eval)
                 
+    def _send_heartbeat(self):
+        hb = ServerMgmtMsg('HB', self.server_id)
+        self._publication.send_obj(hb, TopicNames.srv_mgmt)
+        utils.debug_log("Sent - SeverMgmtevent", verbosity=6)

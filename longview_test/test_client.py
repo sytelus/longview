@@ -2,6 +2,9 @@ import longview as lv
 import time
 import math
 
+lv.set_debug_verbosity(4)
+
+
 def show_find_lr():
     cli_train = lv.WatchClient()
     plot = lv.LinePlot()
@@ -50,7 +53,7 @@ def mnist_plot_grads():
 
     grads = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
     grad_plot = lv.LinePlot()
-    grad_plot.show(grads, xlabel='Epoch', ylabel='Gradients', redraw_after=0, keep_old=40, dim_old=True)
+    grad_plot.show(grads, xlabel='Epoch', ylabel='Gradients', redraw_after=1, keep_old=40, dim_old=True)
 
     lv.wait_key()
 
@@ -59,7 +62,7 @@ def mnist_plot_weight():
 
     params = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.abs().mean().item()), l)', throttle=1)
     params_plot = lv.LinePlot()
-    params_plot.show(params, xlabel='Epoch', ylabel='avg |params|', redraw_after=0, keep_old=40, dim_old=True)
+    params_plot.show(params, xlabel='Epoch', ylabel='avg |params|', redraw_after=1, keep_old=40, dim_old=True)
 
     lv.wait_key()
 
@@ -103,14 +106,18 @@ def basic_show_graph():
 def basic_show_stream():
     cli = lv.WatchClient()
 
+    print("Subscribing to event LossEvent...")
     s1 = cli.create_stream("LossEvent", 'map(lambda v:math.sqrt(v.loss), l)')
     r1 = lv.TextPrinter('L1')
     r1.show(s1)
 
+    print("Subscribing to event Loss2Event...")
     s2 = cli.create_stream("Loss2Event", 'map(lambda v:v.loss2*v.loss2, l)')
     r2 = lv.TextPrinter('L2')
     r2.show(s2)
     
+    print("Waiting for key...")
+
     lv.wait_key()
 
 def basic_read_stream():
@@ -122,9 +129,8 @@ def basic_read_stream():
     print('done')
     lv.wait_key()
 
-lv.set_debug_verbosity(10)
 
-mnist_show_batch_stats()
+basic_show_stream()
 
 img2img_rnd()
 

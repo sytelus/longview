@@ -312,7 +312,8 @@ def add_windows_ctrl_c():
 _utils_debug_verbosity=0
 _utils_start_time = time.time()
 def set_debug_verbosity(verbosity=0):
+    global _utils_debug_verbosity
     _utils_debug_verbosity = verbosity
 def debug_log(msg, param=None, verbosity=3):
-    if _utils_debug_verbosity <= verbosity:
+    if _utils_debug_verbosity >= verbosity:
         print("[Debug][{}]: {} : {} : t={:.2f}".format(verbosity, msg, param, time.time()-_utils_start_time))

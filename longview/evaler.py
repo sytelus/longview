@@ -47,7 +47,7 @@ class Evaler:
         self.eval_f_s = eval_f_s
         self.reset()
 
-        self.th = threading.Thread(target=self._runner)
+        self.th = threading.Thread(target=self._runner, name='evaler')
         self.th.start()
 
     def reset(self):
@@ -62,7 +62,7 @@ class Evaler:
             l = self.g.get_vals() # this var will be used by eval
             eval_result = eval(self.eval_f_s)
             if isinstance(eval_result, Iterator):
-                for self.result in eval_result:
+                for i,self.result in enumerate(eval_result):
                     self.has_result = True
             else:
                 self.result = eval_result
@@ -72,8 +72,10 @@ class Evaler:
             if not self.continue_thread:
                 break
             self.reset()
-        
+        utils.debug_log('eval runner ended!', i)
+
     def abort(self):
+        utils.debug_log('Evaler Aborted')
         self.g.abort()
         self.continue_thread = False
         self.xwait.set()

@@ -18,7 +18,7 @@ class ZmqPubSub:
     def initialize():
         # create thread that will wait on IO Loop
         if ZmqPubSub._thread is None:
-            ZmqPubSub._thread = Thread(target=ZmqPubSub._run_io_loop, daemon=True)
+            ZmqPubSub._thread = Thread(target=ZmqPubSub._run_io_loop, name='ZMQIOLoop', daemon=True)
             ZmqPubSub._start_event = Event()
             ZmqPubSub._thread.start()
             # this is needed to make sure IO Loop has enough time to start
@@ -33,6 +33,14 @@ class ZmqPubSub:
             ZmqPubSub._ioloop = None
 
     @staticmethod
+    def get_timer(secs, callback, start=True):
+        utils.debug_log("Adding PeriodicCallback", secs)
+        pc = ioloop.PeriodicCallback(callback, secs * 1e3)
+        if (start):
+            pc.start()
+        return pc
+
+    @staticmethod
     def _run_io_loop():
         if 'asyncio' in sys.modules:
             # tornado may be using asyncio,
@@ -41,9 +49,11 @@ class ZmqPubSub:
             asyncio.set_event_loop(asyncio.new_event_loop())
 
         ZmqPubSub._ioloop = ioloop.IOLoop()
+        ZmqPubSub._ioloop.make_current()
         while ZmqPubSub._thread is not None:
             try:
                 ZmqPubSub._start_event.set()
+                utils.debug_log("starting ioloop...")
                 ZmqPubSub._ioloop.start()
             except zmq.ZMQError as e:
                 if e.errno == errno.EINTR:
@@ -118,7 +128,11 @@ class ZmqPubSub:
         def _add_sub(self, port, topic, callback, host):
             def callback_wrapper(callback, msg):
                 [topic, obj_s] = msg
-                callback(dill.loads(obj_s))
+                try:
+                    callback(dill.loads(obj_s))
+                except Exception:
+                    ZmqPubSub.close()
+                    raise
 
             # connect to publisher socket
             context = zmq.Context()

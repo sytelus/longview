@@ -1,6 +1,10 @@
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from .lv_types import *
 
+import matplotlib
+import os
+if os.name == 'posix' and "DISPLAY" not in os.environ:
+    matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 import matplotlib.pyplot as plt
 import matplotlib.lines
 from matplotlib.animation import FuncAnimation
@@ -61,19 +65,26 @@ class BasePlot:
                 title.set_weight('bold')
         return self._ax_main
 
-    def _add_eval_result(self, eval_result:EvalResult):
+    def _add_eval_result(self, eval_result:EvalResult, stream_reset:bool):
         """Callback whenever EvalResult becomes available"""
         with self.lock:
             stream_plot = self._stream_plots.get(eval_result.stream_name, None)
             if stream_plot is not None:
-                # check throttle
-                if stream_plot.throttle is None or stream_plot.last_update is None or \
-                        time.time() - stream_plot.last_update >= stream_plot.throttle:
+                if stream_reset:
+                    utils.debug_log("Stream reset", eval_result.event_name)
+                    self.redraw_countdown = 0
+                if eval_result is not None:
+                    # check throttle
+                    if stream_plot.throttle is None or stream_plot.last_update is None or \
+                            time.time() - stream_plot.last_update >= stream_plot.throttle:
 
-                    stream_plot.pending_evals.put(eval_result)
+                        stream_plot.pending_evals.put(eval_result)
 
-                    # update for throttle
-                    stream_plot.last_update = time.time()
+                        # update for throttle
+                        stream_plot.last_update = time.time()
+                    else:
+                        utils.debug_log("Value not plotted due to throttle", 
+                                        eval_result.event_name, verbosity=5)
             else:
                 print("Unrecognized stream received: {}".format(eval_result.stream_name))
 
@@ -81,6 +92,14 @@ class BasePlot:
         """Called on every graph animation update"""
         with self.lock:
             for stream_plot in self._stream_plots.values():
+                # if we need to redraw this plot
+                if stream_plot.redraw_countdown <= 0:
+                    utils.debug_log("Graph reset", stream_plot.stream.stream_name)
+                    # clear the plot
+                    self.clear_stream_plot(stream_plot)
+                    # reset count down
+                    stream_plot.redraw_countdown = stream_plot.redraw_after
+
                 # if we have something to render
                 while not stream_plot.pending_evals.empty():
                     eval_result = stream_plot.pending_evals.get()
@@ -89,14 +108,7 @@ class BasePlot:
                         if stream_plot.redraw_on_end:
                             stream_plot.redraw_countdown = 0
                     elif eval_result.result is not None:
-                        # if we need to redraw this plot
-                        if stream_plot.redraw_countdown <= 0:
-                            # clear the plot
-                            self.clear_stream_plot(stream_plot)
-                            # reset count down
-                            stream_plot.redraw_countdown = stream_plot.redraw_after
-                        else:
-                            stream_plot.redraw_countdown -= 1
+                        stream_plot.redraw_countdown -= 1
                         vals = eval_result.result
                         if not utils.is_array_like(eval_result.result, tuple_is_array=False):
                             vals = [vals]

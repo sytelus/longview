@@ -10,7 +10,7 @@ class LiveGraph:
         self.figure = plt.figure()
         self.line, = plt.plot(self.x_data, self.y_data)
         self.animation = FuncAnimation(self.figure, self.update, interval=1000)
-        self.th = Thread(target=self.thread_f, daemon=True)
+        self.th = Thread(target=self.thread_f, name='LiveGraph', daemon=True)
         self.th.start()
 
     def update(self, frame):

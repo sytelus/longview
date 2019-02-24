@@ -14,7 +14,7 @@ def install_handler():
 
 def work():
     time.sleep(10000)        
-t = threading.Thread(target=work)
+t = threading.Thread(target=work, name='ThreadTest')
 t.daemon = True
 t.start()
 while(True):

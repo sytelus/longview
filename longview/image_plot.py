@@ -1,8 +1,8 @@
+from .base_plot import *
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from .lv_types import *
 from . import utils
 import math
-from .base_plot import *
 import numpy as np
 import skimage.transform
 
