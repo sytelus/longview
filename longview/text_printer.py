@@ -6,8 +6,13 @@ class TextPrinter():
     def __init__(self, prefix=''):
         self.prefix = prefix
     def _add_eval_result(self, eval_result:EvalResult, stream_reset:bool):
-        print("{}- i:{}, ended:{}, result:{}, reset:{}".format(self.prefix, 
-            eval_result.event_index, eval_result.ended, eval_result.result, stream_reset))
+        if eval_result:
+            print("{}- i:{}, ended:{}, result:{}, reset:{}".format(self.prefix, 
+                eval_result.event_index, eval_result.ended, eval_result.result, stream_reset))
+        else:
+            print("{}- i:{}, ended:{}, result:{}, reset:{}".format(self.prefix, 
+                None, None, None, stream_reset))
+
     def show(self, *streams):
         for stream in streams:
             stream.subscribe(self._add_eval_result)

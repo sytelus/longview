@@ -43,7 +43,7 @@ class WatchClient:
             if not self.closed:
                 self._callbacks = {}
                 clisrv_req = ClientServerRequest(CliSrvReqTypes.del_stream, self.stream_req)
-                self.clisrv.request(clisrv_req)
+                self.clisrv.send_obj(clisrv_req)
                 del self._streams[self.stream_name]
                 self._qt = None
                 self.closed = True
@@ -89,11 +89,13 @@ class WatchClient:
 
             # resubscribe to stream
             clisrv_req = ClientServerRequest(CliSrvReqTypes.create_stream, self.stream_req)
-            self.clisrv.request(clisrv_req)
+            self.clisrv.send_obj(clisrv_req)
             self.closed = False
 
         def server_changed(self, server_id):
+            utils.debug_log('sending stream req..')
             self._send_stream_req()
+            utils.debug_log('sent stream req')
             for callback in self._callbacks.keys():
                 callback(None, stream_reset=True)
 
@@ -155,5 +157,5 @@ class WatchClient:
 
     def print_to_srv(self, msg):
         clisrv_req = ClientServerRequest(CliSrvReqTypes.print_msg, msg)
-        self._clisrv.request(clisrv_req)
+        self._clisrv.send_obj(clisrv_req)
 

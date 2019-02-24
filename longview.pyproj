@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{cc8abc7f-ede1-4e13-b6b7-0041a5ec66a7}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>longview_test\test_server.py</StartupFile>
+    <StartupFile>longview\watch_client.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
