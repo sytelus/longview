@@ -5,6 +5,7 @@ import sys
 import uuid
 import queue
 import dill
+import time
 from .lv_types import *
 from . import utils
 from .repeated_timer import RepeatedTimer
@@ -118,6 +119,7 @@ class WatchClient:
         self._sub_srv_mgmt = ZmqPubSub.Subscription(pubsub_port, 
             TopicNames.srv_mgmt, self._on_srv_mgmt)
 
+        self._last_server_hb = time.time()
         self._heartbeat_timer = RepeatedTimer(1, self._send_heartbeat)
         self._heartbeat_timer.start()
 
@@ -134,6 +136,8 @@ class WatchClient:
     def _on_srv_mgmt(self, mgmt_msg:ServerMgmtMsg):
         utils.debug_log("Received - SeverMgmtevent", verbosity=6)
         if mgmt_msg.event_name == 'HB':
+            self._last_server_hb = time.time()
+            self._heartbeat_timer.unpause()
             server_id = mgmt_msg.event_args
             if server_id != self.server_id and self.server_id is not None:
                 utils.debug_log("Server change detected", verbosity=1)
@@ -144,6 +148,9 @@ class WatchClient:
 
 
     def _send_heartbeat(self):
+        if time.time() - self._last_server_hb > 6: #make configurable
+            utils.debug_log("Server heartbeat lost, pausing client heartbeat", verbosity=1)
+            self._heartbeat_timer.pause()
         clisrv_req = ClientServerRequest(CliSrvReqTypes.heartbeat, self.client_id)
         self._clisrv.send_obj(clisrv_req)
 
