@@ -6,6 +6,7 @@ import os
 import inspect
 import types
 import re
+import uuid
 from collections import abc
 
 from functools import wraps
@@ -317,3 +318,10 @@ def set_debug_verbosity(verbosity=0):
 def debug_log(msg, param=None, verbosity=3):
     if _utils_debug_verbosity >= verbosity:
         print("[Debug][{}]: {} : {} : t={:.2f}".format(verbosity, msg, param, time.time()-_utils_start_time))
+
+def is_uuid4(s):
+    try:
+        val = uuid.UUID(s, version=4)
+        return val.hex == s
+    except ValueError:
+        return False

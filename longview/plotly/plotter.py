@@ -1,4 +1,6 @@
 import plotly 
+import plotly.offline
+import plotly.tools as tls
 import plotly.graph_objs as go
 import time
 
@@ -6,34 +8,60 @@ from ..lv_types import *
 from .. import utils
 
 class Plotter:
-    def __init__(self, title=None, rows=None, cols=None):
-        self.rows, self.cols = rows, cols
+    def __init__(self, title=None, rows=None, cols=None, subplot_titles=None):
+        self.title, self.rows, self.cols = title, rows, cols
         self._stream_plots = {}
         
         if rows or cols:
-            subplot = tls.make_subplots(rows, cols, print_grid=False)
+            subplot = tls.make_subplots(rows, cols, print_grid=False, 
+                                        subplot_titles=subplot_titles)
             self.figwig = go.FigureWidget(subplot)
         else:
             self.figwig = go.FigureWidget()
+            self.rows, self.cols = rows, cols
+        self.figwig.layout.title = title
+        
+    @staticmethod
+    def _get_subplot_id(row, col, cols):
+        cols = cols or 1
+        row, col = int(row or 0), int(col or 0)
+        return str(row * cols + col + 1)
 
-    def add(self, stream, style='line', title=None, row=None, col=None, show:bool=False):
+    def add(self, stream, style='line', title=None, row=None, col=None, 
+            xtitle=None, ytitle=None, show:bool=True):
         if stream:
+            plot_title = title or (stream.stream_name \
+                if not utils.is_uuid4(stream.stream_name) else ytitle)
+
             stream_plot = StreamPlot(stream, throttle=None, redraw_on_end=False, 
-                title=title, redraw_after=float('inf'), keep_old=False, dim_old=True)
+                title=plot_title, redraw_after=float('inf'), keep_old=False, dim_old=True)
             self._stream_plots[stream.stream_name] = stream_plot
+        
+            # plotly rebuilds trace object after assigning to figwig :(
             trace = Plotter._get_trace(stream_plot, style)
             self.figwig.add_trace(trace, row=row, col=col)
             stream_plot.trace = self.figwig.data[-1]
+            xaxis = self.figwig.layout['xaxis' + Plotter._get_subplot_id(row, col, self.cols)]
+            xaxis.title = xtitle
+            yaxis = self.figwig.layout['yaxis' + Plotter._get_subplot_id(row, col, self.cols)]
+            yaxis.title = ytitle
+
+            if not (self.title or self.rows or self.cols):
+                self.title = stream_plot.title
+                self.figwig.layout.title = self.title
+            
             stream.subscribe(self._add_eval_result)
             if show:
-                self.figwig
+                plotly.offline.iplot(self.figwig)
+            return self.figwig
             
     def show(self):
-        self.figwig
+        plotly.offline.iplot(self.figwig)
+        return self.figwig
                 
     @staticmethod
     def _get_trace(stream_plot, style):
-        return go.Scatter(x=[], y=[], mode='markers')
+        return go.Scatter(x=[], y=[], mode='lines', name=stream_plot.title)
          
     @staticmethod
     def _process_eval_result(stream_plot, eval_result, ):
