@@ -7,7 +7,7 @@ lv.set_debug_verbosity(4)
 
 def show_find_lr():
     cli_train = lv.WatchClient()
-    plot = lv.LinePlot()
+    plot = lv.mpl.LinePlot()
     
     train_batch_loss = cli_train.create_stream('batch', 'map(lambda d:(d.tt.scheduler.get_lr()[0], d.metrics.batch_loss), l)')
     plot.show(train_batch_loss, xlabel='Epoch', ylabel='Loss')
@@ -21,7 +21,7 @@ def dlc_show_rand_outputs():
     imgs = cli.create_stream('batch', 
         "top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=10, order='rnd')", 
         throttle=1)
-    img_plot = lv.ImagePlot()
+    img_plot = lv.mpl.ImagePlot()
     img_plot.show(imgs, img_width=39, img_height=69, viz_img_scale=10)
 
     lv.wait_key()
@@ -32,7 +32,7 @@ def img2img_rnd():
 
     imgs = cli_train.create_stream('batch', 
         "top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=2, order='rnd')", throttle=1)
-    img_plot = lv.ImagePlot()
+    img_plot = lv.mpl.ImagePlot()
     img_plot.show(imgs, img_width=100, img_height=100, viz_img_scale=3, cols=1)
 
     lv.wait_key()
@@ -43,7 +43,7 @@ def mnist_worst_in_class():
 
     imgs = cli_train.create_stream('batch', 
         'top(l, out_xform=pyt_img_class_out_xform)', throttle=1)
-    img_plot = lv.ImagePlot()
+    img_plot = lv.mpl.ImagePlot()
     img_plot.show(imgs)
 
     lv.wait_key()
@@ -52,7 +52,7 @@ def mnist_plot_grads():
     train_cli = lv.WatchClient()
 
     grads = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
-    grad_plot = lv.LinePlot()
+    grad_plot = lv.mpl.LinePlot()
     grad_plot.show(grads, xlabel='Epoch', ylabel='Gradients', redraw_after=1, keep_old=40, dim_old=True)
 
     lv.wait_key()
@@ -61,7 +61,7 @@ def mnist_plot_weight():
     train_cli = lv.WatchClient()
 
     params = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.abs().mean().item()), l)', throttle=1)
-    params_plot = lv.LinePlot()
+    params_plot = lv.mpl.LinePlot()
     params_plot.show(params, xlabel='Epoch', ylabel='avg |params|', redraw_after=1, keep_old=40, dim_old=True)
 
     lv.wait_key()
@@ -70,7 +70,7 @@ def mnist_show_epoch_stats():
     train_cli = lv.WatchClient()
     test_cli = lv.WatchClient()
 
-    plot = lv.LinePlot()
+    plot = lv.mpl.LinePlot()
 
     train_loss = train_cli.create_stream("epoch", 'map(lambda v:v.metrics.epoch_loss, l)')
     plot.show(train_loss, xlabel='Epoch', ylabel='Train Loss', final_show=False)
@@ -83,7 +83,7 @@ def mnist_show_batch_stats():
     train_cli = lv.WatchClient()
     test_cli = lv.WatchClient()
 
-    plot = lv.LinePlot()
+    plot = lv.mpl.LinePlot()
 
     train_loss = train_cli.create_stream("batch", 'map(lambda v:v.metrics.batch_loss, l)')
     plot.show(train_loss, xlabel='Epoch', ylabel='Train Loss', final_show=False)
@@ -94,25 +94,25 @@ def mnist_show_batch_stats():
 def basic_show_graph():
     cli = lv.WatchClient()
 
-    plot = lv.LinePlot()
+    plot = lv.mpl.LinePlot()
 
-    s1 = cli.create_stream("LossEvent", 'map(lambda v:math.sqrt(v.loss), l)')
-    plot.show(s1, 'i', 'sl', 'SqrtLoss', False)
+    s1 = cli.create_stream("ev_i", 'map(lambda v:math.sqrt(v.val), l)')
+    plot.show(s1, 'i', 'sl', 'sqrt ev_i', False)
 
-    s2 = cli.create_stream("Loss2Event", 'map(lambda v:v.loss2*v.loss2, l)')
-    plot.show(s2, 'i', 'l', 'Loss2')
+    s2 = cli.create_stream("ev_j", 'map(lambda v:v.val*v.val, l)')
+    plot.show(s2, 'i', 'l', 'ev_j')
 
 
 def basic_show_stream():
     cli = lv.WatchClient()
 
-    print("Subscribing to event LossEvent...")
-    s1 = cli.create_stream("LossEvent", 'map(lambda v:math.sqrt(v.loss), l)')
+    print("Subscribing to event ev_i...")
+    s1 = cli.create_stream("ev_i", 'map(lambda v:math.sqrt(v.val), l)')
     r1 = lv.TextPrinter('L1')
     r1.show(s1)
 
-    print("Subscribing to event Loss2Event...")
-    s2 = cli.create_stream("Loss2Event", 'map(lambda v:v.loss2*v.loss2, l)')
+    print("Subscribing to event ev_j...")
+    s2 = cli.create_stream("ev_j", 'map(lambda v:v.val*v.val, l)')
     r2 = lv.TextPrinter('L2')
     r2.show(s2)
     
@@ -123,18 +123,27 @@ def basic_show_stream():
 def basic_read_stream():
     cli = lv.WatchClient()
 
-    with cli.create_stream("Loss2Event", 'map(lambda v:math.sqrt(v.loss2), l)') as s1:
+    with cli.create_stream("ev_i", 'map(lambda v:math.sqrt(v.val), l)') as s1:
         for eval_result in s1:
             print(eval_result.result)
     print('done')
     lv.wait_key()
 
+def plotly_test():
+    cli = lv.WatchClient()
+    s1 = cli.create_stream("ev_i", 'map(lambda v:math.sqrt(v.val), l)')
 
-basic_show_stream()
+    p = lv.plotly.Plotter()
+    p.add(s1)
+    print(p.figwig)
 
-img2img_rnd()
+    lv.wait_key()
+
+########################################################################
+plotly_test()
 
 dlc_show_rand_outputs()
+img2img_rnd()
 show_find_lr()
 mnist_show_batch_stats()
 mnist_show_epoch_stats()

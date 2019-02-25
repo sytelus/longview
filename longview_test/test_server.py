@@ -5,13 +5,14 @@ lv.set_debug_verbosity(4)
 
 srv = lv.WatchServer()
 
-for i in range(100):
-    srv.set_vars("LossEvent", loss=i)
-    # print('sent loss ', i)
-    time.sleep(1)
-    for j in range(3):
-        srv.set_vars("Loss2Event", loss2=j)
-        # print('sent loss2 ', j)
+while(True):
+    for i in range(1000):
+        srv.set_vars("ev_i", val=i)
+        print('sent ev_i ', i)
         time.sleep(1)
-    srv.end_event("Loss2Event")
-srv.end_event("Loss1Event")
+        for j in range(3):
+            srv.set_vars("ev_j", val=j)
+            print('sent ev_j ', j)
+            time.sleep(1)
+        srv.end_event("ev_j")
+    srv.end_event("ev_i")

@@ -19,18 +19,25 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="longview\base_plot.py">
+    <Compile Include="longview\mpl\base_plot.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="longview\evaler.py" />
     <Compile Include="longview\evaler_utils.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="longview\image_plot.py">
+    <Compile Include="longview\mpl\image_plot.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="longview\lv_types.py" />
-    <Compile Include="longview\line_plot.py" />
+    <Compile Include="longview\mpl\line_plot.py" />
+    <Compile Include="longview\mpl\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="longview\plotly\plotter.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="longview\plotly\__init__.py" />
     <Compile Include="longview\repeated_timer.py">
       <SubType>Code</SubType>
     </Compile>
@@ -60,6 +67,8 @@
   <ItemGroup>
     <Folder Include="longview" />
     <Folder Include="longview.egg-info" />
+    <Folder Include="longview\mpl\" />
+    <Folder Include="longview\plotly\" />
     <Folder Include="longview_test" />
   </ItemGroup>
   <ItemGroup>

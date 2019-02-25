@@ -137,7 +137,10 @@ class WatchClient:
         utils.debug_log("Received - SeverMgmtevent", verbosity=6)
         if mgmt_msg.event_name == 'HB':
             self._last_server_hb = time.time()
-            self._heartbeat_timer.unpause()
+            if self._heartbeat_timer.get_state() == RepeatedTimer.State.Paused:
+                utils.debug_log("Server heartbeat received, restarting client heartbeat", 
+                    verbosity=1)
+                self._heartbeat_timer.unpause()
             server_id = mgmt_msg.event_args
             if server_id != self.server_id and self.server_id is not None:
                 utils.debug_log("Server change detected", verbosity=1)
@@ -149,7 +152,8 @@ class WatchClient:
 
     def _send_heartbeat(self):
         if time.time() - self._last_server_hb > 6: #make configurable
-            utils.debug_log("Server heartbeat lost, pausing client heartbeat", verbosity=1)
+            utils.debug_log("Server heartbeat lost, pausing client heartbeat", 
+                (time.time(), self._last_server_hb), verbosity=1)
             self._heartbeat_timer.pause()
         clisrv_req = ClientServerRequest(CliSrvReqTypes.heartbeat, self.client_id)
         self._clisrv.send_obj(clisrv_req)

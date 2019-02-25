@@ -105,7 +105,7 @@ class WatchServer:
         self.close()
 
     def _clisrv_callback(self, clisrv, clisrv_req):
-        utils.debug_log("Received client request", clisrv_req.req_type, verbosity=1)
+        utils.debug_log("Received client request", clisrv_req.req_type, verbosity=5)
 
         if clisrv_req.req_type == CliSrvReqTypes.create_stream:
             return self.create_stream(clisrv_req.req_data)
