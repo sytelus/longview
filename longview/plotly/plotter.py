@@ -21,6 +21,8 @@ class Plotter:
             self.figwig = go.FigureWidget()
             self.rows, self.cols = rows, cols
         self.figwig.layout.title = title
+        self.figwig.layout.showlegend=True
+        self.is_shown = False
         
     @staticmethod
     def _get_subplot_id(row, col, cols):
@@ -29,7 +31,7 @@ class Plotter:
         return str(row * cols + col + 1)
 
     def add(self, stream, style='line', title=None, row=None, col=None, 
-            xtitle=None, ytitle=None, show:bool=True):
+            xtitle=None, ytitle=None, show:bool=None):
         if stream:
             plot_title = title or (stream.stream_name \
                 if not utils.is_uuid4(stream.stream_name) else ytitle)
@@ -53,10 +55,14 @@ class Plotter:
             
             stream.subscribe(self._add_eval_result)
             if show:
-                #plotly.offline.iplot(self.figwig)
-                return self.figwig
-            
+                return self.show()
+            elif show is None and not self.is_shown:
+                return self.show()
+
+        return None
+                
     def show(self):
+        self.is_shown = True
         #plotly.offline.iplot(self.figwig)
         return self.figwig
 
