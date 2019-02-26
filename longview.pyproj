@@ -34,7 +34,13 @@
     <Compile Include="longview\mpl\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="longview\plotly\line_plotter.py" />
+    <Compile Include="longview\plotly\array_plotter.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="longview\plotly\base_plot.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="longview\plotly\line_plot.py" />
     <Compile Include="longview\plotly\__init__.py" />
     <Compile Include="longview\repeated_timer.py">
       <SubType>Code</SubType>
