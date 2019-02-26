@@ -38,7 +38,7 @@ class WatchClient:
                 self._qt[1].set()
 
         def subscribe(self, callback):
-            self._callbacks.append(Weakref.WeakMethod(callback))
+            self._callbacks.append(weakref.WeakMethod(callback))
         def unsubscribe(self, callback):
             for i in reversed(range(len(self._callbacks))):
                 if self._callbacks[i] and self._callbacks[i]() == callback:
@@ -110,14 +110,12 @@ class WatchClient:
 
     _port_start = 40859
 
-    def __init__(self, pubsub_port=None, cliesrv_port=None, host="localhost"):
+    def __init__(self, pubsub_port=None, cliesrv_port=None, server_index:int=0, host="localhost"):
         self.client_id = str(uuid.uuid4())
         self._streams = {}
 
-        pubsub_port = pubsub_port or WatchClient._port_start
-        cliesrv_port = cliesrv_port or WatchClient._port_start+1
-        WatchClient._port_start += int(pubsub_port == WatchClient._port_start) \
-                                + int(cliesrv_port == WatchClient._port_start+1)
+        pubsub_port = (pubsub_port or WatchClient._port_start) + server_index * 2
+        cliesrv_port = (cliesrv_port or WatchClient._port_start+1) + server_index * 2
 
         self._clisrv = ZmqPubSub.ClientServer(cliesrv_port, False)
 
