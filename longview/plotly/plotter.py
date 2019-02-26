@@ -25,10 +25,10 @@ class Plotter:
         self.is_shown = False
         
     @staticmethod
-    def _get_subplot_id(row, col, cols):
+    def _get_subplot_id(row, col, cols, trace_id):
         cols = cols or 1
         row, col = int(row or 0), int(col or 0)
-        return str(row * cols + col + 1)
+        return str(row * cols + col + 1 + trace_id)
 
     def add(self, stream, style='line', title=None, row=None, col=None, 
             xtitle=None, ytitle=None, show:bool=None):
@@ -41,13 +41,16 @@ class Plotter:
             self._stream_plots[stream.stream_name] = stream_plot
         
             # plotly rebuilds trace object after assigning to figwig :(
-            trace = Plotter._get_trace(stream_plot, style)
+            trace_id = stream_plot.trace_id = len(self.figwig.data)
+            trace = Plotter._get_trace(stream_plot, style, trace_id)
             self.figwig.add_trace(trace, row=row, col=col)
-            stream_plot.trace_id = len(self.figwig.data)-1
-            xaxis = self.figwig.layout['xaxis' + Plotter._get_subplot_id(row, col, self.cols)]
-            xaxis.title = xtitle
-            yaxis = self.figwig.layout['yaxis' + Plotter._get_subplot_id(row, col, self.cols)]
-            yaxis.title = ytitle
+
+            if xtitle:
+                xaxis = self.figwig.layout['xaxis' + Plotter._get_subplot_id(row, col, self.cols, trace_id)]
+                xaxis.title = xtitle
+            if ytitle:
+                key = 'yaxis' + Plotter._get_subplot_id(row, col, self.cols, trace_id)
+                self.figwig.layout[key] = {'title':ytitle, 'overlaying':'y', 'side':'left' if trace_id==0 else 'right' }
 
             if not (self.title or self.rows or self.cols):
                 self.title = stream_plot.title
@@ -67,8 +70,10 @@ class Plotter:
         return self.figwig
 
     @staticmethod
-    def _get_trace(stream_plot, style):
-        return go.Scatter(x=[], y=[], mode='lines', name=stream_plot.title)
+    def _get_trace(stream_plot, style, trace_id):
+        yaxis = 'y' + str(trace_id + 1)
+        trace = go.Scatter(x=[], y=[], mode='lines', name=stream_plot.title, yaxis=yaxis)
+        return trace
          
     @staticmethod
     def _process_eval_result(stream_plot, eval_result, ):
