@@ -3,6 +3,8 @@ import plotly.offline
 import plotly.tools as tls
 import plotly.graph_objs as go
 import time
+import threading
+import uuid
 
 from ..lv_types import *
 from .. import utils
@@ -11,6 +13,7 @@ class Plotter:
     def __init__(self, title=None, rows=None, cols=None, subplot_titles=None):
         self.title, self.rows, self.cols = title, rows, cols
         self._stream_plots = {}
+        self.lock = threading.Lock()
         
         if rows or cols:
             subplot = tls.make_subplots(rows, cols, print_grid=False, 
@@ -20,7 +23,13 @@ class Plotter:
             self.figwig = go.FigureWidget()
             self.rows, self.cols = rows, cols
         self.figwig.layout.title = title
+        self.figwig._uuided = str(uuid.uuid4())
         
+    def __del__(self):
+        print('deleting Plotter')
+        del self.figwig
+        del self._stream_plots
+
     @staticmethod
     def _get_subplot_id(row, col, cols):
         cols = cols or 1
@@ -40,7 +49,7 @@ class Plotter:
             # plotly rebuilds trace object after assigning to figwig :(
             trace = Plotter._get_trace(stream_plot, style)
             self.figwig.add_trace(trace, row=row, col=col)
-            stream_plot.trace = self.figwig.data[-1]
+            stream_plot.trace_id = len(self.figwig.data)-1
             xaxis = self.figwig.layout['xaxis' + Plotter._get_subplot_id(row, col, self.cols)]
             xaxis.title = xtitle
             yaxis = self.figwig.layout['yaxis' + Plotter._get_subplot_id(row, col, self.cols)]
@@ -52,13 +61,17 @@ class Plotter:
             
             stream.subscribe(self._add_eval_result)
             if show:
-                plotly.offline.iplot(self.figwig)
-            return self.figwig
+                #plotly.offline.iplot(self.figwig)
+                return self.figwig
             
     def show(self):
-        plotly.offline.iplot(self.figwig)
+        #plotly.offline.iplot(self.figwig)
         return self.figwig
                 
+    def analyse(self, figwig):
+        print(self.figwig == figwig)
+        print(len(figwig.data[0].x), len(self.figwig.data[0].x))
+
     @staticmethod
     def _get_trace(stream_plot, style):
         return go.Scatter(x=[], y=[], mode='lines', name=stream_plot.title)
@@ -76,13 +89,12 @@ class Plotter:
                 vals = [vals]
         return vals
     
-    @staticmethod
-    def _plot_eval_result(stream_plot, eval_result):
+    def _plot_eval_result(self, stream_plot, eval_result):
         vals = Plotter._process_eval_result(stream_plot, eval_result)
         if vals is None:
             return
         
-        trace = stream_plot.trace
+        trace = self.figwig.data[stream_plot.trace_id]
         for val in vals:
             x = eval_result.event_index
             y = val
@@ -97,17 +109,19 @@ class Plotter:
 
             # TODO: below will cause O(n^2) perf issue
             # https://community.plot.ly/t/why-does-data-in-scatter-trace-gets-converted-from-list-to-tuple/20060
-            xdata, ydata = list(trace.x), list(trace.y)
-            xdata.append(x)
-            ydata.append(y)
-            trace.x, trace.y = xdata, ydata
+            with self.lock:
+                xdata, ydata = list(trace.x), list(trace.y)
+                xdata.append(x)
+                ydata.append(y)
+                self.figwig.data[stream_plot.trace_id].x, self.figwig.data[stream_plot.trace_id].y = xdata, ydata
+                print (self.figwig._uuided, stream_plot.trace_id, len(self.figwig.data[stream_plot.trace_id].x), len(trace.x))
+            #print('added', x, y)
 
             # add annotation
             #if pt_label:
             #    stream_plot.xylabel_refs.append(stream_plot.ax.text( \
             #        x, y, pt_label))
 
-        
     def _add_eval_result(self, eval_result:EvalResult, stream_reset:bool):
         """Callback whenever EvalResult becomes available"""
         stream_plot = self._stream_plots.get(eval_result.stream_name, None)
@@ -120,7 +134,7 @@ class Plotter:
                 if stream_plot.throttle is None or stream_plot.last_update is None or \
                         time.time() - stream_plot.last_update >= stream_plot.throttle:
 
-                    Plotter._plot_eval_result(stream_plot, eval_result)
+                    self._plot_eval_result(stream_plot, eval_result)
 
                     # update for throttle
                     stream_plot.last_update = time.time()

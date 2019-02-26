@@ -54,13 +54,10 @@ class WatchServer:
         stream_req._evaler.abort()
         #TODO: to enable delete we need to protect iteration in set_vars
         #del stream_reqs[stream_req.stream_name]
-        return stream_req.stream_num
 
     def create_stream(self, stream_req:StreamRequest) -> int:
         utils.debug_log("creating stream", stream_req.stream_name)
         stream_req._evaler = Evaler(stream_req.eval_f_s)
-        stream_req.stream_num = self._stream_req_count
-        self._stream_req_count += 1
 
         if stream_req.eval_start < 0:
             stream_req.eval_start += events_len
@@ -74,8 +71,6 @@ class WatchServer:
                 stream_reqs = self._event_streams[stream_req.event_name] = {}
             stream_reqs[stream_req.stream_name] = stream_req
 
-        return stream_req.stream_num
-
     def close(self):
         if not self.closed:
             ZmqPubSub.close()
@@ -88,7 +83,6 @@ class WatchServer:
     def _reset(self):
         self._event_streams:Dict[str, StreamRequests] = {}
         self._event_counts:Dict[str, int] = {}
-        self._stream_req_count = 0
         self._global_vars = {}
         self._event_vars = {}
         self._client_heartbeats = {}

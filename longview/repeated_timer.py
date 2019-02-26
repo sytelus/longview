@@ -1,5 +1,6 @@
 import threading
 import time
+import weakref
 
 class RepeatedTimer:
     class State:
@@ -9,9 +10,8 @@ class RepeatedTimer:
 
     def __init__(self, secs, callback):
         self.secs = secs
-        self.callback = callback
+        self.callback = weakref.WeakMethod(callback) if callback else None
         self._thread = None
-        self._last_ret = None
         self._state = RepeatedTimer.State.Stopped
         self.pause_wait = threading.Event()
         self.pause_wait.set()
@@ -35,8 +35,6 @@ class RepeatedTimer:
     def get_state(self):
         return self._state
 
-    def get_last_ret(self):
-        return self._last_ret
 
     def pause(self):
         if self._state == RepeatedTimer.State.Running:
@@ -53,8 +51,8 @@ class RepeatedTimer:
     def _runner(self):
         while (self._continue_thread):
             self.pause_wait.wait()
-            if self.callback is not None:
-                self._last_ret = self.callback()
+            if self.callback and self.callback():
+                self.callback()()
             if self._continue_thread:
                 time.sleep(self.secs)
         self._thread = None

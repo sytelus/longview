@@ -7,6 +7,7 @@ import sys
 import time
 from threading import Thread, Event
 from . import utils
+import weakref
 
 class ZmqPubSub:
 
@@ -124,12 +125,18 @@ class ZmqPubSub:
             ZmqPubSub.initialize()
             ZmqPubSub._io_loop_call(False, self._add_sub,
                 port, topic=topic, callback=callback, host=host)
+            self._socket = None
+
+        def close(self):
+            if self._socket:
+                ZmqPubSub._io_loop_call(False, self._socket.close)
 
         def _add_sub(self, port, topic, callback, host):
-            def callback_wrapper(callback, msg):
+            def callback_wrapper(weak_callback, msg):
                 [topic, obj_s] = msg
                 try:
-                    callback(dill.loads(obj_s))
+                    if weak_callback and weak_callback():
+                        weak_callback()(dill.loads(obj_s))
                 except Exception:
                     ZmqPubSub.close()
                     raise
@@ -151,7 +158,8 @@ class ZmqPubSub:
             # for on_recv event - this would require running ioloop
             if callback is not None:
                 self._stream = zmqstream.ZMQStream(self._socket)
-                wrapper = functools.partial(callback_wrapper, callback)
+                wr_cb = weakref.WeakMethod(callback)
+                wrapper = functools.partial(callback_wrapper, wr_cb)
                 self._stream.on_recv(wrapper)
             #else use receive_obj
 
@@ -179,6 +187,10 @@ class ZmqPubSub:
             # otherwise variables would not be available
             ZmqPubSub._io_loop_call(True, self._connect,
                 port, is_server, callback, host)
+
+        def close(self):
+            if self._socket:
+                ZmqPubSub._io_loop_call(False, self._socket.close)
 
         def _connect(self, port, is_server, callback, host):
             def callback_wrapper(callback, msg):
