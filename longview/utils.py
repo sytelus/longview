@@ -319,9 +319,12 @@ def debug_log(msg, param=None, verbosity=3):
     if _utils_debug_verbosity >= verbosity:
         print("[Debug][{}]: {} : {} : t={:.2f}".format(verbosity, msg, param, time.time()-_utils_start_time))
 
-def is_uuid4(s):
+def get_uuid(hex = False):
+    return  str(uuid.uuid4()) if not hex else uuid.uuid4().hex
+
+def is_uuid4(s, hex=False):
     try:
         val = uuid.UUID(s, version=4)
-        return val.hex == s
+        return val.hex == s if hex else str(val) == s
     except ValueError:
         return False

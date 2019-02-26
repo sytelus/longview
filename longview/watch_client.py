@@ -13,14 +13,12 @@ from .repeated_timer import RepeatedTimer
 
 class WatchClient:
     class Stream:
-        def __init__(self, client_id:str, clisrv, streams, event_name:str, eval_f_s:str,
+        def __init__(self, client_id:str, clisrv, event_name:str, eval_f_s:str,
                 stream_name:str=None, eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
             self.stream_name = stream_name or str(uuid.uuid4())
             self._qt = None
-            self._streams = streams
             self.clisrv = clisrv
             self._callbacks = []
-            self._streams[self.stream_name] = self
             self.stream_req = StreamRequest(event_name, eval_f_s, self.stream_name, 
                 eval_start, eval_end, throttle, client_id)
 
@@ -30,12 +28,16 @@ class WatchClient:
             utils.debug_log("Event eval received", eval_result.event_name, verbosity=6)
             if self.closed:
                 return
-            for callback in self._callbacks:
-                if callback and callback():
-                    callback()(eval_result, stream_reset=False)
+            se = StreamEvent(StreamEvent.Type.eval_result, self.stream_name, eval_result)
+            self._make_callbacks(se)
             if self._qt is not None:
                 self._qt[0].put(eval_result)
                 self._qt[1].set()
+
+        def _make_callbacks(self, stream_event:StreamEvent):
+            for callback in self._callbacks:
+                if callback and callback():
+                    callback()(stream_event)
 
         def subscribe(self, callback):
             self._callbacks.append(weakref.WeakMethod(callback))
@@ -44,12 +46,11 @@ class WatchClient:
                 if self._callbacks[i] and self._callbacks[i]() == callback:
                     del self._callbacks[i]
 
-        def close(self):
+        def _close(self):
             if not self.closed:
                 self._callbacks = []
                 clisrv_req = ClientServerRequest(CliSrvReqTypes.del_stream, self.stream_req)
                 self.clisrv.send_obj(clisrv_req)
-                del self._streams[self.stream_name]
                 self._qt = None
                 self.closed = True
 
@@ -104,9 +105,9 @@ class WatchClient:
             utils.debug_log('sending stream req..')
             self._send_stream_req()
             utils.debug_log('sent stream req')
-            for callback in self._callbacks:
-                if callback and callback():
-                    callback()(None, stream_reset=True)
+
+            se = StreamEvent(StreamEvent.Type.reset, self.stream_name, None)
+            self._make_callbacks(se)
 
     _port_start = 40859
 
@@ -130,10 +131,6 @@ class WatchClient:
 
         self.server_id = None
         utils.debug_log("Client initialized")
-
-    # TODO: remove this
-    def __del__(self):
-        utils.debug_log('deleting WatchClient')
 
     def _on_event_eval(self, eval_result:EvalResult):
         if eval_result.stream_name in self._streams:
@@ -171,10 +168,15 @@ class WatchClient:
         eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
         utils.debug_log("Client - creating stream...", stream_name)
 
-        stream = WatchClient.Stream(self.client_id, self._clisrv, self._streams, event_name, eval_f_s,
+        stream = WatchClient.Stream(self.client_id, self._clisrv, event_name, eval_f_s,
             stream_name, eval_start, eval_end, throttle)
+        self._streams[stream.stream_name] = stream
 
         return stream
+
+    def close_stream(self, stream):
+        stream._close()
+        del self._streams[stream.stream_name]
 
     def print_to_srv(self, msg):
         clisrv_req = ClientServerRequest(CliSrvReqTypes.print_msg, msg)

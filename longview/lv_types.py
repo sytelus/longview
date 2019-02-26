@@ -33,6 +33,15 @@ class EvalResult:
 
 EventEvalFunc = Callable[[EventsData], EvalResult]
 
+class StreamEvent:
+    class Type:
+        eval_result = 'eval_result'
+        reset = 'reset'
+
+    def __init__(self, event_type, stream_name, eval_result):
+        self.event_type, self.stream_name, self.eval_result = \
+            event_type, stream_name, eval_result
+
 class StreamRequest:
     def __init__(self, event_name:str, eval_f_s:str, stream_name:str, 
             eval_start:int, eval_end:int, throttle:float, client_id:str):

@@ -4,7 +4,6 @@ import plotly.tools as tls
 import plotly.graph_objs as go
 import time
 import threading
-import uuid
 
 from ..lv_types import *
 from .. import utils
@@ -13,7 +12,6 @@ class Plotter:
     def __init__(self, title=None, rows=None, cols=None, subplot_titles=None):
         self.title, self.rows, self.cols = title, rows, cols
         self._stream_plots = {}
-        self.lock = threading.Lock()
         
         if rows or cols:
             subplot = tls.make_subplots(rows, cols, print_grid=False, 
@@ -23,13 +21,7 @@ class Plotter:
             self.figwig = go.FigureWidget()
             self.rows, self.cols = rows, cols
         self.figwig.layout.title = title
-        self.figwig._uuided = str(uuid.uuid4())
         
-    def __del__(self):
-        print('deleting Plotter')
-        del self.figwig
-        del self._stream_plots
-
     @staticmethod
     def _get_subplot_id(row, col, cols):
         cols = cols or 1
@@ -67,10 +59,6 @@ class Plotter:
     def show(self):
         #plotly.offline.iplot(self.figwig)
         return self.figwig
-                
-    def analyse(self, figwig):
-        print(self.figwig == figwig)
-        print(len(figwig.data[0].x), len(self.figwig.data[0].x))
 
     @staticmethod
     def _get_trace(stream_plot, style):
@@ -95,6 +83,7 @@ class Plotter:
             return
         
         trace = self.figwig.data[stream_plot.trace_id]
+        xdata, ydata = list(trace.x), list(trace.y)
         for val in vals:
             x = eval_result.event_index
             y = val
@@ -109,37 +98,39 @@ class Plotter:
 
             # TODO: below will cause O(n^2) perf issue
             # https://community.plot.ly/t/why-does-data-in-scatter-trace-gets-converted-from-list-to-tuple/20060
-            with self.lock:
-                xdata, ydata = list(trace.x), list(trace.y)
-                xdata.append(x)
-                ydata.append(y)
-                self.figwig.data[stream_plot.trace_id].x, self.figwig.data[stream_plot.trace_id].y = xdata, ydata
-                print (self.figwig._uuided, stream_plot.trace_id, len(self.figwig.data[stream_plot.trace_id].x), len(trace.x))
-            #print('added', x, y)
+            xdata.append(x)
+            ydata.append(y)
 
             # add annotation
             #if pt_label:
             #    stream_plot.xylabel_refs.append(stream_plot.ax.text( \
             #        x, y, pt_label))
 
-    def _add_eval_result(self, eval_result:EvalResult, stream_reset:bool):
-        """Callback whenever EvalResult becomes available"""
-        stream_plot = self._stream_plots.get(eval_result.stream_name, None)
-        if stream_plot is not None:
-            if stream_reset:
-                utils.debug_log("Stream reset", eval_result.event_name)
-                self.redraw_countdown = 0
-            if eval_result is not None:
-                # check throttle
-                if stream_plot.throttle is None or stream_plot.last_update is None or \
-                        time.time() - stream_plot.last_update >= stream_plot.throttle:
+        self.figwig.data[stream_plot.trace_id].x, self.figwig.data[stream_plot.trace_id].y = xdata, ydata
 
-                    self._plot_eval_result(stream_plot, eval_result)
 
-                    # update for throttle
-                    stream_plot.last_update = time.time()
-                else:
-                    utils.debug_log("Value not plotted due to throttle", 
-                                    eval_result.event_name, verbosity=5)
+    def _add_eval_result(self, stream_event:StreamEvent):
+        stream_plot = self._stream_plots.get(stream_event.stream_name, None)
+        if stream_plot is None:
+            utils.debug_log("Unrecognized stream received: {}".format(eval_result.stream_name))
+            return
+
+        if stream_event.event_type == StreamEvent.Type.reset:
+            utils.debug_log("Stream reset", stream_event.stream_name)
+            self.redraw_countdown = 0
+            self.figwig.data[stream_plot.trace_id].x, self.figwig.data[stream_plot.trace_id].x = [], []
+        elif stream_event.event_type == StreamEvent.Type.eval_result:
+            eval_result = stream_event.eval_result
+            # check throttle
+            if stream_plot.throttle is None or stream_plot.last_update is None or \
+                    time.time() - stream_plot.last_update >= stream_plot.throttle:
+
+                self._plot_eval_result(stream_plot, eval_result)
+
+                # update for throttle
+                stream_plot.last_update = time.time()
+            else:
+                utils.debug_log("Value not plotted due to throttle", 
+                                eval_result.event_name, verbosity=5)
         else:
-            print("Unrecognized stream received: {}".format(eval_result.stream_name))
+            utils.debug_log("Unsupported event type received")
