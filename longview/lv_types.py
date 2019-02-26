@@ -72,15 +72,8 @@ class CliSrvReqTypes:
     heartbeat = 'Heartbeat'
 
 class StreamPlot:
-    def __init__(self, stream, throttle, redraw_on_end, title, 
-            redraw_after, keep_old, dim_old):
+    def __init__(self, stream, throttle, title):
         self.stream = stream
         self.throttle = throttle
-        self.redraw_on_end = redraw_on_end
         self.title = title
-        self.last_update = None
-        self.pending_evals = queue.Queue()
-        self.redraw_after = redraw_after
-        self.keep_old = keep_old
-        self.dim_old = dim_old
-        self.redraw_countdown = redraw_after
+

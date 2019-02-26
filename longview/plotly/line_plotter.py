@@ -8,7 +8,7 @@ import threading
 from ..lv_types import *
 from .. import utils
 
-class Plotter:
+class LinePlotter:
     def __init__(self, title=None, rows=None, cols=None, subplot_titles=None):
         self.title, self.rows, self.cols = title, rows, cols
         self._stream_plots = {}
@@ -36,20 +36,19 @@ class Plotter:
             plot_title = title or (stream.stream_name \
                 if not utils.is_uuid4(stream.stream_name) else ytitle)
 
-            stream_plot = StreamPlot(stream, throttle=None, redraw_on_end=False, 
-                title=plot_title, redraw_after=float('inf'), keep_old=False, dim_old=True)
+            stream_plot = StreamPlot(stream, throttle=None, title=plot_title)
             self._stream_plots[stream.stream_name] = stream_plot
         
             # plotly rebuilds trace object after assigning to figwig :(
             trace_id = stream_plot.trace_id = len(self.figwig.data)
-            trace = Plotter._get_trace(stream_plot, style, trace_id)
+            trace = LinePlotter._get_trace(stream_plot, style, trace_id)
             self.figwig.add_trace(trace, row=row, col=col)
 
             if xtitle:
-                xaxis = self.figwig.layout['xaxis' + Plotter._get_subplot_id(row, col, self.cols, trace_id)]
+                xaxis = self.figwig.layout['xaxis' + LinePlotter._get_subplot_id(row, col, self.cols, trace_id)]
                 xaxis.title = xtitle
             if ytitle:
-                key = 'yaxis' + Plotter._get_subplot_id(row, col, self.cols, trace_id)
+                key = 'yaxis' + LinePlotter._get_subplot_id(row, col, self.cols, trace_id)
                 self.figwig.layout[key] = {'title':ytitle, 'overlaying':'y', 'side':'left' if trace_id==0 else 'right' }
 
             if not (self.title or self.rows or self.cols):
@@ -78,18 +77,15 @@ class Plotter:
     @staticmethod
     def _process_eval_result(stream_plot, eval_result, ):
         if eval_result.ended:
-            if stream_plot.redraw_on_end:
-                stream_plot.redraw_countdown = 0
             vals = None
         elif eval_result.result is not None:
-            stream_plot.redraw_countdown -= 1
             vals = eval_result.result
             if not utils.is_array_like(eval_result.result, tuple_is_array=False):
                 vals = [vals]
         return vals
     
     def _plot_eval_result(self, stream_plot, eval_result):
-        vals = Plotter._process_eval_result(stream_plot, eval_result)
+        vals = LinePlotter._process_eval_result(stream_plot, eval_result)
         if vals is None:
             return
         
@@ -128,7 +124,6 @@ class Plotter:
 
         if stream_event.event_type == StreamEvent.Type.reset:
             utils.debug_log("Stream reset", stream_event.stream_name)
-            self.redraw_countdown = 0
             self.figwig.data[stream_plot.trace_id].x, self.figwig.data[stream_plot.trace_id].x = [], []
         elif stream_event.event_type == StreamEvent.Type.eval_result:
             eval_result = stream_event.eval_result
