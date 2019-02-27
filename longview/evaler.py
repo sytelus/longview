@@ -49,6 +49,7 @@ class Evaler:
 
         self.th = threading.Thread(target=self._runner, name='evaler')
         self.th.start()
+        self.running = True
 
     def reset(self):
         self.g.reset()
@@ -72,16 +73,20 @@ class Evaler:
             if not self.continue_thread:
                 break
             self.reset()
-        utils.debug_log('eval runner ended!', i)
+        self.running = False
+        utils.debug_log('eval runner ended!')
 
     def abort(self):
         utils.debug_log('Evaler Aborted')
-        self.g.abort()
         self.continue_thread = False
+        self.g.abort()
         self.xwait.set()
         self.rwait.set()
 
     def post(self, val=None, ended=False, continue_thread=True):
+        if not self.running:
+            utils.debug_log('post was called when Evaler is not running')
+            return None, False
         self.result, self.has_result = None, False
         self.g.post(val, ended)
         self.xwait.wait()

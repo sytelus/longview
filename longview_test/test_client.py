@@ -50,6 +50,12 @@ def mnist_worst_in_class():
 
 def mnist_plot_grads():
     train_cli = lv.WatchClient()
+    grads = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
+    p = lv.plotly.ArrayPlot('Demo')
+    p.add(grads, xtitle='Epoch', ytitle='Gradients', history_len=30, new_on_eval=True)
+
+def mnist_plot_grads1():
+    train_cli = lv.WatchClient()
 
     grads = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
     grad_plot = lv.mpl.LinePlot()
@@ -129,26 +135,39 @@ def basic_read_stream():
     print('done')
     lv.wait_key()
 
-def plotly_test():
+def plotly_line_graph():
     cli = lv.WatchClient()
     s1 = cli.create_stream("ev_i", 'map(lambda v:math.sqrt(v.val), l)')
 
-    p = lv.plotly.Plotter()
+    p = lv.plotly.LinePlot()
     p.add(s1)
     print(p.figwig)
 
     lv.wait_key()
 
+def plotly_array_graph():
+    cli = lv.WatchClient()
+    s1 = cli.create_stream('ev_j', 'map(lambda v:math.sqrt(v.val)*2, l)')
+
+    p = lv.plotly.ArrayPlot('Demo')
+    p.add(s1, xtitle='Index', ytitle='sqrt(ev_j)', history_len=3, new_on_end=True)
+    lv.wait_key()
+
+
+
 ########################################################################
-plotly_test()
+mnist_plot_grads()
+plotly_array_graph()
+plotly_line_graph()
 
 dlc_show_rand_outputs()
 img2img_rnd()
 show_find_lr()
 mnist_show_batch_stats()
 mnist_show_epoch_stats()
-mnist_plot_grads()
+
 mnist_plot_weight()
+mnist_plot_grads1()
 mnist_worst_in_class()
 
 basic_read_stream()  

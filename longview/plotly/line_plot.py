@@ -5,26 +5,29 @@ from ..lv_types import *
 from .. import utils
 
 class LinePlot(BasePlot):
-    def _setup_layout(self, stream_plot, **layout_args):
-        xtitle = layout_args.get('xtitle',None)
-        ytitle = layout_args.get('ytitle',None)
-        trace_id = stream_plot.trace_id
+    def _setup_layout(self, stream_plot):
+        xtitle = stream_plot.stream_args.get('xtitle',None)
+        ytitle = stream_plot.stream_args.get('ytitle',None)
 
         if xtitle:
-            xaxis = self.figwig.layout['xaxis' + str(trace_id+1)]
+            xaxis = self.figwig.layout['xaxis' + str(stream_plot.index+1)]
             xaxis.title = xtitle
         if ytitle:
-            key = 'yaxis' + str(trace_id+1)
+            key = 'yaxis' + str(stream_plot.index+1)
             self.figwig.layout[key] = {'title':ytitle, 
-                                       'overlaying':'y', 'side':'left' if trace_id==0 else 'right' }
+                                       'overlaying':'y', 'side':'left' if stream_plot.index==0 else 'right' }
 
     def _get_trace(self, stream_plot):
-        yaxis = 'y' + str(stream_plot.trace_id + 1)
+        separate_yaxis = stream_plot.stream_args.get('separate_yaxis', False)
+
+        yaxis = 'y' + (str(stream_plot.index + 1) if separate_yaxis else '')
         trace = go.Scatter(x=[], y=[], mode='lines', name=stream_plot.title, yaxis=yaxis)
         return trace
 
     def _plot_eval_result(self, vals, stream_plot, eval_result):
-        trace = self.figwig.data[stream_plot.trace_id]
+        if not vals:
+            return
+        trace = self.figwig.data[stream_plot.trace_index]
         xdata, ydata = list(trace.x), list(trace.y)
         for val in vals:
             x = eval_result.event_index
@@ -38,8 +41,6 @@ class LinePlot(BasePlot):
             if val_l > 2:
                 pt_label = str(val[2])
 
-            # TODO: below will cause O(n^2) perf issue
-            # https://community.plot.ly/t/why-does-data-in-scatter-trace-gets-converted-from-list-to-tuple/20060
             xdata.append(x)
             ydata.append(y)
 
@@ -48,6 +49,6 @@ class LinePlot(BasePlot):
             #    stream_plot.xylabel_refs.append(stream_plot.ax.text( \
             #        x, y, pt_label))
 
-        self.figwig.data[stream_plot.trace_id].x, self.figwig.data[stream_plot.trace_id].y = xdata, ydata   
+        self.figwig.data[stream_plot.trace_index].x, self.figwig.data[stream_plot.trace_index].y = xdata, ydata   
 
     

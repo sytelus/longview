@@ -44,7 +44,8 @@ class WatchServer:
     def end_event(self, event_name:str='', disable_streams=False) -> None:
         stream_reqs = self._event_streams.get(event_name, {})
         for stream_req in stream_reqs.values():
-            self._end_stream_req(stream_req, disable_streams)
+            if not stream_req.disabled:
+                self._end_stream_req(stream_req, disable_streams)
 
     def del_stream(self, stream_req:StreamRequest):
         utils.debug_log("deleting stream", stream_req.stream_name)

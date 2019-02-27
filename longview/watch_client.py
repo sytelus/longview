@@ -61,7 +61,7 @@ class WatchClient:
             self.close()
 
         def __del__(self):
-            self.close()
+            self._close()
 
         def __iter__(self):
             self._qt = (queue.Queue(), threading.Event())

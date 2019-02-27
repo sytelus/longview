@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{cc8abc7f-ede1-4e13-b6b7-0041a5ec66a7}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>longview_test\circ_ref.py</StartupFile>
+    <StartupFile>longview_test\test_server.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -34,7 +34,7 @@
     <Compile Include="longview\mpl\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="longview\plotly\array_plotter.py">
+    <Compile Include="longview\plotly\array_plot.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="longview\plotly\base_plot.py">
@@ -53,30 +53,12 @@
     <Compile Include="longview\watch_server.py" />
     <Compile Include="longview\zmq_pub_sub.py" />
     <Compile Include="longview\__init__.py" />
-    <Compile Include="longview_test\circ_ref.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="longview_test\live_graph.py" />
-    <Compile Include="longview_test\test_client.py" />
-    <Compile Include="longview_test\test_evaler.py" />
-    <Compile Include="longview_test\test_server.py" />
-    <Compile Include="longview_test\test_zmq_cli.py" />
-    <Compile Include="longview_test\test_zmq_srv.py" />
-    <Compile Include="longview_test\thread_test.py" />
     <Compile Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="longview.egg-info\dependency_links.txt" />
-    <Content Include="longview.egg-info\requires.txt" />
-    <Content Include="longview.egg-info\SOURCES.txt" />
-    <Content Include="longview.egg-info\top_level.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="longview" />
-    <Folder Include="longview.egg-info" />
     <Folder Include="longview\mpl\" />
     <Folder Include="longview\plotly\" />
-    <Folder Include="longview_test" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
