@@ -14,7 +14,9 @@ class LinePlot(BasePlot):
         ytitle = stream_plot.stream_args.get('ytitle',None)
         ztitle = stream_plot.stream_args.get('ztitle',None)
 
+        # handle multiple y axis
         yaxis = 'yaxis' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
+
         if xtitle:
             xaxis = 'xaxis' + str(stream_plot.index+1)
             axis_props = BasePlot._get_axis_common_props(xtitle)
@@ -35,14 +37,11 @@ class LinePlot(BasePlot):
                     axis_props['position'] = 1 - 0.085*(stream_plot.index-2)
             self.figwig.layout[yaxis] = axis_props
         if self.is_3d and ztitle:
-            zaxis = 'zaxis' + str(stream_plot.index+1)
+            zaxis = 'zaxis' #+ str(stream_plot.index+1)
             axis_props = BasePlot._get_axis_common_props(ztitle)
-            self.figwig.layout[zaxis] = axis_props
+            self.figwig.layout.scene[zaxis] = axis_props
 
     def _create_2d_trace(self, stream_plot, mode):
-        separate_yaxis = stream_plot.stream_args.get('separate_yaxis', True)
-        stream_plot.separate_yaxis = separate_yaxis
-
         yaxis = 'y' + (str(stream_plot.index + 1) if separate_yaxis else '')
 
         trace = go.Scatter(x=[], y=[], mode=mode, name=stream_plot.title, yaxis=yaxis,
@@ -56,6 +55,8 @@ class LinePlot(BasePlot):
 
 
     def _create_trace(self, stream_plot):
+        separate_yaxis = stream_plot.stream_args.get('separate_yaxis', True)
+        stream_plot.separate_yaxis = separate_yaxis
         draw_line = stream_plot.stream_args.get('draw_line',True)
         draw_marker = stream_plot.stream_args.get('draw_marker',True)
         mode = 'lines' if draw_line else ''
@@ -87,7 +88,7 @@ class LinePlot(BasePlot):
             val_l = utils.is_scaler_array(val)
             if val_l > 1:
                 x, y = val[0], val[1]
-            elif val_l > 2:
+            if val_l > 2:
                 if self.is_3d:
                     z = val[2]
                     if val_l > 3:
