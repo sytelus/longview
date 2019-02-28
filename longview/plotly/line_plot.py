@@ -8,30 +8,33 @@ class LinePlot(BasePlot):
     def _setup_layout(self, stream_plot):
         xtitle = stream_plot.stream_args.get('xtitle',None)
         ytitle = stream_plot.stream_args.get('ytitle',None)
+        ztitle = stream_plot.stream_args.get('ztitle',None)
         
         yaxis = 'yaxis' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
         if xtitle:
-            xaxis = self.figwig.layout['xaxis' + str(stream_plot.index+1)]
-            xaxis.title = xtitle
+            xaxis = 'xaxis' + str(stream_plot.index+1)
+            axis_props = BasePlot._get_axis_common_props(xtitle)
+            self.figwig.layout[xaxis] = axis_props
         if ytitle:
+            # handle multiple Y-Axis plots
             color = self.figwig.data[stream_plot.trace_index].line.color
             yaxis = 'yaxis' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
-            vals = {'title':ytitle, 'showline':True, 'showgrid': True, 'showticklabels': True, 'ticks':'inside'}
-            vals['linecolor'] = color
-            vals['tickfont']=vals['titlefont'] = dict(color=color)
+            axis_props = BasePlot._get_axis_common_props(ytitle)
+            axis_props['linecolor'] = color
+            axis_props['tickfont']=axis_props['titlefont'] = dict(color=color)
             if stream_plot.index > 0 and stream_plot.separate_yaxis:
-                vals['overlaying'] = 'y'
-                vals['side'] = 'right'
+                axis_props['overlaying'] = 'y'
+                axis_props['side'] = 'right'
                 if stream_plot.index > 1:
                     self.figwig.layout.xaxis = dict(domain=[0, 1 - 0.085*(stream_plot.index-1)])
-                    vals['anchor'] = 'free'
-                    vals['position'] = 1 - 0.085*(stream_plot.index-2)
-
-            self.figwig.layout[yaxis] = vals
+                    axis_props['anchor'] = 'free'
+                    axis_props['position'] = 1 - 0.085*(stream_plot.index-2)
+            self.figwig.layout[yaxis] = axis_props
 
     def _create_trace(self, stream_plot):
         separate_yaxis = stream_plot.stream_args.get('separate_yaxis', True)
         stream_plot.separate_yaxis = separate_yaxis
+
         yaxis = 'y' + (str(stream_plot.index + 1) if separate_yaxis else '')
 
         trace = go.Scatter(x=[], y=[], mode='lines', name=stream_plot.title, yaxis=yaxis,

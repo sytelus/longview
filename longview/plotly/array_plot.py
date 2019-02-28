@@ -2,10 +2,13 @@ from .line_plot import *
 import numpy as np
 
 class ArrayPlot(LinePlot):
-    def _post_init(self):
+    def __init__(self, title=None):
+        super(ArrayPlot, self).__init__(title)
         self.figwig.layout.showlegend = False
 
-    def _post_add(self, stream_plot):
+    def _create_trace(self, stream_plot):
+        super(ArrayPlot, self)._create_trace(stream_plot)
+
         # keep current trace in history
         stream_plot.trace_history = [stream_plot.trace_index]
         stream_plot.trace_history_index = 0
@@ -43,7 +46,7 @@ class ArrayPlot(LinePlot):
 
         super(ArrayPlot, self)._plot_eval_result(vals, stream_plot, eval_result)
 
-    def _post_stream_reset(self, stream_plot):
+    def _after_stream_reset(self, stream_plot):
         for thi in range(cur_history_index, cur_history_index+history_len):
             thi = thi % history_len
             trace_index = stream_plot.trace_history[thi]

@@ -8,16 +8,14 @@ from ..lv_types import *
 from .. import utils
 
 class BasePlot(ABC):
-    def __init__(self, title=None, **plot_args):
+    def __init__(self, title=None):
         self.title = title
         self._stream_plots = {}
-        self.plot_args = plot_args
         
         self.figwig = go.FigureWidget()
         self.figwig.layout.title = title
         self.figwig.layout.showlegend = True
         self.is_shown = False
-        self._post_init()
       
     @abstractmethod
     def _setup_layout(self):
@@ -28,11 +26,7 @@ class BasePlot(ABC):
     @abstractmethod
     def _plot_eval_result(self, vals, stream_plot, eval_result):
         pass      
-    def _post_init(self):
-        pass
-    def _post_add(self, stream_plot):
-        pass
-    def _post_stream_reset(self, stream_plot):
+    def _after_stream_reset(self, stream_plot):
         pass
 
     def add(self, stream, show:bool=None, **stream_args):
@@ -55,8 +49,6 @@ class BasePlot(ABC):
                 self.figwig.layout.title = stream_plot.title
 
             stream.subscribe(self._add_eval_result)
-
-            self._post_add(stream_plot)
 
             if show:
                 return self.show()
@@ -84,6 +76,11 @@ class BasePlot(ABC):
                 vals = [vals]
         return vals
 
+    @staticmethod
+    def _get_axis_common_props(title:str):
+        return {'title':title, 'showline':True, 'showgrid': True, 
+                       'showticklabels': True, 'ticks':'inside'}
+
     def _add_eval_result(self, stream_event:StreamEvent):
         stream_plot = self._stream_plots.get(stream_event.stream_name, None)
         if stream_plot is None:
@@ -94,7 +91,7 @@ class BasePlot(ABC):
             utils.debug_log("Stream reset", stream_event.stream_name)
             self.figwig.data[stream_plot.trace_index].x = []
             self.figwig.data[stream_plot.trace_index].y = []
-            self._post_stream_reset(stream_plot)
+            self._after_stream_reset(stream_plot)
         elif stream_event.event_type == StreamEvent.Type.eval_result:
             eval_result = stream_event.eval_result
             if eval_result.exception is not None:
