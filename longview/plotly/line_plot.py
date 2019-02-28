@@ -44,7 +44,7 @@ class LinePlot(BasePlot):
         trace = self.figwig.data[stream_plot.trace_index]
         xdata, ydata = list(trace.x), list(trace.y)
         for val in vals:
-            x = eval_result.event_index
+            x =  eval_result.event_index
             y = val
             pt_label = None
 

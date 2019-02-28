@@ -12,7 +12,7 @@ while(True):
         print('sent ev_i ', i)
         time.sleep(1)
         for j in range(3):
-            srv.set_vars("ev_j", val=j*random.random())
+            srv.set_vars("ev_j", x=j, val=j*random.random())
             print('sent ev_j ', j)
             time.sleep(1)
         srv.end_event("ev_j")

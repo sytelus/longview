@@ -2,6 +2,7 @@ import dill
 import math
 import queue
 import threading
+import sys
 from functools import *
 from collections.abc import Iterable, Iterator
 
@@ -61,7 +62,11 @@ class Evaler:
     def _runner(self):
         while True:
             l = self.g.get_vals() # this var will be used by eval
-            eval_result = eval(self.eval_f_s)
+            try:
+                eval_result = eval(self.eval_f_s)
+            except Exception as e:
+                print(e, file=sys.stderr)
+                eval_result = None
             if isinstance(eval_result, Iterator):
                 for i,self.result in enumerate(eval_result):
                     self.has_result = True
