@@ -13,7 +13,7 @@ class LinePlot(BasePlot):
         xtitle = stream_plot.stream_args.get('xtitle',None)
         ytitle = stream_plot.stream_args.get('ytitle',None)
         ztitle = stream_plot.stream_args.get('ztitle',None)
-        
+
         yaxis = 'yaxis' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
         if xtitle:
             xaxis = 'xaxis' + str(stream_plot.index+1)
@@ -39,27 +39,32 @@ class LinePlot(BasePlot):
             axis_props = BasePlot._get_axis_common_props(ztitle)
             self.figwig.layout[zaxis] = axis_props
 
-    def _create_2d_trace(self, stream_plot):
+    def _create_2d_trace(self, stream_plot, mode):
         separate_yaxis = stream_plot.stream_args.get('separate_yaxis', True)
         stream_plot.separate_yaxis = separate_yaxis
 
         yaxis = 'y' + (str(stream_plot.index + 1) if separate_yaxis else '')
 
-        trace = go.Scatter(x=[], y=[], mode='lines', name=stream_plot.title, yaxis=yaxis,
+        trace = go.Scatter(x=[], y=[], mode=mode, name=stream_plot.title, yaxis=yaxis,
                            line=dict(color=BasePlot.get_pallet_color(stream_plot.index)))
         return trace
 
-    def _create_3d_trace(self, stream_plot):
-        trace = go.Scatter3d(x=[], y=[], z=[], mode='lines', name=stream_plot.title,
+    def _create_3d_trace(self, stream_plot, mode):
+        trace = go.Scatter3d(x=[], y=[], z=[], mode=mode, name=stream_plot.title,
                            line=dict(color=BasePlot.get_pallet_color(stream_plot.index)))
         return trace
 
 
     def _create_trace(self, stream_plot):
+        draw_line = stream_plot.stream_args.get('draw_line',True)
+        draw_marker = stream_plot.stream_args.get('draw_marker',True)
+        mode = 'lines' if draw_line else ''
+        mode = ('' if mode=='' else mode+'+') + 'markers' if draw_marker else ''
+
         if self.is_3d:
-            return self._create_3d_trace(stream_plot)  
+            return self._create_3d_trace(stream_plot, mode)  
         else:
-            return self._create_2d_trace(stream_plot)  
+            return self._create_2d_trace(stream_plot, mode)  
 
     def _plot_eval_result(self, vals, stream_plot, eval_result):
         if not vals:
