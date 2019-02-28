@@ -5,6 +5,10 @@ from ..lv_types import *
 from .. import utils
 
 class LinePlot(BasePlot):
+    def __init__(self, title=None, is_3d:bool=False):
+        super(LinePlot, self).__init__(title)
+        self.is_3d = is_3d
+
     def _setup_layout(self, stream_plot):
         xtitle = stream_plot.stream_args.get('xtitle',None)
         ytitle = stream_plot.stream_args.get('ytitle',None)
@@ -30,8 +34,12 @@ class LinePlot(BasePlot):
                     axis_props['anchor'] = 'free'
                     axis_props['position'] = 1 - 0.085*(stream_plot.index-2)
             self.figwig.layout[yaxis] = axis_props
+        if self.is_3d and ztitle:
+            zaxis = 'zaxis' + str(stream_plot.index+1)
+            axis_props = BasePlot._get_axis_common_props(ztitle)
+            self.figwig.layout[zaxis] = axis_props
 
-    def _create_trace(self, stream_plot):
+    def _create_2d_trace(self, stream_plot):
         separate_yaxis = stream_plot.stream_args.get('separate_yaxis', True)
         stream_plot.separate_yaxis = separate_yaxis
 
@@ -41,31 +49,63 @@ class LinePlot(BasePlot):
                            line=dict(color=BasePlot.get_pallet_color(stream_plot.index)))
         return trace
 
+    def _create_3d_trace(self, stream_plot):
+        trace = go.Scatter3d(x=[], y=[], z=[], mode='lines', name=stream_plot.title,
+                           line=dict(color=BasePlot.get_pallet_color(stream_plot.index)))
+        return trace
+
+
+    def _create_trace(self, stream_plot):
+        if self.is_3d:
+            return self._create_3d_trace(stream_plot)  
+        else:
+            return self._create_2d_trace(stream_plot)  
+
     def _plot_eval_result(self, vals, stream_plot, eval_result):
         if not vals:
             return
+
+        # get trace data
         trace = self.figwig.data[stream_plot.trace_index]
-        xdata, ydata = list(trace.x), list(trace.y)
+        xdata, ydata, zdata = list(trace.x), list(trace.y), []
+        if self.is_3d:
+            zdata = list(trace.z)
+
+        # add each value in trace data
         for val in vals:
             x =  eval_result.event_index
             y = val
+            z = None
             pt_label = None
 
             # if val turns out to be array-like, extract x,y
             val_l = utils.is_scaler_array(val)
-            if val_l >= 2:
+            if val_l > 1:
                 x, y = val[0], val[1]
-            if val_l > 2:
-                pt_label = str(val[2])
+            elif val_l > 2:
+                if self.is_3d:
+                    z = val[2]
+                    if val_l > 3:
+                        pt_label = str(val[3])
+                else:
+                    pt_label = str(val[2])
 
             xdata.append(x)
             ydata.append(y)
+            zdata.append(z)
 
             # add annotation
             #if pt_label:
             #    stream_plot.xylabel_refs.append(stream_plot.ax.text( \
             #        x, y, pt_label))
 
-        self.figwig.data[stream_plot.trace_index].x, self.figwig.data[stream_plot.trace_index].y = xdata, ydata   
+        self.figwig.data[stream_plot.trace_index].x = xdata
+        self.figwig.data[stream_plot.trace_index].y = ydata   
+        if self.is_3d:
+            self.figwig.data[stream_plot.trace_index].z = zdata
 
-    
+    def clear_plot(self, stream_plot):
+        self.figwig.data[stream_plot.trace_index].x = []
+        self.figwig.data[stream_plot.trace_index].y = []   
+        if self.is_3d:
+            self.figwig.data[stream_plot.trace_index].z = []

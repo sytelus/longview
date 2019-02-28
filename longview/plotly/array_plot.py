@@ -46,7 +46,7 @@ class ArrayPlot(LinePlot):
 
         super(ArrayPlot, self)._plot_eval_result(vals, stream_plot, eval_result)
 
-    def _after_stream_reset(self, stream_plot):
+    def clear_plot(self, stream_plot):
         for thi in range(cur_history_index, cur_history_index+history_len):
             thi = thi % history_len
             trace_index = stream_plot.trace_history[thi]

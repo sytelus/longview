@@ -26,15 +26,18 @@ class BasePlot(ABC):
     @abstractmethod
     def _plot_eval_result(self, vals, stream_plot, eval_result):
         pass      
-    def _after_stream_reset(self, stream_plot):
+    @abstractmethod
+    def clear_plot(self, stream_plot):
         pass
 
-    def add(self, stream, show:bool=None, **stream_args):
+    def add(self, stream, show:bool=None, clear_after_end=True, **stream_args):
         if stream:
             plot_title = self.title or (stream.stream_name \
                 if not utils.is_uuid4(stream.stream_name) else stream_args['ytitle'])
 
             stream_plot = StreamPlot(stream, throttle=None, title=stream_args['ytitle'])
+            stream_plot.clear_after_end = clear_after_end
+            stream_plot._last_event_ended = False
             stream_plot.index = len(self._stream_plots)
             stream_plot.stream_args = stream_args
             self._stream_plots[stream.stream_name] = stream_plot
@@ -89,14 +92,19 @@ class BasePlot(ABC):
 
         if stream_event.event_type == StreamEvent.Type.reset:
             utils.debug_log("Stream reset", stream_event.stream_name)
-            self.figwig.data[stream_plot.trace_index].x = []
-            self.figwig.data[stream_plot.trace_index].y = []
-            self._after_stream_reset(stream_plot)
+            self.clear_plot(stream_plot)
         elif stream_event.event_type == StreamEvent.Type.eval_result:
             eval_result = stream_event.eval_result
             if eval_result.exception is not None:
                 print(eval_result.exception, file=sys.stderr)
                 raise eval_result.exception
+
+            # state management for _last_event_ended
+            if stream_plot._last_event_ended and stream_plot.clear_after_end:
+                self.clear_plot(stream_plot)
+            stream_plot._last_event_ended = False
+            if eval_result.ended:
+                stream_plot._last_event_ended = True
 
             # check throttle
             if eval_result.ended or \
