@@ -22,7 +22,7 @@ class BasePlot(ABC):
     def _setup_layout(self):
         pass
     @abstractmethod
-    def _get_trace(self, stream_plot):
+    def _create_trace(self, stream_plot):
         pass
     @abstractmethod
     def _plot_eval_result(self, vals, stream_plot, eval_result):
@@ -37,15 +37,15 @@ class BasePlot(ABC):
     def add(self, stream, show:bool=None, **stream_args):
         if stream:
             plot_title = self.title or (stream.stream_name \
-                if not utils.is_uuid4(stream.stream_name) else ytitle)
+                if not utils.is_uuid4(stream.stream_name) else stream_args['ytitle'])
 
-            stream_plot = StreamPlot(stream, throttle=None, title=plot_title)
+            stream_plot = StreamPlot(stream, throttle=None, title=stream_args['ytitle'])
             stream_plot.index = len(self._stream_plots)
             stream_plot.stream_args = stream_args
             self._stream_plots[stream.stream_name] = stream_plot
         
             stream_plot.trace_index = len(self.figwig.data)
-            trace = self._get_trace(stream_plot)
+            trace = self._create_trace(stream_plot)
             self.figwig.add_trace(trace)
 
             self._setup_layout(stream_plot)
@@ -68,6 +68,10 @@ class BasePlot(ABC):
         self.is_shown = True
         #plotly.offline.iplot(self.figwig)
         return self.figwig
+
+    @staticmethod
+    def get_pallet_color(i:int):
+        return plotly.colors.DEFAULT_PLOTLY_COLORS[i % len(plotly.colors.DEFAULT_PLOTLY_COLORS)]
 
     @staticmethod
     def _extract_vals(stream_plot, eval_result):

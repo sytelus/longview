@@ -21,7 +21,7 @@ class ArrayPlot(LinePlot):
                 if history_len > len(stream_plot.trace_history):
                     # add new trace
                     cur_history_index = len(stream_plot.trace_history)
-                    trace = self._get_trace(stream_plot)
+                    trace = self._create_trace(stream_plot)
                     self.figwig.add_trace(trace)
                     stream_plot.trace_history.append(len(self.figwig.data)-1)
                 else:
