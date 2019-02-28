@@ -93,6 +93,9 @@ class BasePlot:
                     if eval_result.ended:
                         if stream_plot.redraw_on_end:
                             stream_plot.redraw_countdown = 0
+                    elif eval_result.exception is not None:
+                        print(eval_result.exception, file=sys.stderr)
+                        raise eval_result.exception
                     elif eval_result.result is not None:
                         stream_plot.redraw_countdown -= 1
                         vals = eval_result.result

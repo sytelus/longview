@@ -1,6 +1,7 @@
 import plotly 
 import plotly.graph_objs as go
 import time
+import sys
 from abc import ABC, abstractmethod
 
 from ..lv_types import *
@@ -75,9 +76,9 @@ class BasePlot(ABC):
 
     @staticmethod
     def _extract_vals(stream_plot, eval_result):
-        if eval_result.ended:
+        if eval_result.ended or eval_result.result is None:
             vals = None
-        elif eval_result.result is not None:
+        else:
             vals = eval_result.result
             if not utils.is_array_like(eval_result.result, tuple_is_array=False):
                 vals = [vals]
@@ -96,10 +97,14 @@ class BasePlot(ABC):
             self._post_stream_reset(stream_plot)
         elif stream_event.event_type == StreamEvent.Type.eval_result:
             eval_result = stream_event.eval_result
+            if eval_result.exception is not None:
+                print(eval_result.exception, file=sys.stderr)
+                raise eval_result.exception
 
             # check throttle
-            if stream_plot.throttle is None or stream_plot.last_update is None or \
-                    time.time() - stream_plot.last_update >= stream_plot.throttle:
+            if eval_result.ended or \
+                stream_plot.throttle is None or stream_plot.last_update is None or \
+                time.time() - stream_plot.last_update >= stream_plot.throttle:
 
                 vals = BasePlot._extract_vals(stream_plot, eval_result)
                 self._plot_eval_result(vals, stream_plot, eval_result)

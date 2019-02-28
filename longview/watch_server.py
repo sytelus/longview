@@ -151,24 +151,25 @@ class WatchServer:
                     utils.debug_log("Throttled", event_name, verbosity=5)
 
     def _end_stream_req(self, stream_req:StreamRequest, disable_stream:bool):
-        result, has_result = stream_req._evaler.post(ended=True, 
-                                                     continue_thread=not disable_stream)
+        eval_return = stream_req._evaler.post(ended=True, 
+            continue_thread=not disable_stream)
+
         event_name = stream_req.event_name
         if disable_stream:
             stream_req.disabled = True
             utils.debug_log("{} stream disabled".format(stream_req.stream_name), verbosity=1)
 
         eval_result = EvalResult(event_name, self.get_event_index(event_name), 
-            result, stream_req.stream_name, self.server_id, ended=True)
+            eval_return, stream_req.stream_name, self.server_id, ended=True)
         self._publication.send_obj(eval_result, TopicNames.event_eval)
 
     def _eval_event_send(self, stream_req:StreamRequest, event_data:EventData):
-        result, has_result = stream_req._evaler.post(event_data)
-        if has_result:
+        eval_return = stream_req._evaler.post(event_data)
+        if eval_return.is_valid:
             event_name = stream_req.event_name
             event_index = self.get_event_index(event_name)
             eval_result = EvalResult(event_name, event_index,
-                result, stream_req.stream_name, self.server_id)
+                eval_return, stream_req.stream_name, self.server_id)
             self._publication.send_obj(eval_result, TopicNames.event_eval)
                 
     def _send_heartbeat(self):

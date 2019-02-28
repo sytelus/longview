@@ -32,6 +32,7 @@ class ZmqPubSub:
             ZmqPubSub._ioloop.add_callback(ZmqPubSub._ioloop.stop)
             ZmqPubSub._thread = None
             ZmqPubSub._ioloop = None
+            print("ZMQ IOLoop is now closed")
 
     @staticmethod
     def get_timer(secs, callback, start=True):
@@ -138,7 +139,6 @@ class ZmqPubSub:
                     if weak_callback and weak_callback():
                         weak_callback()(dill.loads(obj_s))
                 except Exception:
-                    ZmqPubSub.close()
                     raise
 
             # connect to publisher socket

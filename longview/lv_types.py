@@ -21,11 +21,19 @@ class ServerMgmtMsg:
         self.event_name = event_name
         self.event_args = event_args
 
+class EvalReturn:
+    def __init__(self, result=None, is_valid=False, exception=None):
+        self.result, self.exception, self.is_valid = \
+            result, exception, is_valid
+    def reset(self):
+        self.result, self.exception, self.is_valid = \
+            None, None, False
 class EvalResult:
-    def __init__(self, event_name:str, event_index:int, result:Any, 
+    def __init__(self, event_name:str, event_index:int, eval_return:EvalReturn,
             stream_name:str, server_id:str, ended:bool=False):
         self.event_name = event_name
-        self.result = result
+        self.result = eval_return.result
+        self.exception = eval_return.exception
         self.stream_name = stream_name
         self.event_index = event_index
         self.ended = ended
