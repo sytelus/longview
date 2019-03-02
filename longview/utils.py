@@ -328,3 +328,18 @@ def is_uuid4(s, hex=False):
         return val.hex == s if hex else str(val) == s
     except ValueError:
         return False
+
+def frange(start, stop=None, step=None, steps=None):
+    if stop is None:
+        start, stop = 0, start
+    if steps is None:
+        if step is None:
+            step = 1
+        steps = int((stop-start)/step)
+    else:
+        if step is not None:
+            raise ValueError("Both step and steps cannot be specified")
+        step = (stop-start)/steps
+    for i in range(steps):
+        yield start
+        start += step  

@@ -5,8 +5,8 @@ from ..lv_types import *
 from .. import utils
 
 class LinePlot(BasePlot):
-    def __init__(self, title=None, is_3d:bool=False):
-        super(LinePlot, self).__init__(title)
+    def __init__(self, title=None, show_legend:bool=True, is_3d:bool=False):
+        super(LinePlot, self).__init__(title, show_legend)
         self.is_3d = is_3d
 
     def _setup_layout(self, stream_plot):
@@ -42,7 +42,7 @@ class LinePlot(BasePlot):
             self.figwig.layout.scene[zaxis] = axis_props
 
     def _create_2d_trace(self, stream_plot, mode):
-        yaxis = 'y' + (str(stream_plot.index + 1) if separate_yaxis else '')
+        yaxis = 'y' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
 
         trace = go.Scatter(x=[], y=[], mode=mode, name=stream_plot.title, yaxis=yaxis,
                            line=dict(color=BasePlot.get_pallet_color(stream_plot.index)))
@@ -55,8 +55,7 @@ class LinePlot(BasePlot):
 
 
     def _create_trace(self, stream_plot):
-        separate_yaxis = stream_plot.stream_args.get('separate_yaxis', True)
-        stream_plot.separate_yaxis = separate_yaxis
+        stream_plot.separate_yaxis = stream_plot.stream_args.get('separate_yaxis', True)
         draw_line = stream_plot.stream_args.get('draw_line',True)
         draw_marker = stream_plot.stream_args.get('draw_marker',True)
         mode = 'lines' if draw_line else ''

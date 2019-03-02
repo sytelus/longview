@@ -8,13 +8,13 @@ from ..lv_types import *
 from .. import utils
 
 class BasePlot(ABC):
-    def __init__(self, title=None):
+    def __init__(self, title=None, show_legend:bool=True):
         self.title = title
         self._stream_plots = {}
         
         self.figwig = go.FigureWidget()
         self.figwig.layout.title = title
-        self.figwig.layout.showlegend = True
+        self.figwig.layout.showlegend = show_legend
         self.is_shown = False
       
     @abstractmethod
@@ -30,22 +30,49 @@ class BasePlot(ABC):
     def clear_plot(self, stream_plot):
         pass
 
-    def add(self, stream, show:bool=None, clear_after_end=True, **stream_args):
+    def _add_trace(self, stream_plot):
+        stream_plot.trace_index = len(self.figwig.data)
+        trace = self._create_trace(stream_plot)
+        self.figwig.add_trace(trace)
+
+    def _add_trace_with_history(self, stream_plot):
+        # if history buffer isn't full
+        if stream_plot.history_len > len(stream_plot.trace_history):
+            self._add_trace(stream_plot)
+            stream_plot.trace_history.append(len(self.figwig.data)-1)
+            stream_plot.cur_history_index = len(stream_plot.trace_history)-1
+        else:
+            # rotate trace
+            stream_plot.cur_history_index = (stream_plot.cur_history_index + 1) % stream_plot.history_len
+            stream_plot.trace_index = stream_plot.trace_history[stream_plot.cur_history_index]
+            self.clear_plot(stream_plot)
+            self.figwig.data[stream_plot.trace_index].opacity = 1
+
+        cur_history_len = len(stream_plot.trace_history)
+        if stream_plot.dim_history and cur_history_len > 1:
+            min_alpha, max_alpha, dimmed_len = 0.05, 0.7, cur_history_len-1
+            alphas = list(utils.frange(max_alpha, min_alpha, steps=dimmed_len))
+            for i, thi in enumerate(range(stream_plot.cur_history_index+1, 
+                                          stream_plot.cur_history_index+cur_history_len)):
+                trace_index = stream_plot.trace_history[thi % cur_history_len]
+                self.figwig.data[trace_index].opacity = alphas[i]
+
+    def add(self, stream, show:bool=None, clear_after_end=True, clear_after_each=False, 
+           history_len=0, dim_history=True, **stream_args):
         if stream:
             plot_title = self.title or (stream.stream_name \
                 if not utils.is_uuid4(stream.stream_name) else stream_args['ytitle'])
 
             stream_plot = StreamPlot(stream, throttle=None, title=stream_args['ytitle'])
-            stream_plot.clear_after_end = clear_after_end
+            stream_plot.clear_after_end, stream_plot.clear_after_each = clear_after_end, clear_after_each
+            stream_plot.history_len, stream_plot.dim_history = history_len, dim_history
+            stream_plot.trace_history, stream_plot.cur_history_index = [], None
             stream_plot._last_event_ended = False
             stream_plot.index = len(self._stream_plots)
             stream_plot.stream_args = stream_args
             self._stream_plots[stream.stream_name] = stream_plot
         
-            stream_plot.trace_index = len(self.figwig.data)
-            trace = self._create_trace(stream_plot)
-            self.figwig.add_trace(trace)
-
+            self._add_trace_with_history(stream_plot)
             self._setup_layout(stream_plot)
 
             if not self.figwig.layout.title:
@@ -84,6 +111,11 @@ class BasePlot(ABC):
         return {'title':title, 'showline':True, 'showgrid': True, 
                        'showticklabels': True, 'ticks':'inside'}
 
+    def _clear_history(self, stream_plot):
+        for i in len(stream_plot.trace_history):
+            stream_plot.trace_index = i
+            self.clear_plot(stream_plot)
+
     def _add_eval_result(self, stream_event:StreamEvent):
         stream_plot = self._stream_plots.get(stream_event.stream_name, None)
         if stream_plot is None:
@@ -92,7 +124,7 @@ class BasePlot(ABC):
 
         if stream_event.event_type == StreamEvent.Type.reset:
             utils.debug_log("Stream reset", stream_event.stream_name)
-            self.clear_plot(stream_plot)
+            self._clear_history(stream_plot)
         elif stream_event.event_type == StreamEvent.Type.eval_result:
             eval_result = stream_event.eval_result
             if eval_result.exception is not None:
@@ -101,7 +133,7 @@ class BasePlot(ABC):
 
             # state management for _last_event_ended
             if stream_plot._last_event_ended and stream_plot.clear_after_end:
-                self.clear_plot(stream_plot)
+                self._add_trace_with_history(stream_plot)
             stream_plot._last_event_ended = False
             if eval_result.ended:
                 stream_plot._last_event_ended = True

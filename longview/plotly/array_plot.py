@@ -11,7 +11,7 @@ class ArrayPlot(LinePlot):
 
         # keep current trace in history
         stream_plot.trace_history = [stream_plot.trace_index]
-        stream_plot.trace_history_index = 0
+        stream_plot.cur_history_index = 0
          
     def _plot_eval_result(self, vals, stream_plot, eval_result):
         history_len = stream_plot.stream_args.get('history_len', 0)
@@ -29,9 +29,9 @@ class ArrayPlot(LinePlot):
                     stream_plot.trace_history.append(len(self.figwig.data)-1)
                 else:
                     # rotate trace
-                    cur_history_index = (stream_plot.trace_history_index + 1) % history_len
+                    cur_history_index = (stream_plot.cur_history_index + 1) % history_len
 
-                stream_plot.trace_history_index = cur_history_index
+                stream_plot.cur_history_index = cur_history_index
                 stream_plot.trace_index = stream_plot.trace_history[cur_history_index]
                 if dim_history:
                     history_len = len(stream_plot.trace_history)
