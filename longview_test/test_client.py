@@ -97,13 +97,18 @@ def mnist_show_batch_stats():
     test_acc = test_cli.create_stream("batch", 'map(lambda v:v.metrics.batch_accuracy, l)')
     plot.show(test_acc, xtitle='Epoch', ytitle='Test Accuracy')
 
-def basic_show_graph():
+def mpl_line_plot():
     cli = lv.WatchClient()
     p = lv.mpl.LinePlot('Demo')
     s1 = cli.create_stream('ev_i', 'map(lambda v:math.sqrt(v.val)*2, l)')
     p.add(s1, xtitle='Index', ytitle='sqrt(ev_i)')
     lv.wait_key()
 
+def mpl_history_plot():
+    cli = lv.WatchClient()
+    p2 = lv.mpl.LinePlot('History Demo')
+    p2s1 = cli.create_stream('ev_j', 'map(lambda v:(v.val, math.sqrt(v.val)*2), l)')
+    p2.add(p2s1, xtitle='Index', ytitle='sqrt(ev_j)', clear_after_end=True, history_len=15)
 
 def basic_show_stream():
     cli = lv.WatchClient()
@@ -151,7 +156,8 @@ def plotly_array_graph():
 
 
 ########################################################################
-basic_show_graph()
+mpl_history_plot()
+mpl_line_plot()
 
 mnist_plot_grads()
 plotly_array_graph()
@@ -168,7 +174,7 @@ mnist_plot_grads1()
 mnist_worst_in_class()
 
 basic_read_stream()  
-basic_show_graph()
+mpl_line_plot()
 basic_show_stream()
 
 

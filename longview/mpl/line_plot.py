@@ -76,29 +76,40 @@ class LinePlot(BasePlot):
         if not vals:
             return
         line = stream_plot.ax.get_lines()[-1]
+        xdata, ydata = line.get_data()
+        zdata = []
+
+        # add each value in trace data
         for val in vals:
-            x = eval_result.event_index
+            x =  eval_result.event_index
             y = val
+            z = None
             pt_label = None
 
-            # if val turns out to be array like, extract x,y
+            # if val turns out to be array-like, extract x,y
             val_l = utils.is_scaler_array(val)
-            if val_l >= 2:
+            if val_l > 1:
                 x, y = val[0], val[1]
             if val_l > 2:
-                pt_label = str(val[2])
+                if self.is_3d:
+                    z = val[2]
+                    if val_l > 3:
+                        pt_label = str(val[3])
+                else:
+                    pt_label = str(val[2])
 
-            xdata, ydata = line.get_data()
             xdata.append(x)
             ydata.append(y)
-            line.set_data(xdata, ydata)
-            # add annotation
-            if pt_label:
-                stream_plot.xylabel_refs.append(stream_plot.ax.text( \
-                    x, y, pt_label))
+            zdata.append(z)
 
-            stream_plot.ax.relim()
-            stream_plot.ax.autoscale_view()
+        print(xdata, ydata)
+        line.set_data(xdata, ydata)
+        # add annotation
+        if pt_label:
+            stream_plot.xylabel_refs.append(stream_plot.ax.text( \
+                x, y, pt_label))
+        stream_plot.ax.relim()
+        stream_plot.ax.autoscale_view()
 
 
    
