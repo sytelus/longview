@@ -82,6 +82,9 @@ class BasePlot(ABC):
 
                 if not self.figwig.layout.title:
                     self.figwig.layout.title = stream_plot.title
+                # TODO: better way for below?
+                if history_len > 1:
+                    self.figwig.layout.showlegend = False
 
                 stream.subscribe(self._add_eval_result)
 

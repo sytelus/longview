@@ -76,7 +76,7 @@ class LinePlot(BasePlot):
 
         # get trace data
         trace = self.figwig.data[stream_plot.trace_index]
-        xdata, ydata, zdata = list(trace.x), list(trace.y), []
+        xdata, ydata, zdata, pt_labels = list(trace.x), list(trace.y), [], []
         if self.is_3d:
             zdata = list(trace.z)
 
@@ -103,15 +103,18 @@ class LinePlot(BasePlot):
             ydata.append(y)
             zdata.append(z)
 
-            # add annotation
-            #if pt_label:
-            #    stream_plot.xylabel_refs.append(stream_plot.ax.text( \
-            #        x, y, pt_label))
+            if pt_label:
+                pt_labels.append(dict(x=x, y=y, xref='x', yref='y', text=pt_label, showarrow=False))
 
         self.figwig.data[stream_plot.trace_index].x = xdata
         self.figwig.data[stream_plot.trace_index].y = ydata   
         if self.is_3d:
             self.figwig.data[stream_plot.trace_index].z = zdata
+        self.figwig.layout.annotations = []
+        for x, y, pt_label in zip(xdata, ydata, pt_labels):
+            # add annotation
+            if pt_label:
+                self.figwig.layout.annotations = pt_labels
 
     def clear_plot(self, stream_plot):
         self.figwig.data[stream_plot.trace_index].x = []
