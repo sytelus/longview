@@ -33,6 +33,8 @@ class BasePlot(ABC):
     def _add_trace(self, stream_plot):
         stream_plot.trace_index = len(self.figwig.data)
         trace = self._create_trace(stream_plot)
+        if stream_plot.opacity is not None:
+            trace.opacity = stream_plot.opacity
         self.figwig.add_trace(trace)
 
     def _add_trace_with_history(self, stream_plot):
@@ -48,30 +50,28 @@ class BasePlot(ABC):
             stream_plot.cur_history_index = (stream_plot.cur_history_index + 1) % stream_plot.history_len
             stream_plot.trace_index = stream_plot.trace_history[stream_plot.cur_history_index]
             self.clear_plot(stream_plot)
-            self.figwig.data[stream_plot.trace_index].opacity = 1
+            self.figwig.data[stream_plot.trace_index].opacity = stream_plot.opacity or 1
 
         cur_history_len = len(stream_plot.trace_history)
         if stream_plot.dim_history and cur_history_len > 1:
-            min_alpha, max_alpha, dimmed_len = 0.05, 0.7, cur_history_len-1
+            max_opacity = stream_plot.opacity or 1
+            min_alpha, max_alpha, dimmed_len = max_opacity*0.05, max_opacity*0.8, cur_history_len-1
             alphas = list(utils.frange(max_alpha, min_alpha, steps=dimmed_len))
             for i, thi in enumerate(range(stream_plot.cur_history_index+1, 
                                           stream_plot.cur_history_index+cur_history_len)):
                 trace_index = stream_plot.trace_history[thi % cur_history_len]
                 self.figwig.data[trace_index].opacity = alphas[i]
 
-    def add(self, stream, show:bool=None, clear_after_end=True, clear_after_each=False, 
-           history_len=0, dim_history=True, **stream_args):
+    def add(self, stream, title=None, throttle=None, clear_after_end=True, clear_after_each=False, 
+           history_len=1, dim_history=True, show:bool=None, opacity=None, **stream_args):
         if stream:
-            plot_title = self.title or (stream.stream_name \
-                if not utils.is_uuid4(stream.stream_name) else stream_args['ytitle'])
-
-            stream_plot = StreamPlot(stream, throttle=None, title=stream_args['ytitle'])
-            stream_plot.clear_after_end, stream_plot.clear_after_each = clear_after_end, clear_after_each
-            stream_plot.history_len, stream_plot.dim_history = history_len, dim_history
-            stream_plot.trace_history, stream_plot.cur_history_index = [], None
+            stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
+                clear_after_each, history_len, dim_history, opacity)
             stream_plot._clear_pending = False
-            stream_plot.index = len(self._stream_plots)
             stream_plot.stream_args = stream_args
+
+            stream_plot.trace_history, stream_plot.cur_history_index = [], None
+            stream_plot.index = len(self._stream_plots)
             self._stream_plots[stream.stream_name] = stream_plot
         
             self._add_trace_with_history(stream_plot)
@@ -82,9 +82,7 @@ class BasePlot(ABC):
 
             stream.subscribe(self._add_eval_result)
 
-            if show:
-                return self.show()
-            elif show is None and not self.is_shown:
+            if show or (show is None and not self.is_shown):
                 return self.show()
 
         return None
@@ -109,12 +107,15 @@ class BasePlot(ABC):
         return vals
 
     @staticmethod
-    def _get_axis_common_props(title:str):
-        return {'title':title, 'showline':True, 'showgrid': True, 
+    def _get_axis_common_props(title:str, axis_range:tuple):
+        props = {'title':title, 'showline':True, 'showgrid': True, 
                        'showticklabels': True, 'ticks':'inside'}
+        if axis_range:
+            props['range'] = list(*axis_range)
+        return props
 
     def _clear_history(self, stream_plot):
-        for i in len(stream_plot.trace_history):
+        for i in range(len(stream_plot.trace_history)):
             stream_plot.trace_index = i
             self.clear_plot(stream_plot)
 

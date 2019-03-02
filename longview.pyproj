@@ -34,9 +34,6 @@
     <Compile Include="longview\mpl\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="longview\plotly\array_plot.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="longview\plotly\base_plot.py">
       <SubType>Code</SubType>
     </Compile>

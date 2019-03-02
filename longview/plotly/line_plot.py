@@ -10,22 +10,18 @@ class LinePlot(BasePlot):
         self.is_3d = is_3d
 
     def _setup_layout(self, stream_plot):
-        xtitle = stream_plot.stream_args.get('xtitle',None)
-        ytitle = stream_plot.stream_args.get('ytitle',None)
-        ztitle = stream_plot.stream_args.get('ztitle',None)
-
         # handle multiple y axis
         yaxis = 'yaxis' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
 
-        if xtitle:
+        if stream_plot.xtitle:
             xaxis = 'xaxis' + str(stream_plot.index+1)
-            axis_props = BasePlot._get_axis_common_props(xtitle)
+            axis_props = BasePlot._get_axis_common_props(stream_plot.xtitle, stream_plot.xrange)
             self.figwig.layout[xaxis] = axis_props
-        if ytitle:
+        if stream_plot.ytitle:
             # handle multiple Y-Axis plots
             color = self.figwig.data[stream_plot.trace_index].line.color
             yaxis = 'yaxis' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
-            axis_props = BasePlot._get_axis_common_props(ytitle)
+            axis_props = BasePlot._get_axis_common_props(stream_plot.ytitle, stream_plot.yrange)
             axis_props['linecolor'] = color
             axis_props['tickfont']=axis_props['titlefont'] = dict(color=color)
             if stream_plot.index > 0 and stream_plot.separate_yaxis:
@@ -36,26 +32,34 @@ class LinePlot(BasePlot):
                     axis_props['anchor'] = 'free'
                     axis_props['position'] = 1 - 0.085*(stream_plot.index-2)
             self.figwig.layout[yaxis] = axis_props
-        if self.is_3d and ztitle:
+        if self.is_3d and stream_plot.ztitle:
             zaxis = 'zaxis' #+ str(stream_plot.index+1)
-            axis_props = BasePlot._get_axis_common_props(ztitle)
+            axis_props = BasePlot._get_axis_common_props(stream_plot.ztitle, stream_plot.zrange)
             self.figwig.layout.scene[zaxis] = axis_props
 
     def _create_2d_trace(self, stream_plot, mode):
         yaxis = 'y' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
 
-        trace = go.Scatter(x=[], y=[], mode=mode, name=stream_plot.title, yaxis=yaxis,
-                           line=dict(color=BasePlot.get_pallet_color(stream_plot.index)))
+        trace = go.Scatter(x=[], y=[], mode=mode, name=stream_plot.title or stream_plot.ytitle, yaxis=yaxis,
+                           line=dict(color=(stream_plot.color or BasePlot.get_pallet_color(stream_plot.index))))
         return trace
 
     def _create_3d_trace(self, stream_plot, mode):
-        trace = go.Scatter3d(x=[], y=[], z=[], mode=mode, name=stream_plot.title,
-                           line=dict(color=BasePlot.get_pallet_color(stream_plot.index)))
+        trace = go.Scatter3d(x=[], y=[], z=[], mode=mode, name=stream_plot.title or stream_plot.ytitle,
+                           line=dict(color=(stream_plot.color or BasePlot.get_pallet_color(stream_plot.index))))
         return trace
 
 
     def _create_trace(self, stream_plot):
         stream_plot.separate_yaxis = stream_plot.stream_args.get('separate_yaxis', True)
+        stream_plot.xtitle = stream_plot.stream_args.get('xtitle',None)
+        stream_plot.ytitle = stream_plot.stream_args.get('ytitle',None)
+        stream_plot.ztitle = stream_plot.stream_args.get('ztitle',None)
+        stream_plot.color = stream_plot.stream_args.get('color',None)
+        stream_plot.xrange = stream_plot.stream_args.get('xrange',None)
+        stream_plot.yrange = stream_plot.stream_args.get('yrange',None)
+        stream_plot.zrange = stream_plot.stream_args.get('zrange',None)
+        
         draw_line = stream_plot.stream_args.get('draw_line',True)
         draw_marker = stream_plot.stream_args.get('draw_marker',True)
         mode = 'lines' if draw_line else ''

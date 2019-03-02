@@ -8,7 +8,7 @@ import numpy as np
 
 class LinePlot(BasePlot):
     def init_stream_plot(self, stream, stream_plot, 
-            xlabel='', ylabel='', color=None, alpha=1, xlim=None, ylim=None):
+            xtitle='', ytitle='', color=None, xrange=None, yrange=None):
         stream_plot.xylabel_refs = [] # annotation references
 
         # add main subplot
@@ -17,45 +17,48 @@ class LinePlot(BasePlot):
         else:
             stream_plot.ax = self.get_main_axis().twinx()
 
-        color = color or plt.cm.hsv(1.0/(1+len(self._stream_plots)))
-        stream_plot.title = stream_plot.title or ylabel
+        color = color or plt.cm.Dark2(1.0/(1+len(self._stream_plots)))
 
         # add default line in subplot
         stream_plot.line = matplotlib.lines.Line2D([], [], 
-            label=stream_plot.title, color=color) #, linewidth=3
-        stream_plot.line.set_alpha(alpha)
+            label=stream_plot.title or ytitle, color=color) #, linewidth=3
+        if stream_plot.opacity is not None:
+            stream_plot.line.set_alpha(stream_plot.opacity)
         stream_plot.ax.add_line(stream_plot.line)
 
         # if more than 2 y-axis then place additional outside
-        if len(self._stream_plots) > 2:
-            pos = (len(self._stream_plots)-2) * 160
+        if len(self._stream_plots) > 1:
+            pos = (len(self._stream_plots)) * 30
             stream_plot.ax.spines['right'].set_position(('outward', pos))
 
         self._stream_plots[stream.stream_name] = stream_plot
-        stream_plot.ax.set_xlabel(xlabel)
-        stream_plot.ax.set_ylabel(ylabel)
+        stream_plot.ax.set_xlabel(xtitle)
+        stream_plot.ax.set_ylabel(ytitle)
         stream_plot.ax.yaxis.label.set_color(color)
         stream_plot.ax.yaxis.label.set_style('italic')
         stream_plot.ax.xaxis.label.set_style('italic')
-        if xlim is not None:
-            stream_plot.ax.set_xlim(*xlim)
-        if ylim is not None:
-            stream_plot.ax.set_ylim(*ylim)
+        if xrange is not None:
+            stream_plot.ax.set_xlim(*xrange)
+        if yrange is not None:
+            stream_plot.ax.set_ylim(*yrange)
 
         # redo the legend
-        self.figure.legend(loc='center right', bbox_to_anchor=(1.5, 0.5))
+        #self.figure.legend(loc='center right', bbox_to_anchor=(1.5, 0.5))
+        self.figure.legend(loc='lower right')
+        self.figure.tight_layout()
 
-    def clear_stream_plot(self, stream_plot):
+
+    def clear_plot(self, stream_plot):
         lines = stream_plot.ax.get_lines() 
         # if we need to keep history
-        if stream_plot.keep_old > 0:
-            while len(lines) > stream_plot.keep_old:
+        if stream_plot.history_len > 1:
+            while len(lines) > stream_plot.history_len-1:
                 lines.pop(0).remove()
             # dim old lines
-            if stream_plot.dim_old:
+            if stream_plot.dim_history:
                 alphas = np.linspace(0.05, 1, len(lines))
-                for line, alpha in zip(lines, alphas):
-                    line.set_alpha(alpha)
+                for line, opacity in zip(lines, alphas):
+                    line.set_alpha(opacity)
                     line.set_linewidth(1)
             # add new line
             line = matplotlib.lines.Line2D([], [], linewidth=3)
@@ -69,7 +72,9 @@ class LinePlot(BasePlot):
             label_info.remove()
         stream_plot.xylabel_refs.clear()
 
-    def render_stream_plot(self, stream_plot, vals, eval_result):
+    def _plot_eval_result(self, vals, stream_plot, eval_result):
+        if not vals:
+            return
         line = stream_plot.ax.get_lines()[-1]
         for val in vals:
             x = eval_result.event_index

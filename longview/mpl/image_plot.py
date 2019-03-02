@@ -19,7 +19,7 @@ class ImagePlot(BasePlot):
         # axis image
         stream_plot.ax_imgs = [[None for _ in range(cols)] for _ in range(rows)] 
 
-    def clear_stream_plot(self, stream_plot):
+    def clear_plot(self, stream_plot):
         for row in range(stream_plot.rows):
             for col in range(stream_plot.cols):
                 img = stream_plot.ax_imgs[row][col]
@@ -50,7 +50,10 @@ class ImagePlot(BasePlot):
 
         return img_in
 
-    def render_stream_plot(self, stream_plot, vals, eval_result):
+    def _plot_eval_result(self, vals, stream_plot, eval_result):
+        if not vals:
+            return
+
         row, col, i = 0, 0, 0
         for val in vals:
             val = val if isinstance(val, tuple) else (val,)

@@ -80,8 +80,11 @@ class CliSrvReqTypes:
     heartbeat = 'Heartbeat'
 
 class StreamPlot:
-    def __init__(self, stream, throttle, title):
+    def __init__(self, stream, throttle, title, clear_after_end, 
+                clear_after_each, history_len, dim_history, opacity):
         self.stream = stream
         self.throttle = throttle
-        self.title = title
+        self.title, self.opacity = title, opacity
+        self.clear_after_end, self.clear_after_each = clear_after_end, clear_after_each
+        self.history_len, self.dim_history = history_len, dim_history
 

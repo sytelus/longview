@@ -10,7 +10,7 @@ def show_find_lr():
     plot = lv.mpl.LinePlot()
     
     train_batch_loss = cli_train.create_stream('batch', 'map(lambda d:(d.tt.scheduler.get_lr()[0], d.metrics.batch_loss), l)')
-    plot.show(train_batch_loss, xlabel='Epoch', ylabel='Loss')
+    plot.show(train_batch_loss, xtitle='Epoch', ytitle='Loss')
     
     lv.wait_key()
 
@@ -59,7 +59,7 @@ def mnist_plot_grads1():
 
     grads = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
     grad_plot = lv.mpl.LinePlot()
-    grad_plot.show(grads, xlabel='Epoch', ylabel='Gradients', redraw_after=1, keep_old=40, dim_old=True)
+    grad_plot.show(grads, xtitle='Epoch', ytitle='Gradients', clear_after_each=1, history_len=40, dim_history=True)
 
     lv.wait_key()
 
@@ -68,7 +68,7 @@ def mnist_plot_weight():
 
     params = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.abs().mean().item()), l)', throttle=1)
     params_plot = lv.mpl.LinePlot()
-    params_plot.show(params, xlabel='Epoch', ylabel='avg |params|', redraw_after=1, keep_old=40, dim_old=True)
+    params_plot.show(params, xtitle='Epoch', ytitle='avg |params|', clear_after_each=1, history_len=40, dim_history=True)
 
     lv.wait_key()
 
@@ -79,10 +79,10 @@ def mnist_show_epoch_stats():
     plot = lv.mpl.LinePlot()
 
     train_loss = train_cli.create_stream("epoch", 'map(lambda v:v.metrics.epoch_loss, l)')
-    plot.show(train_loss, xlabel='Epoch', ylabel='Train Loss', final_show=False)
+    plot.show(train_loss, xtitle='Epoch', ytitle='Train Loss', final_show=False)
     
     test_acc = test_cli.create_stream("epoch", 'map(lambda v:v.metrics.epoch_accuracy, l)')
-    plot.show(test_acc, xlabel='Epoch', ylabel='Test Accuracy', ylim=(0,1))
+    plot.show(test_acc, xtitle='Epoch', ytitle='Test Accuracy', yrange=(0,1))
 
 
 def mnist_show_batch_stats():
@@ -92,21 +92,17 @@ def mnist_show_batch_stats():
     plot = lv.mpl.LinePlot()
 
     train_loss = train_cli.create_stream("batch", 'map(lambda v:v.metrics.batch_loss, l)')
-    plot.show(train_loss, xlabel='Epoch', ylabel='Train Loss', final_show=False)
+    plot.show(train_loss, xtitle='Epoch', ytitle='Train Loss', final_show=False)
     
     test_acc = test_cli.create_stream("batch", 'map(lambda v:v.metrics.batch_accuracy, l)')
-    plot.show(test_acc, xlabel='Epoch', ylabel='Test Accuracy')
+    plot.show(test_acc, xtitle='Epoch', ytitle='Test Accuracy')
 
 def basic_show_graph():
     cli = lv.WatchClient()
-
-    plot = lv.mpl.LinePlot()
-
-    s1 = cli.create_stream("ev_i", 'map(lambda v:math.sqrt(v.val), l)')
-    plot.show(s1, 'i', 'sl', 'sqrt ev_i', False)
-
-    s2 = cli.create_stream("ev_j", 'map(lambda v:v.val*v.val, l)')
-    plot.show(s2, 'i', 'l', 'ev_j')
+    p = lv.mpl.LinePlot('Demo')
+    s1 = cli.create_stream('ev_i', 'map(lambda v:math.sqrt(v.val)*2, l)')
+    p.add(s1, xtitle='Index', ytitle='sqrt(ev_i)')
+    lv.wait_key()
 
 
 def basic_show_stream():
@@ -147,15 +143,16 @@ def plotly_line_graph():
 
 def plotly_array_graph():
     cli = lv.WatchClient()
-    s1 = cli.create_stream('ev_j', 'map(lambda v:math.sqrt(v.val)*2, l)')
-
-    p = lv.plotly.ArrayPlot('Demo')
-    p.add(s1, xtitle='Index', ytitle='sqrt(ev_j)', history_len=3, new_on_end=True)
+    p = lv.plotly.LinePlot('Demo')
+    s2 = cli.create_stream('ev_j', 'map(lambda v:(v.x, v.val), l)')
+    p.add(s2, ytitle='ev_j', history_len=15)
     lv.wait_key()
 
 
 
 ########################################################################
+basic_show_graph()
+
 mnist_plot_grads()
 plotly_array_graph()
 plotly_line_graph()
