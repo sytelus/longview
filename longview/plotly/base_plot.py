@@ -41,6 +41,8 @@ class BasePlot(ABC):
             self._add_trace(stream_plot)
             stream_plot.trace_history.append(len(self.figwig.data)-1)
             stream_plot.cur_history_index = len(stream_plot.trace_history)-1
+            #if stream_plot.cur_history_index:
+            #    self.figwig.data[trace_index].showlegend = False
         else:
             # rotate trace
             stream_plot.cur_history_index = (stream_plot.cur_history_index + 1) % stream_plot.history_len
@@ -67,7 +69,7 @@ class BasePlot(ABC):
             stream_plot.clear_after_end, stream_plot.clear_after_each = clear_after_end, clear_after_each
             stream_plot.history_len, stream_plot.dim_history = history_len, dim_history
             stream_plot.trace_history, stream_plot.cur_history_index = [], None
-            stream_plot._last_event_ended = False
+            stream_plot._clear_pending = False
             stream_plot.index = len(self._stream_plots)
             stream_plot.stream_args = stream_args
             self._stream_plots[stream.stream_name] = stream_plot
@@ -131,12 +133,12 @@ class BasePlot(ABC):
                 print(eval_result.exception, file=sys.stderr)
                 raise eval_result.exception
 
-            # state management for _last_event_ended
-            if stream_plot._last_event_ended and stream_plot.clear_after_end:
+            # state management for _clear_pending
+            if stream_plot._clear_pending:
                 self._add_trace_with_history(stream_plot)
-            stream_plot._last_event_ended = False
-            if eval_result.ended:
-                stream_plot._last_event_ended = True
+                stream_plot._clear_pending = False
+            if stream_plot.clear_after_each or (eval_result.ended and stream_plot.clear_after_end):
+                stream_plot._clear_pending = True
 
             # check throttle
             if eval_result.ended or \
