@@ -7,6 +7,10 @@ from .. import utils
 import numpy as np
 
 class LinePlot(BasePlot):
+    def __init__(self, title=None, show_legend:bool=True, is_3d:bool=False):
+        super(LinePlot, self).__init__(title, show_legend)
+        self.is_3d = is_3d
+
     def init_stream_plot(self, stream, stream_plot, 
             xtitle='', ytitle='', color=None, xrange=None, yrange=None):
         stream_plot.xylabel_refs = [] # annotation references
@@ -44,7 +48,8 @@ class LinePlot(BasePlot):
 
         # redo the legend
         #self.figure.legend(loc='center right', bbox_to_anchor=(1.5, 0.5))
-        self.figure.legend(loc='lower right')
+        if self.show_legend:
+            self.figure.legend(loc='lower right')
         self.figure.tight_layout()
 
 
@@ -77,7 +82,7 @@ class LinePlot(BasePlot):
             return
         line = stream_plot.ax.get_lines()[-1]
         xdata, ydata = line.get_data()
-        zdata = []
+        zdata, pt_labels = [], []
 
         # add each value in trace data
         for val in vals:
@@ -101,13 +106,15 @@ class LinePlot(BasePlot):
             xdata.append(x)
             ydata.append(y)
             zdata.append(z)
+            pt_labels.append(pt_label)
 
-        print(xdata, ydata)
         line.set_data(xdata, ydata)
-        # add annotation
-        if pt_label:
-            stream_plot.xylabel_refs.append(stream_plot.ax.text( \
-                x, y, pt_label))
+        for x, y, pt_label in zip(xdata, ydata, pt_labels):
+            # add annotation
+            if pt_label:
+                stream_plot.xylabel_refs.append(stream_plot.ax.text( \
+                    x, y, pt_label))
+
         stream_plot.ax.relim()
         stream_plot.ax.autoscale_view()
 

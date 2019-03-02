@@ -15,12 +15,13 @@ import threading
 import queue
 
 class BasePlot:
-    def __init__(self, title=None):
+    def __init__(self, title=None, show_legend:bool=True):
         # we initialize figure when first axis is added
         self._fig_init_done = False
         # has this plot be shown yet?
         self.is_shown = False
         self.title = title
+        self.show_legend = show_legend
         # number of streams for this plot
         self._stream_plots = {}
         # lock to protect code from callback from seperate thread and render thread
@@ -64,7 +65,6 @@ class BasePlot:
     def _add_eval_result(self, stream_event:StreamEvent):
         """Callback whenever EvalResult becomes available"""
         with self.lock: # callbacks are from separate thread!
-            print('b')
             stream_plot = self._stream_plots.get(stream_event.stream_name, None)
             if stream_plot is None:
                 utils.debug_log("Unrecognized stream received: {}".format(stream_event.stream_name))
