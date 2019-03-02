@@ -2,6 +2,7 @@ import plotly
 import plotly.graph_objs as go
 import time
 import sys
+import threading
 from abc import ABC, abstractmethod
 
 from ..lv_types import *
@@ -12,6 +13,7 @@ class BasePlot(ABC):
         self.title = title
         self._stream_plots = {}
         
+        self.lock = threading.Lock()
         self.figwig = go.FigureWidget()
         self.figwig.layout.title = title
         self.figwig.layout.showlegend = show_legend
@@ -64,28 +66,29 @@ class BasePlot(ABC):
 
     def add(self, stream, title=None, throttle=None, clear_after_end=True, clear_after_each=False, 
            history_len=1, dim_history=True, show:bool=None, opacity=None, **stream_args):
-        if stream:
-            stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
-                clear_after_each, history_len, dim_history, opacity)
-            stream_plot._clear_pending = False
-            stream_plot.stream_args = stream_args
+        with self.lock:
+            if stream:
+                stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
+                    clear_after_each, history_len, dim_history, opacity)
+                stream_plot._clear_pending = False
+                stream_plot.stream_args = stream_args
 
-            stream_plot.trace_history, stream_plot.cur_history_index = [], None
-            stream_plot.index = len(self._stream_plots)
-            self._stream_plots[stream.stream_name] = stream_plot
+                stream_plot.trace_history, stream_plot.cur_history_index = [], None
+                stream_plot.index = len(self._stream_plots)
+                self._stream_plots[stream.stream_name] = stream_plot
         
-            self._add_trace_with_history(stream_plot)
-            self._setup_layout(stream_plot)
+                self._add_trace_with_history(stream_plot)
+                self._setup_layout(stream_plot)
 
-            if not self.figwig.layout.title:
-                self.figwig.layout.title = stream_plot.title
+                if not self.figwig.layout.title:
+                    self.figwig.layout.title = stream_plot.title
 
-            stream.subscribe(self._add_eval_result)
+                stream.subscribe(self._add_eval_result)
 
-            if show or (show is None and not self.is_shown):
-                return self.show()
+                if show or (show is None and not self.is_shown):
+                    return self.show()
 
-        return None
+            return None
                 
     def show(self):
         self.is_shown = True
@@ -111,7 +114,7 @@ class BasePlot(ABC):
         props = {'title':title, 'showline':True, 'showgrid': True, 
                        'showticklabels': True, 'ticks':'inside'}
         if axis_range:
-            props['range'] = list(*axis_range)
+            props['range'] = list(axis_range)
         return props
 
     def _clear_history(self, stream_plot):
@@ -120,40 +123,41 @@ class BasePlot(ABC):
             self.clear_plot(stream_plot)
 
     def _add_eval_result(self, stream_event:StreamEvent):
-        stream_plot = self._stream_plots.get(stream_event.stream_name, None)
-        if stream_plot is None:
-            utils.debug_log("Unrecognized stream received: {}".format(eval_result.stream_name))
-            return
+        with self.lock:
+            stream_plot = self._stream_plots.get(stream_event.stream_name, None)
+            if stream_plot is None:
+                utils.debug_log("Unrecognized stream received: {}".format(eval_result.stream_name))
+                return
 
-        if stream_event.event_type == StreamEvent.Type.reset:
-            utils.debug_log("Stream reset", stream_event.stream_name)
-            self._clear_history(stream_plot)
-        elif stream_event.event_type == StreamEvent.Type.eval_result:
-            eval_result = stream_event.eval_result
-            if eval_result.exception is not None:
-                print(eval_result.exception, file=sys.stderr)
-                raise eval_result.exception
+            if stream_event.event_type == StreamEvent.Type.reset:
+                utils.debug_log("Stream reset", stream_event.stream_name)
+                self._clear_history(stream_plot)
+            elif stream_event.event_type == StreamEvent.Type.eval_result:
+                eval_result = stream_event.eval_result
+                if eval_result.exception is not None:
+                    print(eval_result.exception, file=sys.stderr)
+                    raise eval_result.exception
 
-            # state management for _clear_pending
-            if stream_plot._clear_pending:
-                self._add_trace_with_history(stream_plot)
-                stream_plot._clear_pending = False
-            if stream_plot.clear_after_each or (eval_result.ended and stream_plot.clear_after_end):
-                stream_plot._clear_pending = True
+                # state management for _clear_pending
+                if stream_plot._clear_pending:
+                    self._add_trace_with_history(stream_plot)
+                    stream_plot._clear_pending = False
+                if stream_plot.clear_after_each or (eval_result.ended and stream_plot.clear_after_end):
+                    stream_plot._clear_pending = True
 
-            # check throttle
-            if eval_result.ended or \
-                stream_plot.throttle is None or stream_plot.last_update is None or \
-                time.time() - stream_plot.last_update >= stream_plot.throttle:
+                # check throttle
+                if eval_result.ended or \
+                    stream_plot.throttle is None or stream_plot.last_update is None or \
+                    time.time() - stream_plot.last_update >= stream_plot.throttle:
 
-                vals = BasePlot._extract_vals(stream_plot, eval_result)
-                self._plot_eval_result(vals, stream_plot, eval_result)
+                    vals = BasePlot._extract_vals(stream_plot, eval_result)
+                    self._plot_eval_result(vals, stream_plot, eval_result)
 
-                # update for throttle
-                stream_plot.last_update = time.time()
+                    # update for throttle
+                    stream_plot.last_update = time.time()
+                else:
+                    utils.debug_log("Value not plotted due to throttle", 
+                                    eval_result.event_name, verbosity=5)
+
             else:
-                utils.debug_log("Value not plotted due to throttle", 
-                                eval_result.event_name, verbosity=5)
-
-        else:
-            utils.debug_log("Unsupported event type received")
+                utils.debug_log("Unsupported event type received")
