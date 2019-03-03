@@ -99,7 +99,7 @@ class BasePlot:
                             stream_plot.throttle is None or stream_plot.last_update is None or \
                             time.time() - stream_plot.last_update >= stream_plot.throttle:
 
-                            vals = BasePlot._extract_vals(stream_plot, eval_result)
+                            vals = BasePlot._extract_vals(eval_result)
                             self._plot_eval_result(vals, stream_plot, eval_result)
 
                             # update for throttle
@@ -109,8 +109,8 @@ class BasePlot:
                                             eval_result.event_name, verbosity=5)
 
     def add(self, stream, title=None, throttle=None, 
-            clear_after_end=False, clear_after_each=False, 
-            history_len=0, dim_history=True, show:bool=None, opacity=None, **stream_args):
+            clear_after_end=False, clear_after_each=False, show:bool=None, 
+            history_len=0, dim_history=True, opacity=None, **stream_args):
 
         # make sure figure is initialized
         self.init_fig()
@@ -135,7 +135,7 @@ class BasePlot:
         return plt.show() #must be done only once
 
     @staticmethod
-    def _extract_vals(stream_plot, eval_result):
+    def _extract_vals(eval_result):
         if eval_result.ended or eval_result.result is None:
             vals = None
         else:

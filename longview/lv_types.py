@@ -51,13 +51,11 @@ class StreamEvent:
             event_type, stream_name, eval_result
 
 class StreamRequest:
-    def __init__(self, event_name:str, eval_f_s:str, stream_name:str, 
-            eval_start:int, eval_end:int, throttle:float, client_id:str):
+    def __init__(self, event_name:str, eval_expr:str, stream_name:str, 
+            throttle:float, client_id:str):
         self.event_name = event_name
-        self.eval_f_s = eval_f_s
+        self.eval_expr = eval_expr
         self.stream_name = stream_name
-        self.eval_start = eval_start
-        self.eval_end = eval_end
         self.client_id = client_id
 
         # below will be set by server side

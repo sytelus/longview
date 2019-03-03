@@ -19,6 +19,9 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="longview\default_objs.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="longview\mpl\base_plot.py">
       <SubType>Code</SubType>
     </Compile>
