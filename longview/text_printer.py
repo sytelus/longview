@@ -45,7 +45,7 @@ class TextPrinter():
 
                     if eval_result.ended:
                         if self.is_ipython:
-                            stream_plot.text.append('<br/>Event ended: {}'.format(eval_result.event_name))
+                            stream_plot.text += '<br/>Event ended: {}'.format(eval_result.event_name)
                         else:
                             print('[Stream {}] **** Event ended: {}'.\
                                 format(stream_event.display_name(), eval_result.event_name))
@@ -54,17 +54,18 @@ class TextPrinter():
                         if vals is None:
                             vals = [None]
                         for val in vals:
+                            val = str(val)
                             if self.is_ipython:
-                                stream_plot.text.append('<br/>' + html.escape(val))
+                                stream_plot.text += '<br/>' + html.escape(val)
                             else:
                                 print('[Stream {}] {}'.\
                                     format(stream_event.display_name(), val))
                         
                     if self.is_ipython:
                         all_html = ''
-                        for stream_plot in self._stream_plots.items():
+                        for stream_plot in self._stream_plots.values():
                             all_html += stream_plot.text
-                        self.html_widget = all_html
+                        self.html_widget.value = all_html
 
                     # update for throttle
                     stream_plot.last_update = time.time()
