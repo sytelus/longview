@@ -1,7 +1,7 @@
 import matplotlib
 import os
-if os.name == 'posix' and "DISPLAY" not in os.environ:
-    matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
+#if os.name == 'posix' and "DISPLAY" not in os.environ:
+#    matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from ..lv_types import *

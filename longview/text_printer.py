@@ -2,17 +2,18 @@ from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, 
 from .lv_types import *
 from . import utils
 import threading
-import ipywidgets as widgets
-from IPython import get_ipython
-import html
+import pandas as pd
 import time
+import ipywidgets as widgets
+from IPython import get_ipython, display
 
 class TextPrinter():
     def __init__(self):
         self.is_ipython = get_ipython() is not None
-        self.html_widget = widgets.HTML()
         self._stream_plots = {}
         self.is_shown = False
+        self.widget = widgets.HBox(layout=widgets.Layout(overflow='visible'))
+        self.df = pd.DataFrame([])
         self.lock = threading.Lock()
 
     def _add_eval_result(self, stream_event:StreamEvent):
@@ -24,7 +25,7 @@ class TextPrinter():
 
             if stream_event.event_type == StreamEvent.Type.reset:
                 utils.debug_log("Stream reset", stream_event.stream_name)
-                self.clear(stream_plot)
+                self.clear_plot(stream_plot)
             elif stream_event.event_type == StreamEvent.Type.eval_result:
                 eval_result = stream_event.eval_result
                 if eval_result.exception is not None:
@@ -44,31 +45,28 @@ class TextPrinter():
                     time.time() - stream_plot.last_update >= stream_plot.throttle:
 
                     if eval_result.ended:
-                        if self.is_ipython:
-                            stream_plot.text += '<br/>Event ended: {}'.format(eval_result.event_name)
-                        else:
-                            print('[Stream {}] **** Event ended: {}'.\
-                                format(stream_event.display_name(), eval_result.event_name))
+                        self.df = self.df.append(pd.Series(), ignore_index=True)
                     else:
                         vals = TextPrinter._extract_vals(eval_result)
-                        if vals is None:
-                            vals = [None]
-                        for val in vals:
-                            val = str(val)
-                            if self.is_ipython:
-                                stream_plot.text += '<br/>' + html.escape(val)
-                            else:
-                                print('[Stream {}] {}'.\
-                                    format(stream_event.display_name(), val))
-                        
-                    if self.is_ipython:
-                        all_html = ''
-                        for stream_plot in self._stream_plots.values():
-                            all_html += stream_plot.text
-                        self.html_widget.value = all_html
+                        if vals is not None:
+                            for val in vals:
+                                if val is not None:
+                                    self.df = self.df.append([val.__dict__])
 
                     # update for throttle
                     stream_plot.last_update = time.time()
+
+                    if self.is_ipython:
+                        stream_plot.out_widget.clear_output(wait=True)
+                        with stream_plot.out_widget:
+                            display.display(self.df)
+                    else:
+                        last_recs = self.df.iloc[[-1]].to_dict('records')
+                        if len(last_recs) == 1:
+                            print(last_recs[0])
+                        else:
+                            print(last_recs)
+
                 else:
                     utils.debug_log("Value not plotted due to throttle", 
                                     eval_result.event_name, verbosity=5)
@@ -78,10 +76,7 @@ class TextPrinter():
 
     def _get_title(self, stream_plot):
         title = stream_plot.title or 'Stream ' + str(len(self._stream_plots))
-        if self.is_ipython:
-            return '<b>' + title + '</b>'
-        else:
-            return title + '\n' + '**************'
+        return title
 
     def add(self, stream, title=None, throttle=None, clear_after_end=True, clear_after_each=False, 
             show:bool=None, **stream_args):
@@ -90,6 +85,8 @@ class TextPrinter():
             stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
                         clear_after_each, history_len=1, dim_history=True, opacity=1)
             stream_plot._clear_pending = False
+            stream_plot.out_widget = widgets.Output()
+            self.widget.children = self.widget.children + (stream_plot.out_widget,)
             stream_plot.text = self._get_title(stream_plot)
             self._stream_plots[stream.stream_name] = stream_plot
             stream.subscribe(self._add_eval_result)
@@ -100,10 +97,10 @@ class TextPrinter():
                 
     def show(self):
         self.is_shown = True
-        return self.html_widget if self.is_ipython else ''
+        return self.widget if self.is_ipython else ''
 
-    def clear(self, stream_plot):
-        pass
+    def clear_plot(self, stream_plot):
+        self.df = self.df.iloc[0:0]
 
     @staticmethod
     def _extract_vals(eval_result):

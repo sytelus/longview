@@ -43,6 +43,9 @@
     <Compile Include="ipython_widget.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="panda_test.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="srv_sum_log.py">
       <SubType>Code</SubType>
     </Compile>
