@@ -49,13 +49,13 @@ def _get_renderer(renderer, cell):
         return renderer
 
 def render(eval_expr:str=None, event_name:str='', stream_name:str=None, throttle=None, 
-            clear_after_end=True, clear_after_each=False, cell=None, renderer=None):
+            clear_after_end=True, clear_after_each=False, cell=None, renderer=None, only_summary=False):
     _ensure_client()
 
     renderer = _get_renderer(renderer, cell)
     
     stream = default_watch_client.create_stream(event_name=event_name, 
         eval_expr=eval_expr or 'map(lambda x:x, l)', stream_name=stream_name, throttle=throttle)
-    renderer.add(stream, clear_after_end=clear_after_end, clear_after_each=clear_after_each)
+    renderer.add(stream, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary)
 
     return renderer

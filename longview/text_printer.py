@@ -7,7 +7,7 @@ import time
 import ipywidgets as widgets
 from IPython import get_ipython, display
 
-class TextPrinter():
+class TextPrinter:
     def __init__(self, cell=None):
         self.is_ipython = get_ipython() is not None
         self._stream_plots = {}
@@ -77,7 +77,10 @@ class TextPrinter():
                     stream_plot.last_update = time.time()
 
                     if self.is_ipython:
-                        self.out_widget.value = self.df.to_html(classes=['output_html', 'rendered_html'])
+                        if not stream_plot.only_summary:
+                            self.out_widget.value = self.df.to_html(classes=['output_html', 'rendered_html'])
+                        else:
+                            self.out_widget.value = self.df.describe().to_html(classes=['output_html', 'rendered_html'])
                         # below doesn't work because of threading issue
                         #self.out_widget.clear_output(wait=True)
                         #with self.out_widget:
@@ -101,13 +104,14 @@ class TextPrinter():
         return title
 
     def add(self, stream, title=None, throttle=None, clear_after_end=True, clear_after_each=False, 
-            show:bool=None, **stream_args):
+            show:bool=None, only_summary=False, **stream_args):
 
         with self.lock:
             stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
                         clear_after_each, history_len=1, dim_history=True, opacity=1)
             stream_plot._clear_pending = False
             stream_plot.text = self._get_title(stream_plot)
+            stream_plot.only_summary = only_summary
             self._stream_plots[stream.stream_name] = stream_plot
             stream.subscribe(self._add_eval_result)
             if show or (show is None and not self.is_shown):
