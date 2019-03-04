@@ -21,15 +21,15 @@ class Evaler:
 
         def reset(self):
             self.ended = False
-            self.val, self.ended = None, False
+            self.event_vars, self.ended = None, False
             self.post_wait.clear()
 
         def abort(self):
             self.ended = True
             self.post_wait.set()
 
-        def post(self, val=None, ended=False):
-            self.val, self.ended = val, ended
+        def post(self, event_vars:EventVars=None, ended=False):
+            self.event_vars, self.ended = event_vars, ended
             self.post_wait.set()
 
         def get_vals(self):
@@ -39,7 +39,7 @@ class Evaler:
                 if self.ended:
                     break
                 else:
-                    yield self.val
+                    yield self.event_vars
                     self.eval_wait.set()
 
     def __init__(self, eval_f_s):
@@ -88,12 +88,12 @@ class Evaler:
         self.eval_wait.set()
         self.reset_wait.set()
 
-    def post(self, val=None, ended=False, continue_thread=True):
+    def post(self, event_vars:EventVars=None, ended=False, continue_thread=True):
         if not self.running:
             utils.debug_log('post was called when Evaler is not running')
             return None, False
         self.eval_return.reset()
-        self.g.post(val, ended)
+        self.g.post(event_vars, ended)
         self.eval_wait.wait()
         self.eval_wait.clear()
         # save result before it would get reset

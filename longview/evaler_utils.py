@@ -60,8 +60,8 @@ def cols2rows(batch):
 
 def top(l, topk=1, order='dsc', group_key=None, out_xform=lambda x:x):
     min_result = {}
-    for event_data in l:
-        batch = cols2rows(event_data.batch)
+    for event_vars in l:
+        batch = cols2rows(event_vars.batch)
         # by default group items in batch by target value
         group_key = group_key or (lambda b: b[1]) #target
         by_class = groupby2(batch, group_key)

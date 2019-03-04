@@ -123,10 +123,10 @@ class ZmqPubSub:
     class Subscription:
         # subscribe to topic, call callback when object is received on topic
         def __init__(self, port, topic="", callback=None, host="localhost"):
+            self._socket = None
             ZmqPubSub.initialize()
             ZmqPubSub._io_loop_call(False, self._add_sub,
                 port, topic=topic, callback=callback, host=host)
-            self._socket = None
 
         def close(self):
             if self._socket:
@@ -194,7 +194,7 @@ class ZmqPubSub:
 
         def _connect(self, port, is_server, callback, host):
             def callback_wrapper(callback, msg):
-                utils.debug_log("Server received request...", verbosity=5)
+                utils.debug_log("Server received request...", verbosity=6)
 
                 [obj_s] = msg
                 try:
@@ -206,7 +206,7 @@ class ZmqPubSub:
                     # we must send reply to complete the cycle
                     self._socket.send_multipart([dill.dumps((None, e))])
                 
-                utils.debug_log("Server sent response", verbosity=5)
+                utils.debug_log("Server sent response", verbosity=6)
                 
             context = zmq.Context()
             if is_server:
@@ -238,8 +238,8 @@ class ZmqPubSub:
             return dill.loads(obj_s)
 
         def request(self, req_obj):
-            utils.debug_log("Client sending request...", verbosity=5)
+            utils.debug_log("Client sending request...", verbosity=6)
             self.send_obj(req_obj)
             r = self.receive_obj()
-            utils.debug_log("Client received response", verbosity=5)
+            utils.debug_log("Client received response", verbosity=6)
             return r

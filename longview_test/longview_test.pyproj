@@ -5,7 +5,7 @@
     <ProjectGuid>9a7fe67e-93f0-42b5-b58f-77320fc639e4</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>test_client.py</StartupFile>
+    <StartupFile>cli_sum_log.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,17 +25,32 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="circ_ref.py" />
-    <Compile Include="test_client.py">
+    <Compile Include="cli_dlc.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="test_evaler.py">
+    <Compile Include="cli_ij.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="test_zmq_cli.py">
+    <Compile Include="cli_mnist.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="test_server.py" />
-    <Compile Include="test_zmq_srv.py">
+    <Compile Include="cli_sum_log.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="evaler_test.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ipython_widget.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="srv_sum_log.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="zmq_cli.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="srv_ij.py" />
+    <Compile Include="zmq_srv.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="thread_test.py">

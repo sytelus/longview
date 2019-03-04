@@ -13,14 +13,14 @@ from .repeated_timer import RepeatedTimer
 
 class WatchClient:
     class Stream:
-        def __init__(self, client_id:str, clisrv, event_name:str, eval_f_s:str,
-                stream_name:str=None, eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
-            self.stream_name = stream_name or str(uuid.uuid4())
+        def __init__(self, client_id:str, clisrv, event_name:str, eval_expr:str,
+                stream_name:str=None, throttle=None):
+            self.stream_name = stream_name if stream_name is not None else str(uuid.uuid4())
             self._qt = None
             self.clisrv = clisrv
             self._callbacks = []
-            self.stream_req = StreamRequest(event_name, eval_f_s, self.stream_name, 
-                eval_start, eval_end, throttle, client_id)
+            self.stream_req = StreamRequest(event_name, eval_expr, self.stream_name, 
+                throttle, client_id)
 
             self._send_stream_req()
 
@@ -137,7 +137,7 @@ class WatchClient:
             utils.debug_log("Received event for stream", eval_result.event_name, verbosity=5)
             self._streams[eval_result.stream_name].on_event_eval(eval_result)
         else:
-            utils.debug_log("Event for unknown stream", eval_result.event_name, verbosity=5)
+            utils.debug_log("Event for unknown stream", eval_result.event_name, verbosity=3)
 
     def _on_srv_mgmt(self, mgmt_msg:ServerMgmtMsg):
         utils.debug_log("Received - SeverMgmtevent", verbosity=6)
@@ -164,12 +164,11 @@ class WatchClient:
         clisrv_req = ClientServerRequest(CliSrvReqTypes.heartbeat, self.client_id)
         self._clisrv.send_obj(clisrv_req)
 
-    def create_stream(self, event_name:str, eval_f_s:str, stream_name:str=None, 
-        eval_start:int=0, eval_end:int=sys.maxsize, throttle=None):
+    def create_stream(self, event_name:str, eval_expr:str, stream_name:str=None, throttle=None):
         utils.debug_log("Client - creating stream...", stream_name)
 
-        stream = WatchClient.Stream(self.client_id, self._clisrv, event_name, eval_f_s,
-            stream_name, eval_start, eval_end, throttle)
+        stream = WatchClient.Stream(self.client_id, self._clisrv, event_name, eval_expr,
+            stream_name, throttle)
         self._streams[stream.stream_name] = stream
 
         return stream
