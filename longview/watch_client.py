@@ -134,10 +134,10 @@ class WatchClient:
 
     def _on_event_eval(self, eval_result:EvalResult):
         if eval_result.stream_name in self._streams:
-            utils.debug_log("Received event for stream", eval_result.event_name, verbosity=5)
+            utils.debug_log("Received event for stream", eval_result.stream_name, verbosity=5)
             self._streams[eval_result.stream_name].on_event_eval(eval_result)
         else:
-            utils.debug_log("Event for unknown stream", eval_result.event_name, verbosity=3)
+            utils.debug_log("Event for unknown stream", eval_result.stream_name, verbosity=3)
 
     def _on_srv_mgmt(self, mgmt_msg:ServerMgmtMsg):
         utils.debug_log("Received - SeverMgmtevent", verbosity=6)

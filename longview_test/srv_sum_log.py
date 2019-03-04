@@ -1,7 +1,7 @@
 import longview as lv
 import time
 from longview import utils
-utils.set_debug_verbosity(5)
+utils.set_debug_verbosity(4)
 
 sum = 0
 for i in range(1000):

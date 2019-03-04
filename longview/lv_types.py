@@ -68,7 +68,7 @@ class StreamEvent:
         if not utils.is_uuid4(self.stream_name) or self.eval_result is None:
             return self.stream_name  
         else:
-           return self.eval_result.stream_index
+           return str(self.eval_result.stream_index)
 
 class StreamRequest:
     def __init__(self, event_name:str, eval_expr:str, stream_name:str, 

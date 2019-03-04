@@ -138,7 +138,8 @@ class ZmqPubSub:
                 try:
                     if weak_callback and weak_callback():
                         weak_callback()(dill.loads(obj_s))
-                except Exception:
+                except Exception as e:
+                    print(e, file=sys.stderr)
                     raise
 
             # connect to publisher socket

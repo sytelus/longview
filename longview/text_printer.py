@@ -12,9 +12,28 @@ class TextPrinter():
         self.is_ipython = get_ipython() is not None
         self._stream_plots = {}
         self.is_shown = False
-        self.widget = widgets.HBox(layout=widgets.Layout(overflow='visible'))
-        self.df = pd.DataFrame([])
+        self.cell = widgets.HBox() #layout=widgets.Layout(overflow='scroll')
         self.lock = threading.Lock()
+
+    @staticmethod
+    def _get_key_name(stream_event, i):
+        return stream_event.display_name() + ':' + str(i)
+
+    def append(self, stream_event, stream_plot, vals):
+        if vals is None:
+            stream_plot.df = stream_plot.df.append([{stream_plot._get_key_name(stream_event, 0) : None}], 
+                                                   sort=False)
+            return
+        for val in vals:
+            if val is None or utils.is_scalar(val):
+                stream_plot.df = stream_plot.df.append([{TextPrinter._get_key_name(stream_event, 0) : val}], 
+                                          sort=False)
+            elif utils.is_array_like(val):
+                for i,val_i in enumerate(val):
+                    stream_plot.df = stream_plot.df.append([{TextPrinter._get_key_name(stream_event, i) : val_i}], 
+                                              sort=False)
+            else:
+                stream_plot.df = stream_plot.df.append([val.__dict__], sort=False)
 
     def _add_eval_result(self, stream_event:StreamEvent):
         with self.lock:
@@ -45,13 +64,10 @@ class TextPrinter():
                     time.time() - stream_plot.last_update >= stream_plot.throttle:
 
                     if eval_result.ended:
-                        self.df = self.df.append(pd.Series(), ignore_index=True)
+                        stream_plot.df = stream_plot.df.append([{'Ended':True}], sort=False)
                     else:
                         vals = TextPrinter._extract_vals(eval_result)
-                        if vals is not None:
-                            for val in vals:
-                                if val is not None:
-                                    self.df = self.df.append([val.__dict__])
+                        self.append(stream_event, stream_plot, vals)
 
                     # update for throttle
                     stream_plot.last_update = time.time()
@@ -59,9 +75,9 @@ class TextPrinter():
                     if self.is_ipython:
                         stream_plot.out_widget.clear_output(wait=True)
                         with stream_plot.out_widget:
-                            display.display(self.df)
+                            display.display(stream_plot.df)
                     else:
-                        last_recs = self.df.iloc[[-1]].to_dict('records')
+                        last_recs = stream_plot.df.iloc[[-1]].to_dict('records')
                         if len(last_recs) == 1:
                             print(last_recs[0])
                         else:
@@ -86,7 +102,11 @@ class TextPrinter():
                         clear_after_each, history_len=1, dim_history=True, opacity=1)
             stream_plot._clear_pending = False
             stream_plot.out_widget = widgets.Output()
-            self.widget.children = self.widget.children + (stream_plot.out_widget,)
+            #stream_plot.out_widget.layout.height = '3in'
+            #stream_plot.out_widget.layout.width = '4in'
+
+            stream_plot.df = pd.DataFrame([])
+            self.cell.children += (stream_plot.out_widget,)
             stream_plot.text = self._get_title(stream_plot)
             self._stream_plots[stream.stream_name] = stream_plot
             stream.subscribe(self._add_eval_result)
@@ -97,10 +117,11 @@ class TextPrinter():
                 
     def show(self):
         self.is_shown = True
-        return self.widget if self.is_ipython else ''
+        return self.cell if self.is_ipython else ''
 
     def clear_plot(self, stream_plot):
-        self.df = self.df.iloc[0:0]
+        print('clear!')
+        stream_plot.df = stream_plot.df.iloc[0:0]
 
     @staticmethod
     def _extract_vals(eval_result):
