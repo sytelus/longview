@@ -153,9 +153,9 @@ class WatchServer:
                                     stream_req.client_id), event_name, verbosity=4)
                 else:
                     stream_req.last_sent = time.time()
-                    event_data = EventData(self._global_vars, **self._event_vars[event_name])
+                    events_vars = EventVars(self._global_vars, **self._event_vars[event_name])
                     utils.debug_log("Sending event data", event_name, verbosity=5)
-                    self._eval_event_send(stream_req, event_data)
+                    self._eval_event_send(stream_req, events_vars)
             else:
                 utils.debug_log("Throttled", event_name, verbosity=5)
 
