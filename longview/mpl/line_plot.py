@@ -3,12 +3,13 @@ from .base_plot import *
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from ..lv_types import *
 from .. import utils
-
+import ipywidgets as widgets
+from IPython import get_ipython
 import numpy as np
 
 class LinePlot(BasePlot):
-    def __init__(self, title=None, show_legend:bool=True, is_3d:bool=False):
-        super(LinePlot, self).__init__(title, show_legend)
+    def __init__(self, cell=None, title=None, show_legend:bool=True, is_3d:bool=False):
+        super(LinePlot, self).__init__(cell, title, show_legend)
         self.is_3d = is_3d
 
     def init_stream_plot(self, stream, stream_plot, 

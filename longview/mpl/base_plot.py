@@ -13,9 +13,11 @@ from matplotlib.animation import FuncAnimation
 import time
 import threading
 import queue
+import ipywidgets as widgets
+from IPython import get_ipython
 
 class BasePlot:
-    def __init__(self, title=None, show_legend:bool=True):
+    def __init__(self, cell=None, title=None, show_legend:bool=True):
         # we initialize figure when first axis is added
         self._fig_init_done = False
         # has this plot be shown yet?

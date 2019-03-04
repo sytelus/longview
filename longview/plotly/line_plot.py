@@ -1,12 +1,13 @@
 import plotly.graph_objs as go
-
+import ipywidgets as widgets
+from IPython import get_ipython
 from .base_plot import BasePlot
 from ..lv_types import *
 from .. import utils
 
 class LinePlot(BasePlot):
-    def __init__(self, title=None, show_legend:bool=True, is_3d:bool=False):
-        super(LinePlot, self).__init__(title, show_legend)
+    def __init__(self, cell=None, title=None, show_legend:bool=True, is_3d:bool=False):
+        super(LinePlot, self).__init__(cell, title, show_legend)
         self.is_3d = is_3d
 
     def _setup_layout(self, stream_plot):
@@ -16,10 +17,10 @@ class LinePlot(BasePlot):
         if stream_plot.xtitle:
             xaxis = 'xaxis' + str(stream_plot.index+1)
             axis_props = BasePlot._get_axis_common_props(stream_plot.xtitle, stream_plot.xrange)
-            self.figwig.layout[xaxis] = axis_props
+            self.widget.layout[xaxis] = axis_props
         if stream_plot.ytitle:
             # handle multiple Y-Axis plots
-            color = self.figwig.data[stream_plot.trace_index].line.color
+            color = self.widget.data[stream_plot.trace_index].line.color
             yaxis = 'yaxis' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
             axis_props = BasePlot._get_axis_common_props(stream_plot.ytitle, stream_plot.yrange)
             axis_props['linecolor'] = color
@@ -28,14 +29,14 @@ class LinePlot(BasePlot):
                 axis_props['overlaying'] = 'y'
                 axis_props['side'] = 'right'
                 if stream_plot.index > 1:
-                    self.figwig.layout.xaxis = dict(domain=[0, 1 - 0.085*(stream_plot.index-1)])
+                    self.widget.layout.xaxis = dict(domain=[0, 1 - 0.085*(stream_plot.index-1)])
                     axis_props['anchor'] = 'free'
                     axis_props['position'] = 1 - 0.085*(stream_plot.index-2)
-            self.figwig.layout[yaxis] = axis_props
+            self.widget.layout[yaxis] = axis_props
         if self.is_3d and stream_plot.ztitle:
             zaxis = 'zaxis' #+ str(stream_plot.index+1)
             axis_props = BasePlot._get_axis_common_props(stream_plot.ztitle, stream_plot.zrange)
-            self.figwig.layout.scene[zaxis] = axis_props
+            self.widget.layout.scene[zaxis] = axis_props
 
     def _create_2d_trace(self, stream_plot, mode):
         yaxis = 'y' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
@@ -75,7 +76,7 @@ class LinePlot(BasePlot):
             return
 
         # get trace data
-        trace = self.figwig.data[stream_plot.trace_index]
+        trace = self.widget.data[stream_plot.trace_index]
         xdata, ydata, zdata, pt_labels = list(trace.x), list(trace.y), [], []
         if self.is_3d:
             zdata = list(trace.z)
@@ -106,18 +107,18 @@ class LinePlot(BasePlot):
             if pt_label:
                 pt_labels.append(dict(x=x, y=y, xref='x', yref='y', text=pt_label, showarrow=False))
 
-        self.figwig.data[stream_plot.trace_index].x = xdata
-        self.figwig.data[stream_plot.trace_index].y = ydata   
+        self.widget.data[stream_plot.trace_index].x = xdata
+        self.widget.data[stream_plot.trace_index].y = ydata   
         if self.is_3d:
-            self.figwig.data[stream_plot.trace_index].z = zdata
-        self.figwig.layout.annotations = []
+            self.widget.data[stream_plot.trace_index].z = zdata
+        self.widget.layout.annotations = []
         for x, y, pt_label in zip(xdata, ydata, pt_labels):
             # add annotation
             if pt_label:
-                self.figwig.layout.annotations = pt_labels
+                self.widget.layout.annotations = pt_labels
 
     def clear_plot(self, stream_plot):
-        self.figwig.data[stream_plot.trace_index].x = []
-        self.figwig.data[stream_plot.trace_index].y = []   
+        self.widget.data[stream_plot.trace_index].x = []
+        self.widget.data[stream_plot.trace_index].y = []   
         if self.is_3d:
-            self.figwig.data[stream_plot.trace_index].z = []
+            self.widget.data[stream_plot.trace_index].z = []

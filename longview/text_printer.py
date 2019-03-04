@@ -9,14 +9,15 @@ from IPython import get_ipython, display
 
 class TextPrinter:
     def __init__(self, cell=None):
-        self.is_ipython = get_ipython() is not None
-        self._stream_plots = {}
-        self.is_shown = False
-        self.cell = cell or widgets.HBox(layout=widgets.Layout(height='3in'))
-        self.out_widget = widgets.HTML()
-        self.df = pd.DataFrame([])
-        self.cell.children += (self.out_widget,)
         self.lock = threading.Lock()
+        self.cell = cell or widgets.HBox(layout=widgets.Layout(height='3in'))
+        self.widget = widgets.HTML()
+        self.cell.children += (self.widget,)
+        self._stream_plots = {}
+        self.is_shown = cell is not None
+
+        self.is_ipython = get_ipython() is not None
+        self.df = pd.DataFrame([])
 
     @staticmethod
     def _get_key_name(stream_event, i):
@@ -78,12 +79,12 @@ class TextPrinter:
 
                     if self.is_ipython:
                         if not stream_plot.only_summary:
-                            self.out_widget.value = self.df.to_html(classes=['output_html', 'rendered_html'])
+                            self.widget.value = self.df.to_html(classes=['output_html', 'rendered_html'])
                         else:
-                            self.out_widget.value = self.df.describe().to_html(classes=['output_html', 'rendered_html'])
+                            self.widget.value = self.df.describe().to_html(classes=['output_html', 'rendered_html'])
                         # below doesn't work because of threading issue
-                        #self.out_widget.clear_output(wait=True)
-                        #with self.out_widget:
+                        #self.widget.clear_output(wait=True)
+                        #with self.widget:
                         #    display.display(self.df)
                     else:
                         last_recs = self.df.iloc[[-1]].to_dict('records')

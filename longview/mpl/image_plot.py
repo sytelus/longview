@@ -5,6 +5,8 @@ from .. import utils
 import math
 import numpy as np
 import skimage.transform
+import ipywidgets as widgets
+from IPython import get_ipython
 
 class ImagePlot(BasePlot):
     def init_stream_plot(self, stream, stream_plot, 
