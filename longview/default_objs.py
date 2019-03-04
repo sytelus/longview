@@ -37,22 +37,22 @@ def _ensure_client():
     if not default_watch_client:
         default_watch_client = WatchClient()
 
-def _get_renderer(renderer):
+def _get_renderer(renderer, cell):
     if renderer is None:
-        return TextPrinter()
+        return TextPrinter(cell)
     elif isinstance(renderer, str):
         if renderer == 'text':
-            return TextPrinter()
+            return TextPrinter(cell)
         else:
             raise ValueError('Render parameter has invalid value: "{}"'.format(renderer))
     else:
         return renderer
 
 def render(eval_expr:str=None, event_name:str='', stream_name:str=None, throttle=None, 
-            clear_after_end=True, clear_after_each=False, renderer=None):
+            clear_after_end=True, clear_after_each=False, cell=None, renderer=None):
     _ensure_client()
 
-    renderer = _get_renderer(renderer)
+    renderer = _get_renderer(renderer, cell)
     
     stream = default_watch_client.create_stream(event_name=event_name, 
         eval_expr=eval_expr or 'map(lambda x:x, l)', stream_name=stream_name, throttle=throttle)

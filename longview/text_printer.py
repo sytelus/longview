@@ -8,11 +8,14 @@ import ipywidgets as widgets
 from IPython import get_ipython, display
 
 class TextPrinter():
-    def __init__(self):
+    def __init__(self, cell=None):
         self.is_ipython = get_ipython() is not None
         self._stream_plots = {}
         self.is_shown = False
-        self.cell = widgets.HBox() #layout=widgets.Layout(overflow='scroll')
+        self.cell = cell or widgets.HBox(layout=widgets.Layout(height='3in'))
+        self.out_widget = widgets.HTML()
+        self.df = pd.DataFrame([])
+        self.cell.children += (self.out_widget,)
         self.lock = threading.Lock()
 
     @staticmethod
@@ -21,19 +24,19 @@ class TextPrinter():
 
     def append(self, stream_event, stream_plot, vals):
         if vals is None:
-            stream_plot.df = stream_plot.df.append([{stream_plot._get_key_name(stream_event, 0) : None}], 
-                                                   sort=False)
+            self.df = self.df.append(pd.Series({stream_plot._get_key_name(stream_event, 0) : None}), 
+                                                   sort=False, ignore_index=True)
             return
         for val in vals:
             if val is None or utils.is_scalar(val):
-                stream_plot.df = stream_plot.df.append([{TextPrinter._get_key_name(stream_event, 0) : val}], 
-                                          sort=False)
+                self.df = self.df.append(pd.Series({TextPrinter._get_key_name(stream_event, 0) : val}), 
+                                          sort=False, ignore_index=True)
             elif utils.is_array_like(val):
                 for i,val_i in enumerate(val):
-                    stream_plot.df = stream_plot.df.append([{TextPrinter._get_key_name(stream_event, i) : val_i}], 
-                                              sort=False)
+                    self.df = self.df.append(pd.Series({TextPrinter._get_key_name(stream_event, i) : val_i}), 
+                                              sort=False, ignore_index=True)
             else:
-                stream_plot.df = stream_plot.df.append([val.__dict__], sort=False)
+                self.df = self.df.append(pd.Series(val.__dict__), sort=False, ignore_index=True)
 
     def _add_eval_result(self, stream_event:StreamEvent):
         with self.lock:
@@ -64,7 +67,8 @@ class TextPrinter():
                     time.time() - stream_plot.last_update >= stream_plot.throttle:
 
                     if eval_result.ended:
-                        stream_plot.df = stream_plot.df.append([{'Ended':True}], sort=False)
+                        self.df = self.df.append(pd.Series({'Ended':True}), 
+                                                               sort=False, ignore_index=True)
                     else:
                         vals = TextPrinter._extract_vals(eval_result)
                         self.append(stream_event, stream_plot, vals)
@@ -73,11 +77,13 @@ class TextPrinter():
                     stream_plot.last_update = time.time()
 
                     if self.is_ipython:
-                        stream_plot.out_widget.clear_output(wait=True)
-                        with stream_plot.out_widget:
-                            display.display(stream_plot.df)
+                        self.out_widget.value = self.df.to_html(classes=['output_html', 'rendered_html'])
+                        # below doesn't work because of threading issue
+                        #self.out_widget.clear_output(wait=True)
+                        #with self.out_widget:
+                        #    display.display(self.df)
                     else:
-                        last_recs = stream_plot.df.iloc[[-1]].to_dict('records')
+                        last_recs = self.df.iloc[[-1]].to_dict('records')
                         if len(last_recs) == 1:
                             print(last_recs[0])
                         else:
@@ -101,12 +107,6 @@ class TextPrinter():
             stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
                         clear_after_each, history_len=1, dim_history=True, opacity=1)
             stream_plot._clear_pending = False
-            stream_plot.out_widget = widgets.Output()
-            #stream_plot.out_widget.layout.height = '3in'
-            #stream_plot.out_widget.layout.width = '4in'
-
-            stream_plot.df = pd.DataFrame([])
-            self.cell.children += (stream_plot.out_widget,)
             stream_plot.text = self._get_title(stream_plot)
             self._stream_plots[stream.stream_name] = stream_plot
             stream.subscribe(self._add_eval_result)
@@ -120,8 +120,7 @@ class TextPrinter():
         return self.cell if self.is_ipython else ''
 
     def clear_plot(self, stream_plot):
-        print('clear!')
-        stream_plot.df = stream_plot.df.iloc[0:0]
+        self.df = self.df.iloc[0:0]
 
     @staticmethod
     def _extract_vals(eval_result):
