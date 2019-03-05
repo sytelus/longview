@@ -1,3 +1,5 @@
+from . import mpl
+from . import plotly
 from .watch_server import *
 from .watch_client import *
 from .text_printer import *
@@ -37,25 +39,50 @@ def _ensure_client():
     if not default_watch_client:
         default_watch_client = WatchClient()
 
-def _get_renderer(renderer, cell):
-    if renderer is None:
-        return TextPrinter(cell)
-    elif isinstance(renderer, str):
-        if renderer == 'text':
-            return TextPrinter(cell)
-        else:
-            raise ValueError('Render parameter has invalid value: "{}"'.format(renderer))
-    else:
-        return renderer
+def _get_renderer(type, cell, title):
+    if type is None:
+        return TextPrinter(cell=cell, title=title)
 
-def render(eval_expr:str=None, event_name:str='', stream_name:str=None, throttle=None, 
-            clear_after_end=True, clear_after_each=False, cell=None, renderer=None, only_summary=False):
+    if type in ['text', 'summary']:
+        return TextPrinter(cell=cell, title=title)
+    elif type in ['line', 'plotly-line', 'scatter', 'plotly-scatter', 
+                        'line3d', 'scatter3d', 'mesh3d']:
+        return plotly.LinePlot(cell=cell, title=title, 
+                                is_3d=type in ['line3d', 'scatter3d', 'mesh3d'])
+    elif type in ['image', 'mpl-image']:
+        return mpl.ImagePlot(cell=cell, title=title)
+    elif type in ['mpl-line', 'mpl-scatter']:
+        return mpl.LinePlot(cell=cell, title=title)
+    else:
+        raise ValueError('Render type parameter has invalid value: "{}"'.format(type))
+
+def get_default_client():
+    return default_watch_client
+def get_default_server():
+    return default_watch_server
+
+
+def vis(expr:str=None, event_name:str='', stream_name:str=None, throttle=None, 
+            clear_after_end=True, clear_after_each=False, show:bool=None, 
+            cell=None, title=None, vis=None, type=None, only_summary=False, 
+            history_len=1, dim_history=True, opacity=None,
+            separate_yaxis=True, xtitle=None, ytitle=None, ztitle=None, color=None,
+            xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=True):
+
     _ensure_client()
 
-    renderer = _get_renderer(renderer, cell)
+    if type:
+        draw_line = 'scatter' not in type
+        only_summary = 'summary' == type
+
+    vis = vis or _get_renderer(type, cell, title)
     
     stream = default_watch_client.create_stream(event_name=event_name, 
-        eval_expr=eval_expr or 'map(lambda x:x, l)', stream_name=stream_name, throttle=throttle)
-    renderer.add(stream, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary)
+        expr=expr, stream_name=stream_name, throttle=throttle)
 
-    return renderer
+    vis.add(stream, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,
+                 show=show, history_len=history_len, dim_history=dim_history, opacity=opacity,
+                 separate_yaxis=separate_yaxis, xtitle=xtitle, ytitle=ytitle, ztitle=ztitle, color=color,
+                 xrange=xrange, yrange=yrange, zrange=zrange, draw_line=draw_line, draw_marker=draw_marker)
+
+    return vis

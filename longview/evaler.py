@@ -42,11 +42,11 @@ class Evaler:
                     yield self.event_vars
                     self.eval_wait.set()
 
-    def __init__(self, eval_expr):
+    def __init__(self, expr):
         self.eval_wait = threading.Event()
         self.reset_wait = threading.Event()
         self.g = Evaler.PostableIterator(self.eval_wait)
-        self.eval_expr = eval_expr
+        self.expr = expr
         self.reset()
 
         self.th = threading.Thread(target=self._runner, name='evaler')
@@ -64,7 +64,7 @@ class Evaler:
         while True:
             l = self.g.get_vals() # this var will be used by eval
             try:
-                eval_result = eval(self.eval_expr)
+                eval_result = eval(self.expr)
                 if isinstance(eval_result, Iterator):
                     for i, result in enumerate(eval_result):
                         self.eval_return = EvalReturn(result, True)

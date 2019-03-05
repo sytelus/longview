@@ -11,7 +11,7 @@ from IPython import get_ipython
 class ImagePlot(BasePlot):
     def init_stream_plot(self, stream, stream_plot, 
             rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
-            colormap=None, viz_img_scale=None):
+            colormap=None, viz_img_scale=None, **stream_args):
         stream_plot.rows, stream_plot.cols = rows, cols
         stream_plot.img_channels, stream_plot.colormap = img_channels, colormap
         stream_plot.img_width, stream_plot.img_height = img_width, img_height

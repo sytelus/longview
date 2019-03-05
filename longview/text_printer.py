@@ -8,13 +8,14 @@ import ipywidgets as widgets
 from IPython import get_ipython, display
 
 class TextPrinter:
-    def __init__(self, cell=None, **plot_args):
+    def __init__(self, cell=None, title=None, **plot_args):
         self.lock = threading.Lock()
         self.cell = cell or widgets.HBox(layout=widgets.Layout(height='3in'))
         self.widget = widgets.HTML()
         self.cell.children += (self.widget,)
         self._stream_plots = {}
         self.is_shown = cell is not None
+        self.title = title
 
         self.is_ipython = get_ipython() is not None
         self.df = pd.DataFrame([])

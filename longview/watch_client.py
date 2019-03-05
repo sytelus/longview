@@ -13,13 +13,13 @@ from .repeated_timer import RepeatedTimer
 
 class WatchClient:
     class Stream:
-        def __init__(self, client_id:str, clisrv, event_name:str, eval_expr:str,
+        def __init__(self, client_id:str, clisrv, event_name:str, expr:str,
                 stream_name:str=None, throttle=None):
             self.stream_name = stream_name if stream_name is not None else str(uuid.uuid4())
             self._qt = None
             self.clisrv = clisrv
             self._callbacks = []
-            self.stream_req = StreamRequest(event_name, eval_expr, self.stream_name, 
+            self.stream_req = StreamRequest(event_name, expr, self.stream_name, 
                 throttle, client_id)
 
             self._send_stream_req()
@@ -164,10 +164,10 @@ class WatchClient:
         clisrv_req = ClientServerRequest(CliSrvReqTypes.heartbeat, self.client_id)
         self._clisrv.send_obj(clisrv_req)
 
-    def create_stream(self, event_name:str, eval_expr:str, stream_name:str=None, throttle=None):
+    def create_stream(self, event_name:str, expr:str, stream_name:str=None, throttle=None):
         utils.debug_log("Client - creating stream...", stream_name)
 
-        stream = WatchClient.Stream(self.client_id, self._clisrv, event_name, eval_expr,
+        stream = WatchClient.Stream(self.client_id, self._clisrv, event_name, expr,
             stream_name, throttle)
         self._streams[stream.stream_name] = stream
 

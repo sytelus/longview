@@ -67,7 +67,14 @@ class WatchServer:
     def create_stream(self, stream_req:StreamRequest) -> int:
         # TODO: need to think more about overwrite behavior
         utils.debug_log("creating stream", stream_req.stream_name)
-        stream_req._evaler = Evaler(stream_req.eval_expr)
+
+        if not stream_req.expr:
+            stream_req.expr = 'map(lambda x:x, l)'
+        elif stream_req.expr.strip().startswith('lambda '):
+            stream_req.expr = 'map({}, l)'.format(stream_req.expr)
+        # else no rewrites
+
+        stream_req._evaler = Evaler(stream_req.expr)
 
         stream_reqs = self._event_streams.get(stream_req.event_name, None)
         if stream_reqs is None:

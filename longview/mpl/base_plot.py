@@ -26,9 +26,8 @@ class BasePlot:
         self.cell.children += (self.widget,)
         self._stream_plots = {}
         self.is_shown = cell is not None
-
-        # we initialize figure when first axis is added
         self.title = title
+
         self._fig_init_done = False
         self.show_legend = show_legend
         # graph objects
@@ -98,7 +97,7 @@ class BasePlot:
                             stream_plot._clear_pending = False
                         if stream_plot.clear_after_each or (eval_result.ended and stream_plot.clear_after_end):
                             stream_plot._clear_pending = True
-
+                        
                         # check throttle
                         if eval_result.ended or \
                             stream_plot.throttle is None or stream_plot.last_update is None or \
@@ -118,9 +117,8 @@ class BasePlot:
                             utils.debug_log("Value not plotted due to throttle", 
                                             eval_result.event_name, verbosity=5)
 
-    def add(self, stream, title=None, throttle=None, 
-            clear_after_end=False, clear_after_each=False, show:bool=None, 
-            history_len=0, dim_history=True, opacity=None, **stream_args):
+    def add(self, stream, title=None, throttle=None, clear_after_end=False, clear_after_each=False, 
+            show:bool=None, history_len=1, dim_history=True, opacity=None, **stream_args):
 
         # make sure figure is initialized
         self.init_fig()

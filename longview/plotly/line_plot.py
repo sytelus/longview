@@ -14,26 +14,27 @@ class LinePlot(BasePlot):
         # handle multiple y axis
         yaxis = 'yaxis' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
 
-        if stream_plot.xtitle:
-            xaxis = 'xaxis' + str(stream_plot.index+1)
-            axis_props = BasePlot._get_axis_common_props(stream_plot.xtitle, stream_plot.xrange)
-            self.widget.layout[xaxis] = axis_props
-        if stream_plot.ytitle:
-            # handle multiple Y-Axis plots
-            color = self.widget.data[stream_plot.trace_index].line.color
-            yaxis = 'yaxis' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
-            axis_props = BasePlot._get_axis_common_props(stream_plot.ytitle, stream_plot.yrange)
-            axis_props['linecolor'] = color
-            axis_props['tickfont']=axis_props['titlefont'] = dict(color=color)
-            if stream_plot.index > 0 and stream_plot.separate_yaxis:
-                axis_props['overlaying'] = 'y'
-                axis_props['side'] = 'right'
-                if stream_plot.index > 1:
-                    self.widget.layout.xaxis = dict(domain=[0, 1 - 0.085*(stream_plot.index-1)])
-                    axis_props['anchor'] = 'free'
-                    axis_props['position'] = 1 - 0.085*(stream_plot.index-2)
-            self.widget.layout[yaxis] = axis_props
-        if self.is_3d and stream_plot.ztitle:
+        xaxis = 'xaxis' + str(stream_plot.index+1)
+        axis_props = BasePlot._get_axis_common_props(stream_plot.xtitle, stream_plot.xrange)
+        #axis_props['rangeslider'] = dict(visible = True)
+        self.widget.layout[xaxis] = axis_props
+
+        # handle multiple Y-Axis plots
+        color = self.widget.data[stream_plot.trace_index].line.color
+        yaxis = 'yaxis' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
+        axis_props = BasePlot._get_axis_common_props(stream_plot.ytitle, stream_plot.yrange)
+        axis_props['linecolor'] = color
+        axis_props['tickfont']=axis_props['titlefont'] = dict(color=color)
+        if stream_plot.index > 0 and stream_plot.separate_yaxis:
+            axis_props['overlaying'] = 'y'
+            axis_props['side'] = 'right'
+            if stream_plot.index > 1:
+                self.widget.layout.xaxis = dict(domain=[0, 1 - 0.085*(stream_plot.index-1)])
+                axis_props['anchor'] = 'free'
+                axis_props['position'] = 1 - 0.085*(stream_plot.index-2)
+        self.widget.layout[yaxis] = axis_props
+
+        if self.is_3d:
             zaxis = 'zaxis' #+ str(stream_plot.index+1)
             axis_props = BasePlot._get_axis_common_props(stream_plot.ztitle, stream_plot.zrange)
             self.widget.layout.scene[zaxis] = axis_props
@@ -60,9 +61,9 @@ class LinePlot(BasePlot):
         stream_plot.xrange = stream_plot.stream_args.get('xrange',None)
         stream_plot.yrange = stream_plot.stream_args.get('yrange',None)
         stream_plot.zrange = stream_plot.stream_args.get('zrange',None)
-        
         draw_line = stream_plot.stream_args.get('draw_line',True)
         draw_marker = stream_plot.stream_args.get('draw_marker',True)
+
         mode = 'lines' if draw_line else ''
         mode = ('' if mode=='' else mode+'+') + 'markers' if draw_marker else ''
 

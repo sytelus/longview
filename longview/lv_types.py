@@ -71,10 +71,10 @@ class StreamEvent:
            return str(self.eval_result.stream_index)
 
 class StreamRequest:
-    def __init__(self, event_name:str, eval_expr:str, stream_name:str, 
+    def __init__(self, event_name:str, expr:str, stream_name:str, 
             throttle:float, client_id:str, stream_index:int=None):
         self.event_name = event_name
-        self.eval_expr = eval_expr
+        self.expr = expr
         self.stream_name = stream_name
         self.client_id = client_id
 

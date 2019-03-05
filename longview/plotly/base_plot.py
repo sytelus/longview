@@ -17,8 +17,8 @@ class BasePlot(ABC):
         self.cell.children += (self.widget,)
         self._stream_plots = {}
         self.is_shown = cell is not None
-
         self.title = title
+
         self.widget.layout.title = title
         self.widget.layout.showlegend = show_legend
       
@@ -117,8 +117,10 @@ class BasePlot(ABC):
 
     @staticmethod
     def _get_axis_common_props(title:str, axis_range:tuple):
-        props = {'title':title, 'showline':True, 'showgrid': True, 
+        props = {'showline':True, 'showgrid': True, 
                        'showticklabels': True, 'ticks':'inside'}
+        if title:
+            props['title'] = title
         if axis_range:
             props['range'] = list(axis_range)
         return props

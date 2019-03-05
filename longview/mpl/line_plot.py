@@ -13,7 +13,7 @@ class LinePlot(BasePlot):
         self.is_3d = is_3d #TODO: not implemented for mpl
 
     def init_stream_plot(self, stream, stream_plot, 
-            xtitle='', ytitle='', color=None, xrange=None, yrange=None):
+            xtitle='', ytitle='', color=None, xrange=None, yrange=None, **stream_args):
         stream_plot.xylabel_refs = [] # annotation references
 
         # add main subplot
