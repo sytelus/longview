@@ -54,7 +54,7 @@ class ImagePlot(BasePlot):
 
     def _plot_eval_result(self, vals, stream_plot, eval_result):
         if not vals:
-            return
+            return False
 
         row, col, i = 0, 0, 0
         for val in vals:
@@ -128,3 +128,4 @@ class ImagePlot(BasePlot):
             i += 1
             if i >= stream_plot.rows * stream_plot.cols:
                 break
+        return True

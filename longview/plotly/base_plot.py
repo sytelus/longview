@@ -10,7 +10,7 @@ from ..lv_types import *
 from .. import utils
 
 class BasePlot(ABC):
-    def __init__(self, cell=None, title=None, show_legend:bool=True):
+    def __init__(self, cell=None, title=None, show_legend:bool=True, **plot_args):
         self.lock = threading.Lock()
         self.cell = cell or widgets.HBox(layout=widgets.Layout(width='100%'))
         self.widget = go.FigureWidget()

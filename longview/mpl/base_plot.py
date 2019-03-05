@@ -14,20 +14,23 @@ import time
 import threading
 import queue
 import ipywidgets as widgets
-from IPython import get_ipython
+from IPython import get_ipython, display
+from ipywidgets.widgets.interaction import show_inline_matplotlib_plots
+from ipykernel.pylab.backend_inline import flush_figures
 
 class BasePlot:
-    def __init__(self, cell=None, title=None, show_legend:bool=True):
-        # we initialize figure when first axis is added
-        self._fig_init_done = False
-        # has this plot be shown yet?
-        self.is_shown = False
-        self.title = title
-        self.show_legend = show_legend
-        # number of streams for this plot
-        self._stream_plots = {}
-        # lock to protect code from callback from seperate thread and render thread
+    def __init__(self, cell=None, title=None, show_legend:bool=True, **plot_args):
         self.lock = threading.Lock()
+        self.cell = cell or widgets.HBox(layout=widgets.Layout(width='100%'))
+        self.widget = widgets.Output()
+        self.cell.children += (self.widget,)
+        self._stream_plots = {}
+        self.is_shown = cell is not None
+
+        # we initialize figure when first axis is added
+        self.title = title
+        self._fig_init_done = False
+        self.show_legend = show_legend
         # graph objects
         self.figure = None
         self._ax_main = None
@@ -103,7 +106,12 @@ class BasePlot:
 
                             vals = BasePlot._extract_vals(eval_result)
                             self._plot_eval_result(vals, stream_plot, eval_result)
-
+                            with self.widget:
+                                self.widget.clear_output(wait=True)
+                                self.widget.display(self.figure)
+                                #flush_figures()
+                                #plt.show()
+                                #show_inline_matplotlib_plots()
                             # update for throttle
                             stream_plot.last_update = time.time()
                         else:
@@ -134,7 +142,8 @@ class BasePlot:
 
     def show(self):
         self.is_shown = True
-        return plt.show() #must be done only once
+        #plt.show() #must be done only once
+        return self.cell
 
     @staticmethod
     def _extract_vals(eval_result):

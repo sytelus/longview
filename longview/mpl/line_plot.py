@@ -8,9 +8,9 @@ from IPython import get_ipython
 import numpy as np
 
 class LinePlot(BasePlot):
-    def __init__(self, cell=None, title=None, show_legend:bool=True, is_3d:bool=False):
-        super(LinePlot, self).__init__(cell, title, show_legend)
-        self.is_3d = is_3d
+    def __init__(self, cell=None, title=None, show_legend:bool=True, is_3d:bool=False, **plot_args):
+        super(LinePlot, self).__init__(cell, title, show_legend, **plot_args)
+        self.is_3d = is_3d #TODO: not implemented for mpl
 
     def init_stream_plot(self, stream, stream_plot, 
             xtitle='', ytitle='', color=None, xrange=None, yrange=None):
@@ -80,7 +80,8 @@ class LinePlot(BasePlot):
 
     def _plot_eval_result(self, vals, stream_plot, eval_result):
         if not vals:
-            return
+            return False
+
         line = stream_plot.ax.get_lines()[-1]
         xdata, ydata = line.get_data()
         zdata, pt_labels = [], []
@@ -118,6 +119,9 @@ class LinePlot(BasePlot):
 
         stream_plot.ax.relim()
         stream_plot.ax.autoscale_view()
+
+        return True
+
 
 
    

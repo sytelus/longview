@@ -8,7 +8,7 @@ import ipywidgets as widgets
 from IPython import get_ipython, display
 
 class TextPrinter:
-    def __init__(self, cell=None):
+    def __init__(self, cell=None, **plot_args):
         self.lock = threading.Lock()
         self.cell = cell or widgets.HBox(layout=widgets.Layout(height='3in'))
         self.widget = widgets.HTML()

@@ -6,8 +6,8 @@ from ..lv_types import *
 from .. import utils
 
 class LinePlot(BasePlot):
-    def __init__(self, cell=None, title=None, show_legend:bool=True, is_3d:bool=False):
-        super(LinePlot, self).__init__(cell, title, show_legend)
+    def __init__(self, cell=None, title=None, show_legend:bool=True, is_3d:bool=False, **plot_args):
+        super(LinePlot, self).__init__(cell, title, show_legend, **plot_args)
         self.is_3d = is_3d
 
     def _setup_layout(self, stream_plot):
@@ -73,7 +73,7 @@ class LinePlot(BasePlot):
 
     def _plot_eval_result(self, vals, stream_plot, eval_result):
         if not vals:
-            return
+            return False
 
         # get trace data
         trace = self.widget.data[stream_plot.trace_index]
@@ -116,6 +116,8 @@ class LinePlot(BasePlot):
             # add annotation
             if pt_label:
                 self.widget.layout.annotations = pt_labels
+
+        return True
 
     def clear_plot(self, stream_plot):
         self.widget.data[stream_plot.trace_index].x = []
