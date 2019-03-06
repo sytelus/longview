@@ -1,13 +1,10 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import math
-
 from . import mpl
 from . import plotly
-from .watch_server import *
-from .watch_client import *
-from .text_printer import *
+from .watch_server import WatchServer
+from .watch_client import WatchClient
+from .text_printer import TextPrinter
 from .graph.hiddenlayer import graph
+from .img_utils import *
 
 default_watch_server = None
 default_watch_client = None
@@ -20,10 +17,6 @@ def start_watch():
 
 def _ensure_server():
     start_watch()
-
-def log(event_name:str='', stream_name='', **vars) -> None:
-    _ensure_server()
-    default_watch_server.log(event_name, stream_name, **vars)
 
 def observe(event_name:str='', **vars) -> None:
     _ensure_server()
@@ -96,9 +89,3 @@ def draw_model(model, input_shape=None, orientation='TB'): #orientation = 'LR' f
     g = graph.build_graph(model, input_shape)
     return g
 
-def show_image(img):
-    if hasattr(img, 'shape'):
-        if len(img.shape) == 1:
-            h = int(math.sqrt(img.shape[0]))
-            img = np.reshape(img, (h, int(img.shape[0] / h)))
-    plt.imshow(img)
