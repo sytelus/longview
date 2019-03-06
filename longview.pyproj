@@ -19,21 +19,24 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="longview\default_objs.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="longview\graph\hiddenlayer\ge.py" />
     <Compile Include="longview\graph\hiddenlayer\graph.py" />
     <Compile Include="longview\graph\hiddenlayer\pytorch_builder.py" />
     <Compile Include="longview\graph\hiddenlayer\tf_builder.py" />
     <Compile Include="longview\graph\hiddenlayer\transforms.py" />
-    <Compile Include="longview\graph\hiddenlayer\__init__.py" />
     <Compile Include="longview\graph\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="longview\img_utils.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="longview\model_graph\hiddenlayer\ge.py" />
+    <Compile Include="longview\model_graph\hiddenlayer\graph.py" />
+    <Compile Include="longview\model_graph\hiddenlayer\pytorch_builder.py" />
+    <Compile Include="longview\model_graph\hiddenlayer\tf_builder.py" />
+    <Compile Include="longview\model_graph\hiddenlayer\transforms.py" />
+    <Compile Include="longview\model_graph\hiddenlayer\__init__.py" />
+    <Compile Include="longview\model_graph\__init__.py" />
     <Compile Include="longview\mpl\base_plot.py">
       <SubType>Code</SubType>
     </Compile>
@@ -70,12 +73,24 @@
   <ItemGroup>
     <Folder Include="longview" />
     <Folder Include="longview\graph\hiddenlayer\" />
+    <Folder Include="longview\model_graph\" />
+    <Folder Include="longview\model_graph\hiddenlayer\" />
+    <Folder Include="longview\model_graph\hiddenlayer\__pycache__\" />
+    <Folder Include="longview\model_graph\__pycache__\" />
     <Folder Include="longview\mpl\" />
     <Folder Include="longview\graph\" />
     <Folder Include="longview\plotly\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="longview\model_graph\hiddenlayer\__pycache__\ge.cpython-36.pyc" />
+    <Content Include="longview\model_graph\hiddenlayer\__pycache__\graph.cpython-36.pyc" />
+    <Content Include="longview\model_graph\hiddenlayer\__pycache__\pytorch_builder.cpython-36.pyc" />
+    <Content Include="longview\model_graph\hiddenlayer\__pycache__\transforms.cpython-36.pyc" />
+    <Content Include="longview\model_graph\hiddenlayer\__pycache__\__init__.cpython-36.pyc" />
+    <Content Include="longview\model_graph\__pycache__\__init__.cpython-36.pyc" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>
