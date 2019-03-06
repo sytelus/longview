@@ -5,7 +5,7 @@
     <ProjectGuid>9a7fe67e-93f0-42b5-b58f-77320fc639e4</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>cli_sum_log.py</StartupFile>
+    <StartupFile>draw_model.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -35,6 +35,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="cli_sum_log.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="draw_model.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="evaler_test.py">

@@ -3,6 +3,7 @@ from . import plotly
 from .watch_server import *
 from .watch_client import *
 from .text_printer import *
+from .graph.hiddenlayer import graph
 
 default_watch_server = None
 default_watch_client = None
@@ -62,7 +63,7 @@ def get_default_server():
     return default_watch_server
 
 
-def vis(expr:str=None, event_name:str='', stream_name:str=None, throttle=None, 
+def open(expr:str=None, event_name:str='', stream_name:str=None, throttle=None, 
             clear_after_end=True, clear_after_each=False, show:bool=None, 
             cell=None, title=None, vis=None, type=None, only_summary=False, 
             history_len=1, dim_history=True, opacity=None,
@@ -86,3 +87,8 @@ def vis(expr:str=None, event_name:str='', stream_name:str=None, throttle=None,
                  xrange=xrange, yrange=yrange, zrange=zrange, draw_line=draw_line, draw_marker=draw_marker)
 
     return vis
+
+def draw_model(model, input_shape):
+    g = graph.build_graph(model, input_shape)
+    g.theme = graph.THEMES['blue'].copy()
+    return g

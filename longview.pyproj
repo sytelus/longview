@@ -22,6 +22,15 @@
     <Compile Include="longview\default_objs.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="longview\graph\hiddenlayer\ge.py" />
+    <Compile Include="longview\graph\hiddenlayer\graph.py" />
+    <Compile Include="longview\graph\hiddenlayer\pytorch_builder.py" />
+    <Compile Include="longview\graph\hiddenlayer\tf_builder.py" />
+    <Compile Include="longview\graph\hiddenlayer\transforms.py" />
+    <Compile Include="longview\graph\hiddenlayer\__init__.py" />
+    <Compile Include="longview\graph\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="longview\mpl\base_plot.py">
       <SubType>Code</SubType>
     </Compile>
@@ -57,7 +66,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="longview" />
+    <Folder Include="longview\graph\hiddenlayer\" />
     <Folder Include="longview\mpl\" />
+    <Folder Include="longview\graph\" />
     <Folder Include="longview\plotly\" />
   </ItemGroup>
   <ItemGroup>
