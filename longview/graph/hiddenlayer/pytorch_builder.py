@@ -12,6 +12,8 @@ import re
 from .graph import Graph, Node
 from . import transforms as ht
 import torch
+from collections import abc
+import numpy as np
 
 # PyTorch Graph Transforms
 FRAMEWORK_TRANSFORMS = [
@@ -62,9 +64,46 @@ def get_shape(torch_node):
         shape = None
     return shape
 
+def calc_rf(model, input_shape):
+    for n, p in model.named_parameters():
+        if not p.requires_grad:
+            continue;
+        if 'bias' in n:
+            p.data.fill_(0)
+        elif 'weight' in n:
+            p.data.fill_(1)
+
+    input = torch.ones(input_shape, requires_grad=True)
+    output = model(input)
+    out_shape = output.size()
+    ndims = len(out_shape)
+    grad = torch.zeros(out_shape)
+    l_tmp=[]
+    for i in xrange(ndims):
+        if i==0 or i==1:#batch or channel
+            l_tmp.append(0)
+        else:
+            l_tmp.append(out_shape[i]/2)
+            
+    grad[tuple(l_tmp)] = 1
+    output.backward(gradient=grad)
+    grad_np = img_.grad[0,0].data.numpy()
+    idx_nonzeros = np.where(grad_np!=0)
+    RF=[np.max(idx)-np.min(idx)+1 for idx in idx_nonzeros]
+    
+    return RF
 
 def import_graph(hl_graph, model, args, input_names=None, verbose=False):
     # TODO: add input names to graph
+
+    if args is None:
+        args = [1, 3, 224, 224] # assume ImageNet default
+
+    # if args is not Tensor but is array like then convert it to torch tensor
+    if not isinstance(args, torch.Tensor) and \
+        hasattr(args, "__len__") and hasattr(args, '__getitem__') and \
+        not isinstance(args, (str, abc.ByteString)):
+        args = torch.ones(args)
 
     # Run the Pytorch graph to get a trace and generate a graph from it
     trace, out = torch.jit.get_trace_graph(model, args)

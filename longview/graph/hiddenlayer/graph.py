@@ -13,7 +13,7 @@ import re
 from random import getrandbits
 import inspect
 import numpy as np
-
+import html
 
 THEMES = {
     "basic": {
@@ -27,6 +27,7 @@ THEMES = {
         "padding":  "1.0,0.5",
     },
     "blue": {
+        "shape": "box",
         "background_color": "#FFFFFF",
         "fill_color": "#BCD6FC",
         "outline_color": "#7C96BC",
@@ -34,10 +35,24 @@ THEMES = {
         "font_name": "Verdana",
         "font_size": "10",
         "margin": "0,0",
-        "padding":  "1.0,0.5",
+        "padding":  "1.0",
+        "layer_overrides": { #TODO: change names of these keys to same as dot params
+            "ConvRelu": {"shape":"box", "fillcolor":"#A1C9F4"},
+            "Conv": {"shape":"box", "fillcolor":"#FAB0E4"},
+            "MaxPool": {"shape":"box", "fillcolor":"#8DE5A1"},
+            "Constant": {"shape":"box", "fillcolor":"#FF9F9B"},
+            "Shape": {"shape":"box", "fillcolor":"#D0BBFF"},
+            "Gather": {"shape":"box", "fillcolor":"#DEBB9B"},
+            "Unsqeeze": {"shape":"box", "fillcolor":"#CFCFCF"},
+            "Sqeeze": {"shape":"box", "fillcolor":"#FFFEA3"},
+            "Dropout": {"shape":"box", "fillcolor":"#B9F2F0"},
+            "LinearRelu": {"shape":"box", "fillcolor":"#8DE5A1"},
+            "Linear": {"shape":"box", "fillcolor":"#4878D0"},
+            "Concat": {"shape":"box", "fillcolor":"#D0BBFF"},
+            "Reshape": {"shape":"box", "fillcolor":"#FFFEA3"},
+        }
     },
 }
-
 
 ###########################################################################
 # Utility Functions
@@ -60,7 +75,7 @@ def detect_framework(value):
 class Node():
     """Represents a framework-agnostic neural network layer in a directed graph."""
 
-    def __init__(self, uid, name, op, output_shape=None, params=None):
+    def __init__(self, uid, name, op, output_shape=None, params=None, combo_params=None):
         """
         uid: unique ID for the layer that doesn't repeat in the computation graph.
         name: Name to display
@@ -76,11 +91,16 @@ class Node():
         self.output_shape = output_shape
         self.params = params if params else {}
         self._caption = ""
+        self.combo_params = combo_params
 
     @property
     def title(self):
         # Default
         title = self.name or self.op
+
+        if self.op == 'Dropout':
+            if 'ratio' in self.params:
+                title += ' ' + str(self.params['ratio'])
 
         if "kernel_shape" in self.params:
             # Kernel
@@ -131,15 +151,14 @@ class Node():
 ###########################################################################
 
 def build_graph(model=None, args=None, input_names=None,
-                transforms="default", framework_transforms="default"):
+                transforms="default", framework_transforms="default", orientation='TB'):
     # Initialize an empty graph
-    g = Graph()
+    g = Graph(orientation=orientation)
 
     # Detect framwork
     framework = detect_framework(model)
     if framework == "torch":
         from .pytorch_builder import import_graph, FRAMEWORK_TRANSFORMS
-        assert args is not None, "Argument args must be provided for Pytorch models."
         import_graph(g, model, args)
     elif framework == "tensorflow":
         from .tf_builder import import_graph, FRAMEWORK_TRANSFORMS
@@ -167,18 +186,18 @@ class Graph():
 
     def __init__(self, model=None, args=None, input_names=None,
                  transforms="default", framework_transforms="default",
-                 meaningful_ids=False):
+                 meaningful_ids=False, orientation='TB'):
         self.nodes = {}
         self.edges = []
         self.meaningful_ids = meaningful_ids # TODO
-        self.theme = THEMES["basic"]
+        self.theme = THEMES["blue"].copy()
+        self.orientation = orientation
 
         if model:
             # Detect framwork
             framework = detect_framework(model)
             if framework == "torch":
                 from .pytorch_builder import import_graph, FRAMEWORK_TRANSFORMS
-                assert args is not None, "Argument args must be provided for Pytorch models."
                 import_graph(self, model, args)
             elif framework == "tensorflow":
                 from .tf_builder import import_graph, FRAMEWORK_TRANSFORMS
@@ -308,7 +327,7 @@ class Graph():
         else:
             return getrandbits(64)
 
-    def build_dot(self):
+    def build_dot(self, orientation):
         """Generate a GraphViz Dot graph.
 
         Returns a GraphViz Digraph object.
@@ -324,7 +343,7 @@ class Graph():
                  fontcolor=self.theme["font_color"],
                  fontname=self.theme["font_name"],
                  margin=self.theme["margin"],
-                 rankdir="LR",
+                 rankdir=orientation,
                  pad=self.theme["padding"])
         dot.attr("node", shape="box", 
                  style="filled", margin="0,0",
@@ -345,22 +364,37 @@ class Graph():
                 label += "<tr><td>{}</td></tr>".format(n.caption)
             if n.repeat > 1:
                 label += "<tr><td align='right' cellpadding='2'>x{}</td></tr>".format(n.repeat)
-            label = "<<table border='0' cellborder='0' cellpadding='0'>" + label + "</table>>"
-            dot.node(str(k), label)
+            label = "<<table border='0' cellborder='0' cellpadding='0'>{}</table>>".\
+                format(label)
+
+            # figure out tooltip
+            tooltips = set()
+            if len(n.params):
+                tooltips.update([str(n.params)])
+            if n.combo_params:
+                for params in n.combo_params:
+                    if len(params):
+                        tooltips.update([str(params)])
+            
+            # figure out shape and color
+            layer_overrides = self.theme.get('layer_overrides', {})
+            op_overrides = layer_overrides.get(n.op or n.name, {})
+
+            dot.node(str(k), label, tooltip=html.escape(' '.join(tooltips)), **op_overrides)
         for a, b, label in self.edges:
             if isinstance(label, (list, tuple)):
-                label = "x".join([str(l or "?") for l in label])
+                label = ' ' + "x".join([str(l or "?") for l in label])
 
             dot.edge(str(a), str(b), label)
         return dot
 
     def _repr_svg_(self):
         """Allows Jupyter notebook to render the graph automatically."""
-        return self.build_dot()._repr_svg_()
+        return self.build_dot(self.orientation)._repr_svg_()
     
     def save(self, path, format="pdf"):
         # TODO: assert on acceptable format values
-        dot = self.build_dot()
+        dot = self.build_dot(self.orientation)
         dot.format = format
         directory, file_name = os.path.split(path)
         # Remove extension from file name. dot.render() adds it.

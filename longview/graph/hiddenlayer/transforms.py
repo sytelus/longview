@@ -18,6 +18,11 @@ from . import ge
 # Transforms
 ###########################################################################
 
+def _concate_params(matches):
+    combo_params = [match.params for match in matches]
+    combo_params += [cb for match in matches if match.combo_params for cb in match.combo_params]
+    return combo_params
+
 class Fold():
     def __init__(self, pattern, op, name=None):
         # TODO: validate that op and name are valid
@@ -43,7 +48,8 @@ class Fold():
                 combo = Node(uid=graph.sequence_id(matches),
                                 name=self.name or " &gt; ".join([l.title for l in matches]),
                                 op=self.op or self.pattern,
-                                output_shape=matches[-1].output_shape)
+                                output_shape=matches[-1].output_shape,
+                                combo_params=_concate_params(matches))
                 combo._caption = "/".join(filter(None, [l.caption for l in matches]))
             graph.replace(matches, combo)
         return graph
@@ -79,7 +85,8 @@ class FoldId():
             # TODO: Find last node in the sub-graph and get the output shape from it
             combo = Node(uid=key,
                          name=self.name,
-                         op=self.op)
+                         op=self.op,
+                         combo_params=_concate_params(nodes))
             graph.replace(nodes, combo)
         return graph
 
@@ -158,7 +165,8 @@ class FoldDuplicates():
                     combo = Node(uid=graph.sequence_id(matches),
                                 name=node.name,
                                 op=node.op,
-                                output_shape=matches[-1].output_shape)
+                                output_shape=matches[-1].output_shape,
+                                combo_params=_concate_params(matches))
                     combo._caption = node.caption
                     combo.repeat = sum([n.repeat for n in matches])
                     graph.replace(matches, combo)

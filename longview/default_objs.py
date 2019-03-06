@@ -1,3 +1,7 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import math
+
 from . import mpl
 from . import plotly
 from .watch_server import *
@@ -88,7 +92,13 @@ def open(expr:str=None, event_name:str='', stream_name:str=None, throttle=None,
 
     return vis
 
-def draw_model(model, input_shape):
+def draw_model(model, input_shape=None, orientation='TB'): #orientation = 'LR' for landscpe
     g = graph.build_graph(model, input_shape)
-    g.theme = graph.THEMES['blue'].copy()
     return g
+
+def show_image(img):
+    if hasattr(img, 'shape'):
+        if len(img.shape) == 1:
+            h = int(math.sqrt(img.shape[0]))
+            img = np.reshape(img, (h, int(img.shape[0] / h)))
+    plt.imshow(img)
