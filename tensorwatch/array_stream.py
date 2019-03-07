@@ -2,8 +2,10 @@ from .stream_base import StreamBase
 from .lv_types import *
 
 class ArrayStream(StreamBase):
-    def __init__(self, array, stream_name:str=None, throttle=None, event_name:str=''):
+    def __init__(self, array, stream_name:str=None, throttle=None, event_name:str='',
+                 annotations=None, texts=None, colors=None):
         super(ArrayStream, self).__init__(stream_name, throttle)
+
         self.array = array
         self.event_name = event_name
 

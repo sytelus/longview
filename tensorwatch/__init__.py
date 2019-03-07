@@ -10,6 +10,7 @@ from .data_utils import pyt_ds2list, sample_by_class
 from .embeddings.tsne_utils import get_tsne_components
 from .array_stream import ArrayStream
 from .stream_base import StreamBase
+from .model_graph.torchstat_utils import model_stats
 
 default_servers = []
 default_clients = []
@@ -43,7 +44,7 @@ def _ensure_client(cli_id):
         default_clients.append(WatchClient())
     #TODO error handling
 
-def _get_renderer(type, cell, title):
+def _get_renderer(type, cell, title, images=None, images_reshape=None):
     if type is None:
         return TextPrinter(cell=cell, title=title)
 
@@ -58,7 +59,8 @@ def _get_renderer(type, cell, title):
     elif type in ['mpl-line', 'mpl-scatter']:
         return mpl.LinePlot(cell=cell, title=title)
     elif type in ['tsne', 'embeddings', 'tsne2d', 'embeddings2d']:
-        return plotly.EmbeddingsPlot(cell=cell, title=title, is_3d='2d' not in type)
+        return plotly.EmbeddingsPlot(cell=cell, title=title, is_3d='2d' not in type, 
+                                     images=images, images_reshape=images_reshape)
     else:
         raise ValueError('Render type parameter has invalid value: "{}"'.format(type))
 
@@ -75,7 +77,7 @@ def open(expr=None, event_name:str='', stream_name:str=None, throttle=None,
             separate_yaxis=True, xtitle=None, ytitle=None, ztitle=None, color=None,
             xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=False, cli_id=0,
             rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
-            colormap=None, viz_img_scale=None):
+            colormap=None, viz_img_scale=None, images=None, images_reshape=None):
 
     _ensure_client(cli_id)
 
@@ -83,13 +85,13 @@ def open(expr=None, event_name:str='', stream_name:str=None, throttle=None,
         draw_line = 'scatter' not in type
         only_summary = 'summary' == type
 
-    vis = vis or _get_renderer(type, cell, title)
+    vis = vis or _get_renderer(type, cell, title, images=images, images_reshape=images_reshape)
     
     if expr is None or isinstance(expr, str):
         stream = default_clients[cli_id].create_stream(event_name=event_name, 
             expr=expr, stream_name=stream_name, throttle=throttle)
     elif utils.is_array_like(expr):
-        steam = ArrayStream(expr)
+        stream = ArrayStream(expr)
     elif ininstance(expr, StreamBase):
         stream = expr
 
@@ -108,4 +110,5 @@ def open(expr=None, event_name:str='', stream_name:str=None, throttle=None,
 def draw_model(model, input_shape=None, orientation='TB'): #orientation = 'LR' for landscpe
     g = graph.build_graph(model, input_shape)
     return g
+
 

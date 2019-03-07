@@ -34,6 +34,9 @@
     <Compile Include="tensorwatch\model_graph\hiddenlayer\tf_builder.py" />
     <Compile Include="tensorwatch\model_graph\hiddenlayer\transforms.py" />
     <Compile Include="tensorwatch\model_graph\hiddenlayer\__init__.py" />
+    <Compile Include="tensorwatch\model_graph\torchstat_utils.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\model_graph\__init__.py" />
     <Compile Include="tensorwatch\mpl\base_plot.py">
       <SubType>Code</SubType>

@@ -83,7 +83,7 @@ class LinePlot(BasePlot):
             return self._create_2d_trace(stream_plot, mode, hoverinfo, marker, line)  
 
     def _plot_eval_result(self, vals, stream_plot, eval_result):
-        if not vals:
+        if vals is None:
             return False
 
         # get trace data
@@ -147,10 +147,9 @@ class LinePlot(BasePlot):
             self.widget.data[stream_plot.trace_index].z = zdata
 
         # add text
-        if len(clrdata):
+        if len(txtdata):
             exisitng = self.widget.data[stream_plot.trace_index].text
-            if utils.is_array_like(exisitng):
-                exisitng = list(exisitng)
+            exisitng = list(exisitng) if utils.is_array_like(exisitng) else []
             exisitng += txtdata
             self.widget.data[stream_plot.trace_index].text = exisitng
 
@@ -163,8 +162,7 @@ class LinePlot(BasePlot):
         # add color
         if len(clrdata):
             exisitng = self.widget.data[stream_plot.trace_index].marker.color
-            if utils.is_array_like(exisitng):
-                exisitng = list(exisitng)
+            exisitng = list(exisitng) if utils.is_array_like(exisitng) else []
             exisitng += clrdata
             self.widget.data[stream_plot.trace_index].marker.color = exisitng
 
