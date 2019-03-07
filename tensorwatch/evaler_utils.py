@@ -35,7 +35,7 @@ def pyt_img_class_out_xform(item): # (input, target, in_weight, out_weight, outp
     # turn log-probabilities in to (max log-probability, class ID)
     output = torch.max(item[4],0)
     # return image, text
-    return(input, "T:{},Pb:{:2f},pd:{:.2f},L:{:4f}".\
+    return(input, "T:{},Pb:{:.2f},pd:{:.2f},L:{:.2f}".\
         format(item[1], math.exp(output[0]), output[1], item[5]))
 
 # use this for image to image translation problems
@@ -46,7 +46,7 @@ def pyt_img_img_out_xform(item): # (input, target, in_weight, out_weight, output
     tar_weight = item[3].data.cpu().numpy() if item[3] is not None else None
 
     # return in-image, text, out-image, target-image
-    return(input, "L:{:4f}, S:{:4f}, {:4f}-{:4f}, {:4f}-{:4f}".format(item[5], input.std(), input.min(), input.max(), output.min(), output.max()), 
+    return(input, "L:{:.2f}, S:{:.2f}, {:.2f}-{:.2f}, {:.2f}-{:.2f}".format(item[5], input.std(), input.min(), input.max(), output.min(), output.max()), 
            target, output, tar_weight)
 
 def cols2rows(batch):

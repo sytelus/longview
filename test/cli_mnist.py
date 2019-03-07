@@ -15,14 +15,14 @@ def show_find_lr():
     
     utils.wait_ley()
 
-def worst_in_class():
+def img_in_class():
     cli_train = tw.WatchClient()
-    cli = tw.WatchClient()
 
     imgs = cli_train.create_stream('batch', 
-        'top(l, out_xform=pyt_img_class_out_xform)', throttle=1)
+        "top(l, out_xform=pyt_img_class_out_xform, order='rnd')", throttle=1)
     img_plot = tw.mpl.ImagePlot()
-    img_plot.show(imgs)
+    img_plot.add(imgs)
+    img_plot.show()
 
     utils.wait_ley()
 
@@ -74,3 +74,5 @@ def batch_stats():
     
     test_acc = test_cli.create_stream("batch", 'map(lambda v:v.metrics.batch_accuracy, l)')
     plot.show(test_acc, xtitle='Epoch', ytitle='Test Accuracy')
+
+img_in_class()

@@ -97,6 +97,7 @@ class ImagePlot(BasePlot):
                         img_viz = img_viz.reshape((dim0, dim1, dim2))
                     else:
                         img_viz = img_viz.reshape((dim0, dim1))
+                        img_viz = np.transpose(img_viz)
                 elif dim == 3:
                     if img_viz.shape[0] == 1:
                         img_viz = np.squeeze(img_viz, axis=0)
@@ -104,7 +105,7 @@ class ImagePlot(BasePlot):
                     else:
                         img_viz = np.swapaxes(img_viz, 0, 2)
                         img_viz = np.swapaxes(img_viz, 1, 0)
-                img_viz = np.swapaxes(img_viz, 1, 0)  # transpose H,W for imshow
+                #img_viz = np.swapaxes(img_viz, 1, 0)  # transpose H,W for imshow
 
 
                 # else leave things as-is
@@ -121,7 +122,7 @@ class ImagePlot(BasePlot):
 
                 stream_plot.ax_imgs[row][col] = ax.imshow(img_viz, interpolation="none", cmap=cmap)
 
-            ax.set_title(label_in)
+            ax.set_title(label_in, fontdict={'fontsize': 6, 'fontweight': 'light'})
 
             row = row+1 if row < stream_plot.rows-1 else 0
             col = col+1 if col < stream_plot.cols-1 else 0
