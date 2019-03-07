@@ -38,17 +38,19 @@ class LinePlot(BasePlot):
             zaxis = 'zaxis' #+ str(stream_plot.index+1)
             axis_props = BasePlot._get_axis_common_props(stream_plot.ztitle, stream_plot.zrange)
             self.widget.layout.scene[zaxis] = axis_props
+            self.widget.layout.margin = dict(l=0, r=0, b=0, t=0)
+            self.widget.layout.hoverdistance = 1
 
-    def _create_2d_trace(self, stream_plot, mode):
+    def _create_2d_trace(self, stream_plot, mode, hoverinfo, marker, line):
         yaxis = 'y' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
 
-        trace = go.Scatter(x=[], y=[], mode=mode, name=stream_plot.title or stream_plot.ytitle, yaxis=yaxis,
-                           line=dict(color=(stream_plot.color or BasePlot.get_pallet_color(stream_plot.index))))
+        trace = go.Scatter(x=[], y=[], mode=mode, name=stream_plot.title or stream_plot.ytitle, yaxis=yaxis, hoverinfo=hoverinfo,
+                           line=line)
         return trace
 
-    def _create_3d_trace(self, stream_plot, mode):
-        trace = go.Scatter3d(x=[], y=[], z=[], mode=mode, name=stream_plot.title or stream_plot.ytitle,
-                           line=dict(color=(stream_plot.color or BasePlot.get_pallet_color(stream_plot.index))))
+    def _create_3d_trace(self, stream_plot, mode, hoverinfo, marker, line):
+        trace = go.Scatter3d(x=[], y=[], z=[], mode=mode, name=stream_plot.title or stream_plot.ytitle, hoverinfo=hoverinfo,
+                           line=line)
         return trace
 
 
@@ -63,14 +65,20 @@ class LinePlot(BasePlot):
         stream_plot.zrange = stream_plot.stream_args.get('zrange',None)
         draw_line = stream_plot.stream_args.get('draw_line',True)
         draw_marker = stream_plot.stream_args.get('draw_marker',True)
-
+        draw_marker_text = stream_plot.stream_args.get('draw_marker_text',False)
+        hoverinfo = stream_plot.stream_args.get('hoverinfo',None)
+        marker = stream_plot.stream_args.get('marker',{})
+        line = stream_plot.stream_args.get('line',{})
+        utils.set_default(line, 'color', stream_plot.color or BasePlot.get_pallet_color(stream_plot.index))
+        
         mode = 'lines' if draw_line else ''
         mode = ('' if mode=='' else mode+'+') + 'markers' if draw_marker else ''
+        mode = ('' if mode=='' else mode+'+') + 'text' if draw_marker_text else ''
 
         if self.is_3d:
-            return self._create_3d_trace(stream_plot, mode)  
+            return self._create_3d_trace(stream_plot, mode, hoverinfo, marker, line)  
         else:
-            return self._create_2d_trace(stream_plot, mode)  
+            return self._create_2d_trace(stream_plot, mode, hoverinfo, marker, line)  
 
     def _plot_eval_result(self, vals, stream_plot, eval_result):
         if not vals:
@@ -78,45 +86,73 @@ class LinePlot(BasePlot):
 
         # get trace data
         trace = self.widget.data[stream_plot.trace_index]
-        xdata, ydata, zdata, pt_labels = list(trace.x), list(trace.y), [], []
+        xdata, ydata, zdata, anndata, txtdata, clrdata = list(trace.x), list(trace.y), [], [], [], [], []
         if self.is_3d:
             zdata = list(trace.z)
 
+        unpacker = lambda a0=None,a1=None,a2=None,a3=None,a4=None,a5=None, *_:(a0,a1,a2,a3,a4,a5)
+
         # add each value in trace data
+        # each value is of the form:
+        # 2D graphs:
+        #   y
+        #   x [, y [, annotation [, text [, color]]]]
+        #   y
+        #   x [, y [, z, [annotation [, text [, color]]]]]
         for val in vals:
-            x =  eval_result.event_index
-            y = val
-            z = None
-            pt_label = None
+            # set defaults
+            x, y, z =  eval_result.event_index, val, None
+            ann, txt, clr = None, None, None
 
             # if val turns out to be array-like, extract x,y
             val_l = utils.is_scaler_array(val)
-            if val_l > 1:
-                x, y = val[0], val[1]
-            if val_l > 2:
+            if val_l >= 0:
                 if self.is_3d:
-                    z = val[2]
-                    if val_l > 3:
-                        pt_label = str(val[3])
+                    x, y, z, ann, txt, clr = unpacker(*val)
                 else:
-                    pt_label = str(val[2])
+                    x, y, ann, txt, clr = unpacker(*val)
+
+            if ann is not None:
+                ann = str(ann)
+            if txt is not None:
+                txt = str(txt)
 
             xdata.append(x)
             ydata.append(y)
             zdata.append(z)
-
-            if pt_label:
-                pt_labels.append(dict(x=x, y=y, xref='x', yref='y', text=pt_label, showarrow=False))
+            if (txt):
+                txtdata.append(txt)
+            if clr:
+                clrdata.append(clr)
+            if ann: #TODO: yref should be y2 for different y axis
+                anndata.append(dict(x=x, y=y, xref='x', yref='y', text=ann, showarrow=False))
 
         self.widget.data[stream_plot.trace_index].x = xdata
         self.widget.data[stream_plot.trace_index].y = ydata   
         if self.is_3d:
             self.widget.data[stream_plot.trace_index].z = zdata
-        self.widget.layout.annotations = []
-        for x, y, pt_label in zip(xdata, ydata, pt_labels):
-            # add annotation
-            if pt_label:
-                self.widget.layout.annotations = pt_labels
+
+        # add text
+        if len(clrdata):
+            exisitng = self.widget.data[stream_plot.trace_index].text
+            if utils.is_array_like(exisitng):
+                exisitng = list(exisitng)
+            exisitng += txtdata
+            self.widget.data[stream_plot.trace_index].text = exisitng
+
+        # add annotation
+        if len(anndata):
+            existing = list(self.widget.layout.annotations)
+            existing += anndata
+            self.widget.layout.annotations = existing
+
+        # add color
+        if len(clrdata):
+            exisitng = self.widget.data[stream_plot.trace_index].marker.color
+            if utils.is_array_like(exisitng):
+                exisitng = list(exisitng)
+            exisitng += clrdata
+            self.widget.data[stream_plot.trace_index].marker.color = exisitng
 
         return True
 
@@ -125,3 +161,6 @@ class LinePlot(BasePlot):
         self.widget.data[stream_plot.trace_index].y = []   
         if self.is_3d:
             self.widget.data[stream_plot.trace_index].z = []
+        self.widget.data[stream_plot.trace_index].text = ""
+        # TODO: avoid removing annotations for other streams
+        self.widget.layout.annotations = []

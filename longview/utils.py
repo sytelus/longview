@@ -100,7 +100,14 @@ def get_public_fields(obj):
                             or inspect.isfunction(attr)
                             or inspect.ismethod(attr))]
 
+def set_default(dict, key, default_val):
+    if key not in dict:
+        dict[key] = val
 
+def to_array_like(val):
+    if is_array_like(val):
+        return val
+    return [val]
     
 def to_dict(obj):
     return dict([attr, getattr(obj, attr)] for attr in get_public_fields(obj))

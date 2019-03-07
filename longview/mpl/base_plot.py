@@ -21,7 +21,10 @@ from ipykernel.pylab.backend_inline import flush_figures
 class BasePlot:
     def __init__(self, cell=None, title=None, show_legend:bool=True, **plot_args):
         self.lock = threading.Lock()
-        self.cell = cell or widgets.HBox(layout=widgets.Layout(width='100%'))
+        utils.set_default(plot_args, 'width', '100%')
+        utils.set_default(plot_args, 'height', '4in')
+
+        self.cell = cell or widgets.HBox(layout=widgets.Layout(width=plot_args['width'], height=plot_args['height]))
         self.widget = widgets.Output()
         self.cell.children += (self.widget,)
         self._stream_plots = {}
@@ -123,18 +126,17 @@ class BasePlot:
         # make sure figure is initialized
         self.init_fig()
 
-        if stream:
-            stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
-                clear_after_each, history_len, dim_history, opacity)
-            stream_plot._clear_pending = False
-            stream_plot.pending_events = queue.Queue()
-            self.init_stream_plot(stream, stream_plot, **stream_args) 
-            self._stream_plots[stream.stream_name] = stream_plot
+        stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
+            clear_after_each, history_len, dim_history, opacity)
+        stream_plot._clear_pending = False
+        stream_plot.pending_events = queue.Queue()
+        self.init_stream_plot(stream, stream_plot, **stream_args) 
+        self._stream_plots[stream.stream_name] = stream_plot
 
-            stream.subscribe(self._add_eval_result)
+        stream.subscribe(self._add_eval_result)
 
-            if show or (show is None and not self.is_shown):
-                return self.show()
+        if show or (show is None and not self.is_shown):
+            return self.show()
 
         return None
 

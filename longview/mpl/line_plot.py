@@ -84,38 +84,49 @@ class LinePlot(BasePlot):
 
         line = stream_plot.ax.get_lines()[-1]
         xdata, ydata = line.get_data()
-        zdata, pt_labels = [], []
+        zdata, anndata, txtdata, clrdata = [], [], [], []
+
+        unpacker = lambda a0=None,a1=None,a2=None,a3=None,a4=None,a5=None, *_:(a0,a1,a2,a3,a4,a5)
 
         # add each value in trace data
+        # each value is of the form:
+        # 2D graphs:
+        #   y
+        #   x [, y [, annotation [, text [, color]]]]
+        #   y
+        #   x [, y [, z, [annotation [, text [, color]]]]]
         for val in vals:
-            x =  eval_result.event_index
-            y = val
-            z = None
-            pt_label = None
+            # set defaults
+            x, y, z =  eval_result.event_index, val, None
+            ann, txt, clr = None, None, None
 
             # if val turns out to be array-like, extract x,y
             val_l = utils.is_scaler_array(val)
-            if val_l > 1:
-                x, y = val[0], val[1]
-            if val_l > 2:
+            if val_l >= 0:
                 if self.is_3d:
-                    z = val[2]
-                    if val_l > 3:
-                        pt_label = str(val[3])
+                    x, y, z, ann, txt, clr = unpacker(*val)
                 else:
-                    pt_label = str(val[2])
+                    x, y, ann, txt, clr = unpacker(*val)
+
+            if ann is not None:
+                ann = str(ann)
+            if txt is not None:
+                txt = str(txt)
 
             xdata.append(x)
             ydata.append(y)
             zdata.append(z)
-            pt_labels.append(pt_label)
+            if (txt):
+                txtdata.append(txt)
+            if clr:
+                clrdata.append(clr)
+            if ann: #TODO: yref should be y2 for different y axis
+                anndata.append(dict(x=x, y=y, xref='x', yref='y', text=ann, showarrow=False))
 
         line.set_data(xdata, ydata)
-        for x, y, pt_label in zip(xdata, ydata, pt_labels):
-            # add annotation
-            if pt_label:
-                stream_plot.xylabel_refs.append(stream_plot.ax.text( \
-                    x, y, pt_label))
+        for ann in anndata:
+            stream_plot.xylabel_refs.append(stream_plot.ax.text( \
+                ann['x'], ann['y'], ann['text']))
 
         stream_plot.ax.relim()
         stream_plot.ax.autoscale_view()

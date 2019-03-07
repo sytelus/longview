@@ -12,7 +12,10 @@ from .. import utils
 class BasePlot(ABC):
     def __init__(self, cell=None, title=None, show_legend:bool=True, **plot_args):
         self.lock = threading.Lock()
-        self.cell = cell or widgets.HBox(layout=widgets.Layout(width='100%'))
+        utils.set_default(plot_args, 'width', '100%')
+        utils.set_default(plot_args, 'height', '4in')
+
+        self.cell = cell or widgets.HBox(layout=widgets.Layout(width=plot_args['width'], height=plot_args['height]))
         self.widget = go.FigureWidget()
         self.cell.children += (self.widget,)
         self._stream_plots = {}
@@ -70,29 +73,29 @@ class BasePlot(ABC):
     def add(self, stream, title=None, throttle=None, clear_after_end=True, clear_after_each=False, 
            show:bool=None, history_len=1, dim_history=True, opacity=None, **stream_args):
         with self.lock:
-            if stream:
-                stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
-                    clear_after_each, history_len, dim_history, opacity)
-                stream_plot._clear_pending = False
-                stream_plot.stream_args = stream_args
+            stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
+                clear_after_each, history_len, dim_history, opacity)
+            stream_plot.index = len(self._stream_plots)
+            #TODO: sync mpl and plotly code using common base
+            stream_plot._clear_pending = False
+            stream_plot.stream_args = stream_args
 
-                stream_plot.trace_history, stream_plot.cur_history_index = [], None
-                stream_plot.index = len(self._stream_plots)
-                self._stream_plots[stream.stream_name] = stream_plot
+            stream_plot.trace_history, stream_plot.cur_history_index = [], None
+            self._stream_plots[stream.stream_name] = stream_plot
         
-                self._add_trace_with_history(stream_plot)
-                self._setup_layout(stream_plot)
+            self._add_trace_with_history(stream_plot)
+            self._setup_layout(stream_plot)
 
-                if not self.widget.layout.title:
-                    self.widget.layout.title = stream_plot.title
-                # TODO: better way for below?
-                if history_len > 1:
-                    self.widget.layout.showlegend = False
+            if not self.widget.layout.title:
+                self.widget.layout.title = stream_plot.title
+            # TODO: better way for below?
+            if history_len > 1:
+                self.widget.layout.showlegend = False
 
-                stream.subscribe(self._add_eval_result)
+            stream.subscribe(self._add_eval_result)
 
-                if show or (show is None and not self.is_shown):
-                    return self.show()
+            if show or (show is None and not self.is_shown):
+                return self.show()
 
             return None
                 

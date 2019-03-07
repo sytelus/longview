@@ -1,24 +1,21 @@
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from .zmq_pub_sub import ZmqPubSub
-import threading
 import sys
 import uuid
-import queue
-import dill
 import time
-import weakref
 from .lv_types import *
 from . import utils
 from .repeated_timer import RepeatedTimer
+from .stream_base import StreamBase
+
 
 class WatchClient:
-    class Stream:
-        def __init__(self, client_id:str, clisrv, event_name:str, expr:str,
-                stream_name:str=None, throttle=None):
-            self.stream_name = stream_name if stream_name is not None else str(uuid.uuid4())
-            self._qt = None
+    class Stream(StreamBase):
+        def __init__(self, stream_name:str=None, throttle=None,
+                     client_id:str, clisrv, event_name:str, expr:str):
+
+            super(self, Stream).__init__(stream_name, throttle)
             self.clisrv = clisrv
-            self._callbacks = []
             self.stream_req = StreamRequest(event_name, expr, self.stream_name, 
                 throttle, client_id)
 
@@ -26,66 +23,13 @@ class WatchClient:
 
         def on_event_eval(self, eval_result:EvalResult):
             utils.debug_log("Event eval received", eval_result.event_name, verbosity=6)
-            if self.closed:
-                return
-            se = StreamEvent(StreamEvent.Type.eval_result, self.stream_name, eval_result)
-            self._make_callbacks(se)
-            if self._qt is not None:
-                self._qt[0].put(eval_result)
-                self._qt[1].set()
-
-        def _make_callbacks(self, stream_event:StreamEvent):
-            for callback in self._callbacks:
-                if callback and callback():
-                    callback()(stream_event)
-
-        def subscribe(self, callback):
-            self._callbacks.append(weakref.WeakMethod(callback))
-        def unsubscribe(self, callback):
-            for i in reversed(range(len(self._callbacks))):
-                if self._callbacks[i] and self._callbacks[i]() == callback:
-                    del self._callbacks[i]
+            self.send_data(eval_result)
 
         def _close(self):
             if not self.closed:
-                self._callbacks = []
                 clisrv_req = ClientServerRequest(CliSrvReqTypes.del_stream, self.stream_req)
                 self.clisrv.send_obj(clisrv_req)
-                self._qt = None
-                self.closed = True
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exception_type, exception_value, traceback):
-            self.close()
-
-        def __del__(self):
-            self._close()
-
-        def __iter__(self):
-            self._qt = (queue.Queue(), threading.Event())
-            return self
-
-        def __next__(self):
-            if self._qt is None:
-                raise RuntimeError("iter() wasn't called before next()")
-
-            eval_result, stop_iter = None, False
-            if not self.closed:
-                if self._qt[0].empty():
-                    self._qt[1].wait()
-                    self._qt[1].clear()
-                eval_result = self._qt[0].get()
-                stop_iter = eval_result.ended
-            else:
-                stop_iter = True
-
-            if stop_iter:
-                self._qt = None
-                raise StopIteration()
-            else:
-                return eval_result
+            super(self, Stream)._close()
 
         def _send_stream_req(self):
             # stop any iterators in progress
@@ -106,8 +50,7 @@ class WatchClient:
             self._send_stream_req()
             utils.debug_log('sent stream req')
 
-            se = StreamEvent(StreamEvent.Type.reset, self.stream_name, None)
-            self._make_callbacks(se)
+            self.send_reset()
 
     _port_start = 40859
 
@@ -167,8 +110,8 @@ class WatchClient:
     def create_stream(self, event_name:str, expr:str, stream_name:str=None, throttle=None):
         utils.debug_log("Client - creating stream...", stream_name)
 
-        stream = WatchClient.Stream(self.client_id, self._clisrv, event_name, expr,
-            stream_name, throttle)
+        stream = WatchClient.Stream(stream_name, throttle,
+                                    self.client_id, self._clisrv, event_name, expr)
         self._streams[stream.stream_name] = stream
 
         return stream

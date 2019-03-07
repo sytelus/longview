@@ -19,6 +19,12 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="longview\array_stream.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="longview\data_utils.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="longview\img_utils.py">
       <SubType>Code</SubType>
     </Compile>
@@ -48,8 +54,20 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="longview\plotly\line_plot.py" />
+    <Compile Include="longview\plotly\embeddings_plot.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="longview\plotly\__init__.py" />
+    <Compile Include="longview\receptive_field\rf_utils.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="longview\repeated_timer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="longview\embeddings\tsne_utils.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="longview\stream_base.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="longview\text_printer.py">
@@ -68,6 +86,8 @@
     <Folder Include="longview\model_graph\hiddenlayer\" />
     <Folder Include="longview\model_graph\hiddenlayer\__pycache__\" />
     <Folder Include="longview\mpl\" />
+    <Folder Include="longview\embeddings\" />
+    <Folder Include="longview\receptive_field\" />
     <Folder Include="longview\plotly\" />
   </ItemGroup>
   <ItemGroup>
