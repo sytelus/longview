@@ -26,7 +26,7 @@ class LinePlot(BasePlot):
 
         # add default line in subplot
         stream_plot.line = matplotlib.lines.Line2D([], [], 
-            label=stream_plot.title or ytitle, color=color) #, linewidth=3
+            label=stream_plot.title or ytitle or str(stream_plot.index), color=color) #, linewidth=3
         if stream_plot.opacity is not None:
             stream_plot.line.set_alpha(stream_plot.opacity)
         stream_plot.ax.add_line(stream_plot.line)
@@ -97,7 +97,7 @@ class LinePlot(BasePlot):
         #   x [, y [, z, [annotation [, text [, color]]]]]
         for val in vals:
             # set defaults
-            x, y, z =  eval_result.event_index, val, None
+            x, y, z =  eval_result.event_index, None, None
             ann, txt, clr = None, None, None
 
             # if val turns out to be array-like, extract x,y
@@ -106,7 +106,19 @@ class LinePlot(BasePlot):
                 if self.is_3d:
                     x, y, z, ann, txt, clr = unpacker(*val)
                 else:
-                    x, y, ann, txt, clr = unpacker(*val)
+                    x, y, ann, txt, clr, _ = unpacker(*val)
+            elif isinstance(val, EventVars):
+                x = val.x if hasattr(val, 'x') else x
+                y = val.y if hasattr(val, 'y') else y
+                z = val.z if hasattr(val, 'z') else z
+                ann = val.ann if hasattr(val, 'ann') else ann
+                txt = val.txt if hasattr(val, 'txt') else txt
+                clr = val.clr if hasattr(val, 'clr') else clr
+
+                if y is None:
+                    y = next(iter(val.__dict__.values()))
+            else:
+                y = val
 
             if ann is not None:
                 ann = str(ann)

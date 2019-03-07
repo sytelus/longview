@@ -72,8 +72,10 @@ class LinePlot(BasePlot):
         utils.set_default(line, 'color', stream_plot.color or BasePlot.get_pallet_color(stream_plot.index))
         
         mode = 'lines' if draw_line else ''
-        mode = ('' if mode=='' else mode+'+') + 'markers' if draw_marker else ''
-        mode = ('' if mode=='' else mode+'+') + 'text' if draw_marker_text else ''
+        if draw_marker:
+            mode = ('' if mode=='' else mode+'+') + 'markers'
+        if draw_marker_text:
+            mode = ('' if mode=='' else mode+'+') + 'text'
 
         if self.is_3d:
             return self._create_3d_trace(stream_plot, mode, hoverinfo, marker, line)  
@@ -86,7 +88,7 @@ class LinePlot(BasePlot):
 
         # get trace data
         trace = self.widget.data[stream_plot.trace_index]
-        xdata, ydata, zdata, anndata, txtdata, clrdata = list(trace.x), list(trace.y), [], [], [], [], []
+        xdata, ydata, zdata, anndata, txtdata, clrdata = list(trace.x), list(trace.y), [], [], [], []
         if self.is_3d:
             zdata = list(trace.z)
 
@@ -101,7 +103,7 @@ class LinePlot(BasePlot):
         #   x [, y [, z, [annotation [, text [, color]]]]]
         for val in vals:
             # set defaults
-            x, y, z =  eval_result.event_index, val, None
+            x, y, z =  eval_result.event_index, None, None
             ann, txt, clr = None, None, None
 
             # if val turns out to be array-like, extract x,y
@@ -110,7 +112,19 @@ class LinePlot(BasePlot):
                 if self.is_3d:
                     x, y, z, ann, txt, clr = unpacker(*val)
                 else:
-                    x, y, ann, txt, clr = unpacker(*val)
+                    x, y, ann, txt, clr, _ = unpacker(*val)
+            elif isinstance(val, EventVars):
+                x = val.x if hasattr(val, 'x') else x
+                y = val.y if hasattr(val, 'y') else y
+                z = val.z if hasattr(val, 'z') else z
+                ann = val.ann if hasattr(val, 'ann') else ann
+                txt = val.txt if hasattr(val, 'txt') else txt
+                clr = val.clr if hasattr(val, 'clr') else clr
+
+                if y is None:
+                    y = next(iter(val.__dict__.values()))
+            else:
+                y = val
 
             if ann is not None:
                 ann = str(ann)

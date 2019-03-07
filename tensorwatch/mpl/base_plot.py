@@ -1,3 +1,7 @@
+from IPython import get_ipython, display
+if get_ipython():
+    get_ipython().magic('matplotlib notebook')
+
 import matplotlib
 import os
 #if os.name == 'posix' and "DISPLAY" not in os.environ:
@@ -14,25 +18,28 @@ import time
 import threading
 import queue
 import ipywidgets as widgets
-from IPython import get_ipython, display
 from ipywidgets.widgets.interaction import show_inline_matplotlib_plots
 from ipykernel.pylab.backend_inline import flush_figures
 
 class BasePlot:
     def __init__(self, cell=None, title=None, show_legend:bool=True, **plot_args):
         self.lock = threading.Lock()
+        self._use_hbox = True
+
         utils.set_default(plot_args, 'width', '100%')
-        utils.set_default(plot_args, 'height', '4in')
+        utils.set_default(plot_args, 'height', '3in')
 
         self.cell = cell or widgets.HBox(layout=widgets.Layout(width=plot_args['width'], height=plot_args['height']))
         self.widget = widgets.Output()
-        self.cell.children += (self.widget,)
+        self._use_hbox = False
+        if self._use_hbox:
+            self.cell.children += (self.widget,)
         self._stream_plots = {}
         self.is_shown = cell is not None
         self.title = title
 
         self._fig_init_done = False
-        self.show_legend = show_legend
+        self.show_legend = True
         # graph objects
         self.figure = None
         self._ax_main = None
@@ -108,12 +115,16 @@ class BasePlot:
 
                             vals = BasePlot._extract_vals(eval_result)
                             self._plot_eval_result(vals, stream_plot, eval_result)
-                            with self.widget:
-                                self.widget.clear_output(wait=True)
-                                self.widget.display(self.figure)
-                                #flush_figures()
-                                #plt.show()
-                                #show_inline_matplotlib_plots()
+
+                            if self._use_hbox and get_ipython():
+                                with self.widget:
+                                    self.widget.clear_output(wait=True)
+                                    self.widget.display(self.figure)
+                                    #display.clear_output(wait=True)
+                                    #display.display(self.figure)
+                                    #flush_figures()
+                                    #plt.show()
+                                    #show_inline_matplotlib_plots()
                             # update for throttle
                             stream_plot.last_update = time.time()
                         else:
@@ -128,7 +139,10 @@ class BasePlot:
 
         stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
             clear_after_each, history_len, dim_history, opacity)
+        stream_plot.index = len(self._stream_plots)
         stream_plot._clear_pending = False
+        stream_plot.stream_args = stream_args
+
         stream_plot.pending_events = queue.Queue()
         self.init_stream_plot(stream, stream_plot, **stream_args) 
         self._stream_plots[stream.stream_name] = stream_plot
@@ -142,8 +156,12 @@ class BasePlot:
 
     def show(self):
         self.is_shown = True
+
         #plt.show() #must be done only once
-        return self.cell
+        if self._use_hbox and get_ipython():
+            return self.cell
+        else:
+            return plt.show()
 
     @staticmethod
     def _extract_vals(eval_result):
