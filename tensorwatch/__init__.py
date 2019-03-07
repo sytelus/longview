@@ -7,6 +7,9 @@ from .model_graph.hiddenlayer import graph
 from .receptive_field.rf_utils import plot_receptive_field, plot_grads_at
 from .img_utils import show_image, open_image, img2pyt
 from .data_utils import pyt_ds2list, sample_by_class
+from .embeddings.tsne_utils import get_tsne_components
+from .array_stream import ArrayStream
+from .stream_base import StreamBase
 
 default_servers = []
 default_clients = []
@@ -54,6 +57,8 @@ def _get_renderer(type, cell, title):
         return mpl.ImagePlot(cell=cell, title=title)
     elif type in ['mpl-line', 'mpl-scatter']:
         return mpl.LinePlot(cell=cell, title=title)
+    elif type in ['tsne', 'embeddings', 'tsne2d', 'embeddings2d']:
+        return plotly.EmbeddingsPlot(cell=cell, title=title, is_3d='2d' not in type)
     else:
         raise ValueError('Render type parameter has invalid value: "{}"'.format(type))
 
@@ -63,12 +68,14 @@ def get_server(srv_id):
     return default_servers[srv_id]
 
 
-def open(expr:str=None, event_name:str='', stream_name:str=None, throttle=None, 
+def open(expr=None, event_name:str='', stream_name:str=None, throttle=None, 
             clear_after_end=True, clear_after_each=False, show:bool=None, 
             cell=None, title=None, vis=None, type=None, only_summary=False, 
             history_len=1, dim_history=True, opacity=None,
             separate_yaxis=True, xtitle=None, ytitle=None, ztitle=None, color=None,
-            xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=False, cli_id=0):
+            xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=False, cli_id=0,
+            rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
+            colormap=None, viz_img_scale=None):
 
     _ensure_client(cli_id)
 
@@ -78,13 +85,23 @@ def open(expr:str=None, event_name:str='', stream_name:str=None, throttle=None,
 
     vis = vis or _get_renderer(type, cell, title)
     
-    stream = default_clients[cli_id].create_stream(event_name=event_name, 
-        expr=expr, stream_name=stream_name, throttle=throttle)
+    if expr is None or isinstance(expr, str):
+        stream = default_clients[cli_id].create_stream(event_name=event_name, 
+            expr=expr, stream_name=stream_name, throttle=throttle)
+    elif utils.is_array_like(expr):
+        steam = ArrayStream(expr)
+    elif ininstance(expr, StreamBase):
+        stream = expr
 
     vis.add(stream, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,
                  show=show, history_len=history_len, dim_history=dim_history, opacity=opacity,
                  separate_yaxis=separate_yaxis, xtitle=xtitle, ytitle=ytitle, ztitle=ztitle, color=color,
-                 xrange=xrange, yrange=yrange, zrange=zrange, draw_line=draw_line, draw_marker=draw_marker)
+                 xrange=xrange, yrange=yrange, zrange=zrange, draw_line=draw_line, draw_marker=draw_marker, 
+                rows=rows, cols=cols, img_width=img_width, img_height=img_height, img_channels=img_channels,
+                colormap=colormap, viz_img_scale=viz_img_scale)
+
+    if isinstance(stream, ArrayStream):
+        stream.send_all()
 
     return vis
 

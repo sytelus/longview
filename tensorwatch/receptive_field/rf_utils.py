@@ -4,17 +4,17 @@ import numpy as np
 
 def _get_rf(model, sample_pil_img):
     # define model functions
-    def model_fn() -> nn.Module:
+    def model_fn():
         model.eval()
         return model
 
     input_shape = np.array(sample_pil_img).shape
 
     rf = PytorchReceptiveField(model_fn)
-    rf_params = self.rf.compute(input_shape=input_shape)
+    rf_params = rf.compute(input_shape=input_shape)
     return rf, rf_params
 
-def plot_receptive_field(model, sample_pil_img, layout=(2, 2), figsize=(20, 12)):
+def plot_receptive_field(model, sample_pil_img, layout=(2, 2), figsize=(6, 6)):
     rf, rf_params = _get_rf(model, sample_pil_img)
     return rf.plot_rf_grids(
         custom_image=sample_pil_img, 
