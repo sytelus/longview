@@ -102,7 +102,7 @@ def get_public_fields(obj):
 
 def set_default(dict, key, default_val):
     if key not in dict:
-        dict[key] = val
+        dict[key] = default_val
 
 def to_array_like(val):
     if is_array_like(val):

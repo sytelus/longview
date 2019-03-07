@@ -13,7 +13,7 @@ class WatchClient:
     class Stream(StreamBase):
         def __init__(self, client_id:str, clisrv, event_name:str, expr:str, stream_name:str=None, throttle=None):
 
-            super(self, Stream).__init__(stream_name, throttle)
+            super(WatchClient.Stream, self).__init__(stream_name, throttle)
             self.clisrv = clisrv
             self.stream_req = StreamRequest(event_name, expr, self.stream_name, 
                 throttle, client_id)
@@ -28,13 +28,10 @@ class WatchClient:
             if not self.closed:
                 clisrv_req = ClientServerRequest(CliSrvReqTypes.del_stream, self.stream_req)
                 self.clisrv.send_obj(clisrv_req)
-            super(self, Stream)._close()
+            super(WatchClient.Stream, self)._close()
 
         def _send_stream_req(self):
-            # stop any iterators in progress
-            self.closed = True
-            if self._qt is not None:
-                self._qt[1].set()
+            self._end_iterator()
 
             # resubscribe to stream
             utils.debug_log("sending create streamreq...")
@@ -42,6 +39,7 @@ class WatchClient:
             self.clisrv.send_obj(clisrv_req)
             utils.debug_log("sent create streamreq")
 
+            #TODO: eliminate need for access to closed (its because of _end_iterator)
             self.closed = False
 
         def server_changed(self, server_id):

@@ -34,6 +34,12 @@ class StreamBase:
             if self._callbacks[i] and self._callbacks[i]() == callback:
                 del self._callbacks[i]
 
+    def _end_iterator(self):
+        # stop any iterators in progress
+        self.closed = True
+        if self._res_buf is not None:
+            self._res_buf[1].set()
+
     def _close(self):
         if not self.closed:
             self._callbacks = []
