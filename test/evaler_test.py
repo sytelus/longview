@@ -1,5 +1,5 @@
-import longview as lv
-from longview import evaler
+import tensorwatch as tw
+from tensorwatch import evaler
 
 
 e = evaler.Evaler('reduce(lambda x,y: x+y, map(lambda x:x**2, filter(lambda x: x%2==0, l)))')

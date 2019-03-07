@@ -1,7 +1,7 @@
-import longview as lv
+import tensorwatch as tw
 import time
-from longview.zmq_pub_sub import ZmqPubSub
-from longview import utils
+from tensorwatch.zmq_pub_sub import ZmqPubSub
+from tensorwatch import utils
 
 def on_event(obj):
     print(obj)

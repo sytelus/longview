@@ -1,5 +1,3 @@
-# Python API for AirSim
-
-This package contains Python library for [longview](https://github.com/sytelus/longview).
+This package contains Python library for [tensorwatch](https://github.com/sytelus/tensorwatch).
 
 

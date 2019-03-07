@@ -1,4 +1,4 @@
-import longview as lv
+import tensorwatch as tw
 import objgraph, time
 
 cli = lv.WatchClient()

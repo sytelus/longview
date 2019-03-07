@@ -1,5 +1,5 @@
-import longview as lv
-from longview import utils
+import tensorwatch as tw
+from tensorwatch import utils
 utils.set_debug_verbosity(5)
 
 r = lv.render(renderer='summary')

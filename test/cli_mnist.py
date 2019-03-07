@@ -1,7 +1,7 @@
-import longview as lv
+import tensorwatch as tw
 import time
 import math
-from longview import utils
+from tensorwatch import utils
 
 utils.set_debug_verbosity(4)
 

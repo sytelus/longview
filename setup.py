@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="longview",
-    version="0.1.0",
+    name="tensorwatch",
+    version="0.3.0",
     author="Shital Shah",
     author_email="sytelus@gmail.com",
-    description="Live Interactive Debugging and Visualization for AI",
+    description="Interactive Realtime Debugging and Visualization for AI",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/sytelus/longview",
+    url="https://github.com/sytelus/tensorwatch",
     packages=setuptools.find_packages(),
 	license='MIT',
     classifiers=(

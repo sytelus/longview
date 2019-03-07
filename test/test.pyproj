@@ -10,7 +10,7 @@
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>longview_test</Name>
+    <Name>test</Name>
     <RootNamespace>test</RootNamespace>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
     <IsWindowsApplication>False</IsWindowsApplication>
@@ -67,8 +67,8 @@
     <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\longview.pyproj">
-      <Name>longview</Name>
+    <ProjectReference Include="..\tensorwatch.pyproj">
+      <Name>tensorwatch</Name>
       <Project>{cc8abc7f-ede1-4e13-b6b7-0041a5ec66a7}</Project>
       <Private>True</Private>
     </ProjectReference>
