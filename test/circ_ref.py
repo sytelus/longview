@@ -1,7 +1,7 @@
 import tensorwatch as tw
 import objgraph, time
 
-cli = lv.WatchClient()
+cli = tw.WatchClient()
 time.sleep(10)
 del cli
 

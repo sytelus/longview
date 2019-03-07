@@ -15,7 +15,7 @@ class BasePlot(ABC):
         utils.set_default(plot_args, 'width', '100%')
         utils.set_default(plot_args, 'height', '4in')
 
-        self.cell = cell or widgets.HBox(layout=widgets.Layout(width=plot_args['width'], height=plot_args['height]))
+        self.cell = cell or widgets.HBox(layout=widgets.Layout(width=plot_args['width'], height=plot_args['height']))
         self.widget = go.FigureWidget()
         self.cell.children += (self.widget,)
         self._stream_plots = {}

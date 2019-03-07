@@ -11,8 +11,7 @@ from .stream_base import StreamBase
 
 class WatchClient:
     class Stream(StreamBase):
-        def __init__(self, stream_name:str=None, throttle=None,
-                     client_id:str, clisrv, event_name:str, expr:str):
+        def __init__(self, client_id:str, clisrv, event_name:str, expr:str, stream_name:str=None, throttle=None):
 
             super(self, Stream).__init__(stream_name, throttle)
             self.clisrv = clisrv
@@ -110,8 +109,7 @@ class WatchClient:
     def create_stream(self, event_name:str, expr:str, stream_name:str=None, throttle=None):
         utils.debug_log("Client - creating stream...", stream_name)
 
-        stream = WatchClient.Stream(stream_name, throttle,
-                                    self.client_id, self._clisrv, event_name, expr)
+        stream = WatchClient.Stream(self.client_id, self._clisrv, event_name, expr, stream_name, throttle)
         self._streams[stream.stream_name] = stream
 
         return stream
