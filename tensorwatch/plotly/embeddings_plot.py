@@ -28,12 +28,12 @@ class EmbeddingsPlot(LinePlot):
         with self.image_output:
             plt.ioff()
 
-            clear_output(wait=True)    
             if self.images_reshape:
                 img = np.reshape(self.images[ind], self.images_reshape)
             else:
                 img = self.images[ind]
             if img is not None:
+                clear_output(wait=True)    
                 self.image_ax.imshow(img)
             display(self.image_figure)
             plt.ion()
