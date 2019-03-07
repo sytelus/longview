@@ -22,7 +22,7 @@ class LinePlot(BasePlot):
         else:
             stream_plot.ax = self.get_main_axis().twinx()
 
-        color = color or plt.cm.Dark2(1.0/(1+len(self._stream_plots)))
+        color = color or plt.cm.Dark2((len(self._stream_plots)%8)/8)
 
         # add default line in subplot
         stream_plot.line = matplotlib.lines.Line2D([], [], 

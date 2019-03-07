@@ -8,36 +8,37 @@ from .receptive_field.rf_utils import plot_receptive_field, plot_grads_at
 from .img_utils import show_image, open_image, img2pyt
 from .data_utils import pyt_ds2list, sample_by_class
 
-default_watch_server = None
-default_watch_client = None
+default_servers = []
+default_clients = []
 
 ########################## server APIs
-def start_watch():
-    global default_watch_server
-    if not default_watch_server:
-        default_watch_server = WatchServer()
+def start_watch(srv_id=0):
+    global default_servers
+    if srv_id == len(default_servers):
+        default_servers.append(WatchServer())
+    #TODO error handling
 
-def _ensure_server():
-    start_watch()
+def _ensure_server(srv_id):
+    start_watch(srv_id)
 
-def observe(event_name:str='', **vars) -> None:
-    _ensure_server()
-    default_watch_server.observe(event_name, **vars)
+def observe(event_name:str='', srv_id=0, **vars) -> None:
+    _ensure_server(srv_id)
+    default_servers[srv_id].observe(event_name, **vars)
 
-def set_globals(**vars):
-    _ensure_server()
-    default_watch_server.set_globals(**vars)
+def set_globals(srv_id=0, **vars):
+    _ensure_server(srv_id)
+    default_servers[srv_id].set_globals(**vars)
 
-def stop_watch():
-    if default_watch_server:
-        default_watch_server.close()
-        default_watch_server = None
+def stop_watch(srv_id=0):
+    #TODO error handling
+    default_servers[srv_id].close()
 
 ########################## client APIs
-def _ensure_client():
-    global default_watch_client
-    if not default_watch_client:
-        default_watch_client = WatchClient()
+def _ensure_client(cli_id):
+    global default_clients
+    if cli_id == len(default_clients):
+        default_clients.append(WatchClient())
+    #TODO error handling
 
 def _get_renderer(type, cell, title):
     if type is None:
@@ -56,10 +57,10 @@ def _get_renderer(type, cell, title):
     else:
         raise ValueError('Render type parameter has invalid value: "{}"'.format(type))
 
-def get_default_client():
-    return default_watch_client
-def get_default_server():
-    return default_watch_server
+def get_client(cli_id):
+    return default_clients
+def get_server(srv_id):
+    return default_servers[srv_id]
 
 
 def open(expr:str=None, event_name:str='', stream_name:str=None, throttle=None, 
@@ -67,9 +68,9 @@ def open(expr:str=None, event_name:str='', stream_name:str=None, throttle=None,
             cell=None, title=None, vis=None, type=None, only_summary=False, 
             history_len=1, dim_history=True, opacity=None,
             separate_yaxis=True, xtitle=None, ytitle=None, ztitle=None, color=None,
-            xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=True):
+            xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=False, cli_id=0):
 
-    _ensure_client()
+    _ensure_client(cli_id)
 
     if type:
         draw_line = 'scatter' not in type
@@ -77,7 +78,7 @@ def open(expr:str=None, event_name:str='', stream_name:str=None, throttle=None,
 
     vis = vis or _get_renderer(type, cell, title)
     
-    stream = default_watch_client.create_stream(event_name=event_name, 
+    stream = default_clients[cli_id].create_stream(event_name=event_name, 
         expr=expr, stream_name=stream_name, throttle=throttle)
 
     vis.add(stream, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,
