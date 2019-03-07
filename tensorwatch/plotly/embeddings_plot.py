@@ -3,6 +3,7 @@ from ipywidgets import Layout, Output
 from IPython.display import display, clear_output
 import numpy as np
 from .line_plot import LinePlot
+import time
 from .. import utils
 
 class EmbeddingsPlot(LinePlot):
@@ -13,18 +14,31 @@ class EmbeddingsPlot(LinePlot):
         if images is not None:
             plt.ioff()
             self.image_output = Output()
-            self.image_figure = plt.figure(figsize=(1,1))
+            self.image_figure = plt.figure(figsize=(2,2))
             self.image_ax = self.image_figure.add_subplot(111)
             self.cell.children += (self.image_output,)
             plt.ion()
         self.images, self.images_reshape = images, images_reshape
+        self.last_ind, self.last_ind_time = -1, 0
 
     def hover_fn(self, trace, points, state):
         if not points:
             return
         ind = points.point_inds[0]
-        if ind > len(self.images) or ind < 0:
+        if ind == self.last_ind or ind > len(self.images) or ind < 0:
             return
+
+        if self.last_ind == -1:
+            self.last_ind, self.last_ind_time = ind, time.time()
+        else:
+            elapsed = time.time() - self.last_ind_time
+            if elapsed  < 0.3:
+                self.last_ind, self.last_ind_time = ind, time.time()
+                if elapsed  < 1:
+                    return
+                # else too much time since update
+            # else we have stable ind
+
         with self.image_output:
             plt.ioff()
 
