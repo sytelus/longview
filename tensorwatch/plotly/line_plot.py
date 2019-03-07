@@ -45,12 +45,12 @@ class LinePlot(BasePlot):
         yaxis = 'y' + (str(stream_plot.index + 1) if stream_plot.separate_yaxis else '')
 
         trace = go.Scatter(x=[], y=[], mode=mode, name=stream_plot.title or stream_plot.ytitle, yaxis=yaxis, hoverinfo=hoverinfo,
-                           line=line)
+                           line=line, marker=marker)
         return trace
 
     def _create_3d_trace(self, stream_plot, mode, hoverinfo, marker, line):
         trace = go.Scatter3d(x=[], y=[], z=[], mode=mode, name=stream_plot.title or stream_plot.ytitle, hoverinfo=hoverinfo,
-                           line=line)
+                           line=line, marker=marker)
         return trace
 
 
@@ -134,9 +134,9 @@ class LinePlot(BasePlot):
             xdata.append(x)
             ydata.append(y)
             zdata.append(z)
-            if (txt):
+            if txt is not None:
                 txtdata.append(txt)
-            if clr:
+            if clr is not None:
                 clrdata.append(clr)
             if ann: #TODO: yref should be y2 for different y axis
                 anndata.append(dict(x=x, y=y, xref='x', yref='y', text=ann, showarrow=False))
