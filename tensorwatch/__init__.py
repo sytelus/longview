@@ -4,13 +4,16 @@ from .watch_server import WatchServer
 from .watch_client import WatchClient
 from .text_printer import TextPrinter
 from .model_graph.hiddenlayer import graph
-from .receptive_field.rf_utils import plot_receptive_field, plot_grads_at
-from .img_utils import show_image, open_image, img2pyt
-from .data_utils import pyt_ds2list, sample_by_class
-from .embeddings.tsne_utils import get_tsne_components
 from .array_stream import ArrayStream
 from .stream_base import StreamBase
+
+###### Import methods #########
+from .receptive_field.rf_utils import plot_receptive_field, plot_grads_at
+from .embeddings.tsne_utils import get_tsne_components
 from .model_graph.torchstat_utils import model_stats
+from .img_utils import show_image, open_image, img2pyt
+from .data_utils import pyt_ds2list, sample_by_class
+
 
 default_servers = []
 default_clients = []
@@ -92,7 +95,7 @@ def open(expr=None, event_name:str='', stream_name:str=None, throttle=None,
             expr=expr, stream_name=stream_name, throttle=throttle)
     elif utils.is_array_like(expr):
         stream = ArrayStream(expr)
-    elif ininstance(expr, StreamBase):
+    elif isinstance(expr, StreamBase):
         stream = expr
 
     vis.add(stream, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,

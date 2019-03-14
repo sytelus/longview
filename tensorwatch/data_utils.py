@@ -1,5 +1,7 @@
 import random
 from . import utils
+import scipy.spatial.distance
+import heapq
 
 def pyt_tensor2np(pyt_tensor, convert_scaler=True):
     if pyt_tensor is None:
@@ -30,4 +32,15 @@ def sample_by_class(data, n_samples, class_col=1, shuffle=True):
     samples = sum(samples.values(), [])
     return samples
 
+def col2array(dataset, col):
+    return [row[col] for row in dataset]
 
+def search_similar(input, compare_to, algorithm='euclidean', topk=5):
+    scores = scipy.spatial.distance.cdist(input, com_to, algorithm)
+    result = []
+    for score, data in zip(scores, compre_to):
+        if len(result) < topk:
+            heapq.heappush(result, (score, data))
+        else:
+            heapq.heappushpop(result, (score, data))
+    return result
