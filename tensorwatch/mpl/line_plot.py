@@ -85,6 +85,7 @@ class LinePlot(BasePlot):
         line = stream_plot.ax.get_lines()[-1]
         xdata, ydata = line.get_data()
         zdata, anndata, txtdata, clrdata = [], [], [], []
+        dirty = False
 
         unpacker = lambda a0=None,a1=None,a2=None,a3=None,a4=None,a5=None, *_:(a0,a1,a2,a3,a4,a5)
 

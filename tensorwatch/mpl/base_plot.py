@@ -4,6 +4,8 @@
 
 import matplotlib
 import os
+import sys
+import traceback
 #if os.name == 'posix' and "DISPLAY" not in os.environ:
 #    matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 
@@ -17,6 +19,7 @@ from matplotlib.animation import FuncAnimation
 import time
 import threading
 import queue
+from IPython import get_ipython, display
 import ipywidgets as widgets
 from ipywidgets.widgets.interaction import show_inline_matplotlib_plots
 from ipykernel.pylab.backend_inline import flush_figures
@@ -29,9 +32,9 @@ class BasePlot:
         utils.set_default(plot_args, 'width', '100%')
         utils.set_default(plot_args, 'height', '3in')
 
-        self.cell = cell or widgets.HBox(layout=widgets.Layout(width=plot_args['width'], height=plot_args['height']))
+        self.cell = cell or widgets.HBox(layout=widgets.Layout(width=plot_args['width'], height=plot_args['height'])) \
+            if self._use_hbox else None
         self.widget = widgets.Output()
-        self._use_hbox = False
         if self._use_hbox:
             self.cell.children += (self.widget,)
         self._stream_plots = {}
@@ -45,6 +48,7 @@ class BasePlot:
         self._ax_main = None
         # matplotlib animation
         self.animation = None
+        #print(matplotlib.get_backend())
 
     def init_fig(self, anim_interval:float=1.0):
         """(for derived class) Initializes matplotlib figure"""
@@ -86,6 +90,12 @@ class BasePlot:
             stream_plot.pending_events.put(stream_event)
 
     def _on_update(self, frame):
+        try:
+            self._on_update_internal(frame)
+        except:
+            traceback.print_exc(file=sys.stdout)
+
+    def _on_update_internal(self, frame):
         """Called on every graph animation update"""
         with self.lock:
             for stream_plot in self._stream_plots.values():
@@ -114,17 +124,19 @@ class BasePlot:
                             time.time() - stream_plot.last_update >= stream_plot.throttle:
 
                             vals = BasePlot._extract_vals(eval_result)
-                            self._plot_eval_result(vals, stream_plot, eval_result)
+                            dirty = self._plot_eval_result(vals, stream_plot, eval_result)
 
-                            if self._use_hbox and get_ipython():
-                                with self.widget:
-                                    self.widget.clear_output(wait=True)
-                                    self.widget.display(self.figure)
-                                    #display.clear_output(wait=True)
-                                    #display.display(self.figure)
-                                    #flush_figures()
-                                    #plt.show()
-                                    #show_inline_matplotlib_plots()
+                            if dirty:
+                                if self._use_hbox and get_ipython():
+                                    with self.widget:
+                                        display.clear_output(wait=True)
+                                        display.display(self.figure)
+                                        #display.clear_output(wait=True)
+                                        #display.display(self.figure)
+                                        #flush_figures()
+                                        #plt.show()
+                                        #show_inline_matplotlib_plots()
+
                             # update for throttle
                             stream_plot.last_update = time.time()
                         else:
@@ -158,10 +170,15 @@ class BasePlot:
         self.is_shown = True
 
         #plt.show() #must be done only once
-        if self._use_hbox and get_ipython():
-            return self.cell
+        if get_ipython():
+            if self._use_hbox:
+                return self.cell
+            else:
+                #plt.show()
+                return self.figure
         else:
-            return plt.show()
+            #plt.ion()
+            return plt.show(block=False)
 
     @staticmethod
     def _extract_vals(eval_result):
