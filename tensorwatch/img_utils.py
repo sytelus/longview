@@ -12,7 +12,10 @@ def show_image(img, size=None):
             w = int(img.shape[0] / h)
             size = h,w
         img = np.reshape(img, size)
-    plt.imshow(img)
+    #fig = plt.Figure()
+    #ax = fig.add_subplot(111)
+    #ax.imshow(img)
+    return plt.imshow(img) #TODO support console
 
 # convert_mode param is mode: https://pillow.readthedocs.io/en/5.1.x/handbook/concepts.html#modes
 # use 'RGB' to force 3 channels
@@ -33,3 +36,17 @@ def img2pyt(img, add_batch_dim=True, resize=None):
     if add_batch_dim:
         img_pyt.unsqueeze_(0)
     return img_pyt
+
+def linear_to_2d(img, size=None):
+    if size is not None or (hasattr(img, 'shape') and len(img.shape) == 1):
+        if size is None:
+            # make guess for 1-dim tensors
+            h = int(math.sqrt(img.shape[0]))
+            w = int(img.shape[0] / h)
+            size = h,w
+        img = np.reshape(img, size)
+    return img
+
+def stack_images(imgs):
+    return np.hstack(imgs)
+

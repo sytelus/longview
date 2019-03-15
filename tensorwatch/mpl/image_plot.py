@@ -115,12 +115,20 @@ class ImagePlot(BasePlot):
                 stream_plot.ax_imgs[row][col] = ax.imshow(img_viz, interpolation="none", cmap=cmap)
                 dirty = True
 
-            ax.set_title(label_in, fontdict={'fontsize': 6, 'fontweight': 'light'})
+            ax.set_title(label_in, fontdict={'fontsize': 8}) #'fontweight': 'light'
 
-            row = row+1 if row < stream_plot.rows-1 else 0
-            col = col+1 if col < stream_plot.cols-1 else 0
+            col = col + 1
+            if col >= stream_plot.cols:
+                col = 0
+                row = row + 1
+                if row >= stream_plot.rows:
+                    break
+
             i += 1
-            if i >= stream_plot.rows * stream_plot.cols:
-                break
 
+        self.figure.tight_layout()
         return dirty
+
+    
+    def has_legend(self):
+        return self.show_legend or False
