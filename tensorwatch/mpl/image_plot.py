@@ -42,7 +42,7 @@ class ImagePlot(BasePlot):
                     dim2 = img_in.shape[0] - dim0 - dim1
                     img_in = img_in.reshape((dim0, dim1, dim2))
                 else:
-                    img_in = img_in.reshape((dim0, dim1))
+                    img_in = img_in.reshape((dim1, dim0))
             elif len(img_in.shape) == 2:
                 img_in = np.swapaxes(img_in, 0, 1) # transpose H,W for imshow
             else:
