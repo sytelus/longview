@@ -19,6 +19,9 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="tensorwatch\pytorch_utils.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\array_stream.py">
       <SubType>Code</SubType>
     </Compile>
@@ -26,6 +29,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\data_utils.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tensorwatch\imagenet_utils.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\img_utils.py">
@@ -73,6 +79,16 @@
     <Compile Include="tensorwatch\embeddings\tsne_utils.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tensorwatch\saliency\backprop.py" />
+    <Compile Include="tensorwatch\saliency\deeplift.py" />
+    <Compile Include="tensorwatch\saliency\epsilon_lrp.py" />
+    <Compile Include="tensorwatch\saliency\gradcam.py" />
+    <Compile Include="tensorwatch\saliency\inverter_util.py" />
+    <Compile Include="tensorwatch\saliency\occlusion.py" />
+    <Compile Include="tensorwatch\saliency\saliency.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tensorwatch\saliency\__init__.py" />
     <Compile Include="tensorwatch\stream_base.py">
       <SubType>Code</SubType>
     </Compile>
@@ -96,6 +112,7 @@
     <Folder Include="tensorwatch\data_explore\" />
     <Folder Include="tensorwatch\receptive_field\" />
     <Folder Include="tensorwatch\plotly\" />
+    <Folder Include="tensorwatch\saliency\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
