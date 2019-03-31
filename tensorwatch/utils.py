@@ -100,8 +100,8 @@ def get_public_fields(obj):
                             or inspect.isfunction(attr)
                             or inspect.ismethod(attr))]
 
-def set_default(dict, key, default_val):
-    if key not in dict:
+def set_default(dict, key, default_val, replace_none=True):
+    if key not in dict or (replace_none and dict[key] is None):
         dict[key] = default_val
 
 def to_array_like(val):

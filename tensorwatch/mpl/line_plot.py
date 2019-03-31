@@ -47,13 +47,6 @@ class LinePlot(BasePlot):
         if yrange is not None:
             stream_plot.ax.set_ylim(*yrange)
 
-        # redo the legend
-        #self.figure.legend(loc='center right', bbox_to_anchor=(1.5, 0.5))
-        if self.show_legend:
-            self.figure.legend(loc='lower right')
-        self.figure.tight_layout()
-
-
     def clear_plot(self, stream_plot):
         lines = stream_plot.ax.get_lines() 
         # if we need to keep history
@@ -85,6 +78,7 @@ class LinePlot(BasePlot):
         line = stream_plot.ax.get_lines()[-1]
         xdata, ydata = line.get_data()
         zdata, anndata, txtdata, clrdata = [], [], [], []
+        dirty = False
 
         unpacker = lambda a0=None,a1=None,a2=None,a3=None,a4=None,a5=None, *_:(a0,a1,a2,a3,a4,a5)
 

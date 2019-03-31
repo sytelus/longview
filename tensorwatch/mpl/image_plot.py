@@ -42,7 +42,7 @@ class ImagePlot(BasePlot):
                     dim2 = img_in.shape[0] - dim0 - dim1
                     img_in = img_in.reshape((dim0, dim1, dim2))
                 else:
-                    img_in = img_in.reshape((dim0, dim1))
+                    img_in = img_in.reshape((dim1, dim0))
             elif len(img_in.shape) == 2:
                 img_in = np.swapaxes(img_in, 0, 1) # transpose H,W for imshow
             else:
@@ -55,8 +55,8 @@ class ImagePlot(BasePlot):
     def _plot_eval_result(self, vals, stream_plot, eval_result):
         if not vals:
             return False
-
         row, col, i = 0, 0, 0
+        dirty = False
         for val in vals:
             val = val if isinstance(val, tuple) else (val,)
             unpacker = lambda a0,a1=None,a2=None,a3=None,a4=None:(a0,a1,a2,a3,a4)
@@ -67,18 +67,8 @@ class ImagePlot(BasePlot):
                 ImagePlot.to_2d(stream_plot, img_tar_weights)
 
             # combine in out images
-            if img_out is not None and img_tar is not None and img_tar_weights is not None:
-                img_viz = np.hstack((img_in, img_tar, img_out, img_tar_weights))
-            elif img_out is not None and img_tar is not None:
-                img_viz = np.hstack((img_in, img_tar, img_out))
-            elif img_out is not None:
-                img_viz = np.hstack((img_in, img_out))
-            elif img_tar is not None:
-                img_viz = np.hstack((img_in, img_tar, np.zeros_like(img_tar)))
-            elif img_tar is not None:
-                img_viz = np.hstack((img_in, img_tar, np.zeros_like(img_tar)))
-            else:
-                img_viz = img_in
+            non_none = tuple((img for img in (img_in, img_tar, img_out, img_tar_weights) if img is not None))
+            img_viz = np.hstack(non_none)
 
             ax = stream_plot.axs[row][col]
             if ax is None:
@@ -97,7 +87,9 @@ class ImagePlot(BasePlot):
                         img_viz = img_viz.reshape((dim0, dim1, dim2))
                     else:
                         img_viz = img_viz.reshape((dim0, dim1))
-                        img_viz = np.transpose(img_viz)
+                        img_viz = np.transpose(img_viz) # transpose H,W for imshow
+                #elif dim == 2:
+                #    img_viz = np.transpose(img_viz) # transpose H,W for imshow
                 elif dim == 3:
                     if img_viz.shape[0] == 1:
                         img_viz = np.squeeze(img_viz, axis=0)
@@ -118,15 +110,25 @@ class ImagePlot(BasePlot):
                         scaled_shape = (*(img_viz.shape[:-1]*np.array(stream_plot.viz_img_scale)), img_viz.shape[-1])
                     else:
                         scaled_shape = tuple(img_viz.shape * np.array(stream_plot.viz_img_scale))
-                    img_viz = skimage.transform.resize(img_viz, scaled_shape)
+                    img_viz = skimage.transform.resize(img_viz, scaled_shape, mode='constant')
 
                 stream_plot.ax_imgs[row][col] = ax.imshow(img_viz, interpolation="none", cmap=cmap)
+                dirty = True
 
-            ax.set_title(label_in, fontdict={'fontsize': 6, 'fontweight': 'light'})
+            ax.set_title(label_in, fontdict={'fontsize': 8}) #'fontweight': 'light'
 
-            row = row+1 if row < stream_plot.rows-1 else 0
-            col = col+1 if col < stream_plot.cols-1 else 0
+            col = col + 1
+            if col >= stream_plot.cols:
+                col = 0
+                row = row + 1
+                if row >= stream_plot.rows:
+                    break
+
             i += 1
-            if i >= stream_plot.rows * stream_plot.cols:
-                break
-        return True
+
+        self.figure.tight_layout()
+        return dirty
+
+    
+    def has_legend(self):
+        return self.show_legend or False

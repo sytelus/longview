@@ -4,13 +4,16 @@ from .watch_server import WatchServer
 from .watch_client import WatchClient
 from .text_printer import TextPrinter
 from .model_graph.hiddenlayer import graph
-from .receptive_field.rf_utils import plot_receptive_field, plot_grads_at
-from .img_utils import show_image, open_image, img2pyt
-from .data_utils import pyt_ds2list, sample_by_class
-from .embeddings.tsne_utils import get_tsne_components
 from .array_stream import ArrayStream
 from .stream_base import StreamBase
+
+###### Import methods #########
+from .receptive_field.rf_utils import plot_receptive_field, plot_grads_at
+from .embeddings.tsne_utils import get_tsne_components
 from .model_graph.torchstat_utils import model_stats
+from .img_utils import show_image, open_image, img2pyt, linear_to_2d
+from .data_utils import pyt_ds2list, sample_by_class, col2array, search_similar
+
 
 default_servers = []
 default_clients = []
@@ -44,7 +47,7 @@ def _ensure_client(cli_id):
         default_clients.append(WatchClient())
     #TODO error handling
 
-def _get_renderer(type, cell, title, images=None, images_reshape=None):
+def _get_renderer(type, cell, title, images=None, images_reshape=None, width=None, height=None):
     if type is None:
         return TextPrinter(cell=cell, title=title)
 
@@ -55,7 +58,7 @@ def _get_renderer(type, cell, title, images=None, images_reshape=None):
         return plotly.LinePlot(cell=cell, title=title, 
                                 is_3d=type in ['line3d', 'scatter3d', 'mesh3d'])
     elif type in ['image', 'mpl-image']:
-        return mpl.ImagePlot(cell=cell, title=title)
+        return mpl.ImagePlot(cell=cell, title=title, width=width, height=height)
     elif type in ['mpl-line', 'mpl-scatter']:
         return mpl.LinePlot(cell=cell, title=title)
     elif type in ['tsne', 'embeddings', 'tsne2d', 'embeddings2d']:
@@ -71,13 +74,13 @@ def get_server(srv_id):
 
 
 def open(expr=None, event_name:str='', stream_name:str=None, throttle=None, 
-            clear_after_end=True, clear_after_each=False, show:bool=None, 
+            clear_after_end=True, clear_after_each=False,
             cell=None, title=None, vis=None, type=None, only_summary=False, 
             history_len=1, dim_history=True, opacity=None,
             separate_yaxis=True, xtitle=None, ytitle=None, ztitle=None, color=None,
             xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=False, cli_id=0,
             rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
-            colormap=None, viz_img_scale=None, images=None, images_reshape=None):
+            colormap=None, viz_img_scale=None, images=None, images_reshape=None, width=None, height=None):
 
     _ensure_client(cli_id)
 
@@ -85,18 +88,18 @@ def open(expr=None, event_name:str='', stream_name:str=None, throttle=None,
         draw_line = 'scatter' not in type
         only_summary = 'summary' == type
 
-    vis = vis or _get_renderer(type, cell, title, images=images, images_reshape=images_reshape)
+    vis = vis or _get_renderer(type, cell, title, images=images, images_reshape=images_reshape, width=width, height=height)
     
     if expr is None or isinstance(expr, str):
         stream = default_clients[cli_id].create_stream(event_name=event_name, 
             expr=expr, stream_name=stream_name, throttle=throttle)
     elif utils.is_array_like(expr):
         stream = ArrayStream(expr)
-    elif ininstance(expr, StreamBase):
+    elif isinstance(expr, StreamBase):
         stream = expr
 
-    vis.add(stream, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,
-                 show=show, history_len=history_len, dim_history=dim_history, opacity=opacity,
+    s = vis.add(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,
+                 history_len=history_len, dim_history=dim_history, opacity=opacity,
                  separate_yaxis=separate_yaxis, xtitle=xtitle, ytitle=ytitle, ztitle=ztitle, color=color,
                  xrange=xrange, yrange=yrange, zrange=zrange, draw_line=draw_line, draw_marker=draw_marker, 
                 rows=rows, cols=cols, img_width=img_width, img_height=img_height, img_channels=img_channels,

@@ -1,9 +1,11 @@
-from IPython import get_ipython, display
-if get_ipython():
-    get_ipython().magic('matplotlib notebook')
+#from IPython import get_ipython, display
+#if get_ipython():
+#    get_ipython().magic('matplotlib notebook')
 
 import matplotlib
 import os
+import sys
+import traceback
 #if os.name == 'posix' and "DISPLAY" not in os.environ:
 #    matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 
@@ -17,21 +19,22 @@ from matplotlib.animation import FuncAnimation
 import time
 import threading
 import queue
+from IPython import get_ipython, display
 import ipywidgets as widgets
 from ipywidgets.widgets.interaction import show_inline_matplotlib_plots
 from ipykernel.pylab.backend_inline import flush_figures
 
 class BasePlot:
-    def __init__(self, cell=None, title=None, show_legend:bool=True, **plot_args):
+    def __init__(self, cell=None, title=None, show_legend:bool=None, **plot_args):
         self.lock = threading.Lock()
         self._use_hbox = True
 
         utils.set_default(plot_args, 'width', '100%')
         utils.set_default(plot_args, 'height', '3in')
 
-        self.cell = cell or widgets.HBox(layout=widgets.Layout(width=plot_args['width'], height=plot_args['height']))
+        self.cell = cell or widgets.HBox(layout=widgets.Layout(width=plot_args['width'], height=plot_args['height'])) \
+            if self._use_hbox else None
         self.widget = widgets.Output()
-        self._use_hbox = False
         if self._use_hbox:
             self.cell.children += (self.widget,)
         self._stream_plots = {}
@@ -39,12 +42,15 @@ class BasePlot:
         self.title = title
 
         self._fig_init_done = False
-        self.show_legend = True
+        self.show_legend = show_legend
         # graph objects
         self.figure = None
         self._ax_main = None
         # matplotlib animation
         self.animation = None
+
+        #print(matplotlib.get_backend())
+        #display.display(self.cell)
 
     def init_fig(self, anim_interval:float=1.0):
         """(for derived class) Initializes matplotlib figure"""
@@ -53,9 +59,8 @@ class BasePlot:
 
         # create figure and animation
         self.figure = plt.figure(figsize=(8, 3))
+        self.anim_interval = anim_interval
 
-        if anim_interval:
-            self.animation = FuncAnimation(self.figure, self._on_update, interval=anim_interval)
         plt.set_cmap('Dark2')
         plt.rcParams['image.cmap']='Dark2'
 
@@ -86,6 +91,12 @@ class BasePlot:
             stream_plot.pending_events.put(stream_event)
 
     def _on_update(self, frame):
+        try:
+            self._on_update_internal(frame)
+        except:
+            traceback.print_exc(file=sys.stdout)
+
+    def _on_update_internal(self, frame):
         """Called on every graph animation update"""
         with self.lock:
             for stream_plot in self._stream_plots.values():
@@ -114,17 +125,23 @@ class BasePlot:
                             time.time() - stream_plot.last_update >= stream_plot.throttle:
 
                             vals = BasePlot._extract_vals(eval_result)
-                            self._plot_eval_result(vals, stream_plot, eval_result)
+                            dirty = self._plot_eval_result(vals, stream_plot, eval_result)
 
-                            if self._use_hbox and get_ipython():
-                                with self.widget:
+                            if dirty:
+                                if self._use_hbox and get_ipython():
                                     self.widget.clear_output(wait=True)
-                                    self.widget.display(self.figure)
-                                    #display.clear_output(wait=True)
-                                    #display.display(self.figure)
-                                    #flush_figures()
-                                    #plt.show()
-                                    #show_inline_matplotlib_plots()
+                                    with self.widget:
+                                        plt.show(self.figure)
+
+                                        # everything else that doesn't work
+                                        #self.figure.show()
+                                        #display.clear_output(wait=True)
+                                        #display.display(self.figure)
+                                        #flush_figures()
+                                        #plt.show()
+                                        #show_inline_matplotlib_plots()
+
+
                             # update for throttle
                             stream_plot.last_update = time.time()
                         else:
@@ -136,7 +153,7 @@ class BasePlot:
 
         # make sure figure is initialized
         self.init_fig()
-
+        
         stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
             clear_after_each, history_len, dim_history, opacity)
         stream_plot.index = len(self._stream_plots)
@@ -146,6 +163,13 @@ class BasePlot:
         stream_plot.pending_events = queue.Queue()
         self.init_stream_plot(stream, stream_plot, **stream_args) 
         self._stream_plots[stream.stream_name] = stream_plot
+
+        # redo the legend
+        #self.figure.legend(loc='center right', bbox_to_anchor=(1.5, 0.5))
+        if self.show_legend:
+            self.figure.legend(loc='lower right')
+        plt.subplots_adjust(hspace=0.6)
+        self.figure.tight_layout()
 
         stream.subscribe(self._add_eval_result)
 
@@ -157,11 +181,20 @@ class BasePlot:
     def show(self):
         self.is_shown = True
 
+        if self.anim_interval:
+            self.animation = FuncAnimation(self.figure, self._on_update, interval=self.anim_interval)
+
         #plt.show() #must be done only once
-        if self._use_hbox and get_ipython():
-            return self.cell
+        if get_ipython():
+            if self._use_hbox:
+                display.display(self.cell) # this method doesn't need returns
+                #return self.cell
+            else:
+                #plt.show()
+                return self.figure
         else:
-            return plt.show()
+            #plt.ion()
+            return plt.show(block=False)
 
     @staticmethod
     def _extract_vals(eval_result):
@@ -184,3 +217,6 @@ class BasePlot:
     def _plot_eval_result(self, vals, stream_plot, eval_result):
         """(for derived class) Plot the data in given axes"""
         pass
+
+    def has_legend(self):
+        return self.show_legend or True

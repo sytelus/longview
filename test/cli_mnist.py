@@ -2,6 +2,7 @@ import tensorwatch as tw
 import time
 import math
 from tensorwatch import utils
+import matplotlib.pyplot as plt
 
 utils.set_debug_verbosity(4)
 
@@ -11,33 +12,36 @@ def show_find_lr():
     plot = tw.mpl.LinePlot()
     
     train_batch_loss = cli_train.create_stream('batch', 'map(lambda d:(d.tt.scheduler.get_lr()[0], d.metrics.batch_loss), l)')
-    plot.show(train_batch_loss, xtitle='Epoch', ytitle='Loss')
+    plot.show(train_batch_loss, xlabel='Epoch', ylabel='Loss')
     
     utils.wait_ley()
 
 def img_in_class():
     cli_train = tw.WatchClient()
 
-    imgs = cli_train.create_stream('batch', 
+    imgs = cli_train.create_stream('batch',
         "top(l, out_xform=pyt_img_class_out_xform, order='rnd')", throttle=1)
     img_plot = tw.mpl.ImagePlot()
     img_plot.add(imgs)
     img_plot.show()
 
-    utils.wait_ley()
+    while(True):
+        plt.draw()
+        plt.pause(0.01)
+        time.sleep(1)
 
 def plot_grads():
     train_cli = tw.WatchClient()
     grads = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
     p = tw.plotly.ArrayPlot('Demo')
-    p.add(grads, xtitle='Epoch', ytitle='Gradients', history_len=30, new_on_eval=True)
+    p.add(grads, xlabel='Epoch', ylabel='Gradients', history_len=30, new_on_eval=True)
 
 def plot_grads1():
     train_cli = tw.WatchClient()
 
     grads = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
     grad_plot = tw.mpl.LinePlot()
-    grad_plot.show(grads, xtitle='Epoch', ytitle='Gradients', clear_after_each=1, history_len=40, dim_history=True)
+    grad_plot.show(grads, xlabel='Epoch', ylabel='Gradients', clear_after_each=1, history_len=40, dim_history=True)
 
     utils.wait_ley()
 
@@ -46,7 +50,7 @@ def plot_weight():
 
     params = train_cli.create_stream('batch', 'map(lambda d:agg_params(d.model, lambda p: p.abs().mean().item()), l)', throttle=1)
     params_plot = tw.mpl.LinePlot()
-    params_plot.show(params, xtitle='Epoch', ytitle='avg |params|', clear_after_each=1, history_len=40, dim_history=True)
+    params_plot.show(params, xlabel='Epoch', ylabel='avg |params|', clear_after_each=1, history_len=40, dim_history=True)
 
     utils.wait_ley()
 
@@ -57,22 +61,27 @@ def epoch_stats():
     plot = tw.mpl.LinePlot()
 
     train_loss = train_cli.create_stream("epoch", 'map(lambda v:v.metrics.epoch_loss, l)')
-    plot.show(train_loss, xtitle='Epoch', ytitle='Train Loss', final_show=False)
+    plot.show(train_loss, xlabel='Epoch', ylabel='Train Loss', final_show=False)
     
     test_acc = test_cli.create_stream("epoch", 'map(lambda v:v.metrics.epoch_accuracy, l)')
-    plot.show(test_acc, xtitle='Epoch', ytitle='Test Accuracy', yrange=(0,1))
+    plot.show(test_acc, xlabel='Epoch', ylabel='Test Accuracy', yrange=(0,1))
 
 
 def batch_stats():
-    train_cli = tw.WatchClient()
-    test_cli = tw.WatchClient()
-
     plot = tw.mpl.LinePlot()
 
-    train_loss = train_cli.create_stream("batch", 'map(lambda v:v.metrics.batch_loss, l)')
-    plot.show(train_loss, xtitle='Epoch', ytitle='Train Loss', final_show=False)
+    train_loss = tw.open('lambda v:(v.metrics.epochf, v.metrics.batch_loss)', event_name="batch", title='Batch Statistics',
+                         xtitle='Epoch', ytitle='Train Loss', clear_after_end=False, type='mpl-line')
     
-    test_acc = test_cli.create_stream("batch", 'map(lambda v:v.metrics.batch_accuracy, l)')
-    plot.show(test_acc, xtitle='Epoch', ytitle='Test Accuracy')
+    train_acc = tw.open('lambda v:(v.metrics.epochf, v.metrics.epoch_loss)', event_name="batch",
+                         xtitle='Epoch', ytitle='Train Accuracy', clear_after_end=False, yrange=(0,1), 
+                         vis=train_loss, type='mpl-line')
+
+    train_loss.show()
+
+    while(True):
+        plt.draw()
+        plt.pause(0.01)
+        time.sleep(1)
 
 img_in_class()
