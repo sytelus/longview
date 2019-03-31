@@ -5,7 +5,7 @@
     <ProjectGuid>9a7fe67e-93f0-42b5-b58f-77320fc639e4</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>tsny.py</StartupFile>
+    <StartupFile>srv_sum_log.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -50,6 +50,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="srv_sum_log.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="srv_sum_log2.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tsny.py">
