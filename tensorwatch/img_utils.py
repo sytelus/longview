@@ -28,12 +28,11 @@ def show_image(img, size=None, alpha=None, cmap=None,
 # convert_mode param is mode: https://pillow.readthedocs.io/en/5.1.x/handbook/concepts.html#modes
 # use convert_mode='RGB' to force 3 channels
 def open_image(path, resize=None, resample=Image.ANTIALIAS, convert_mode=None):
-    img = None
-    with Image.open(path) as img:
-        if resize is not None:
-            img = img.resize(resize, Image.ANTIALIAS)
-        if convert_mode is not None:
-            img = img.convert(convert_mode)
+    img = Image.open(path)
+    if resize is not None:
+        img = img.resize(resize, Image.ANTIALIAS)
+    if convert_mode is not None:
+        img = img.convert(convert_mode)
     return img
 
 def img2pyt(img, add_batch_dim=True, resize=None):
@@ -58,3 +57,9 @@ def linear_to_2d(img, size=None):
 
 def stack_images(imgs):
     return np.hstack(imgs)
+
+def plt_loop(sleep_time=1, plt_pause=0.01):
+    while(True):
+        plt.draw()
+        plt.pause(plt_pause)
+        time.sleep(sleep_time)

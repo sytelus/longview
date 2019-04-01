@@ -5,6 +5,7 @@ from .deeplift import DeepLIFTRescaleExplainer
 from .occlusion import OcclusionExplainer
 from .epsilon_lrp import EpsilonLrp
 import skimage.transform
+import torch
 from .. import img_utils
 
 def _get_explainer(explainer_name, model, layer_path=None):
@@ -34,12 +35,13 @@ def _get_explainer(explainer_name, model, layer_path=None):
     raise ValueError('Explainer {} is not recognized'.format(explainer_name))
 
 def get_saliency(model, input, label, method='gradcam', layer_path=['avgpool']):
-    exp = get_explainer(method, model, layer_path)
+    exp = _get_explainer(method, model, layer_path)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     input = input.to(device)
-    label = label.to(device)
+    if label is not None:
+        label = label.to(device)
 
     saliency = exp.explain(input, label)
 
@@ -50,8 +52,8 @@ def get_saliency(model, input, label, method='gradcam', layer_path=['avgpool']):
     return saliency
 
 def show_image_saliency(raw_image, saliency):
-    #upsampler = nn.Upsample(size=(raw_input.height, raw_input.width), mode='bilinear')
+    #upsampler = nn.Upsample(size=(raw_image.height, raw_image.width), mode='bilinear')
     saliency_upsampled = skimage.transform.resize(saliency.detach().cpu().numpy(), 
-                                                  (raw_input.height, raw_input.width))
+                                                  (raw_image.height, raw_image.width))
 
-    return img_utils.show_image(raw_input, img2=saliency_upsampled, alpha2=0.6, cmap2='jet')
+    return img_utils.show_image(raw_image, img2=saliency_upsampled, alpha2=0.6, cmap2='jet')

@@ -1,5 +1,5 @@
 import torch
-from explainer.backprop import VanillaGradExplainer
+from .backprop import VanillaGradExplainer
 
 
 def _get_layer(model, key_list):
