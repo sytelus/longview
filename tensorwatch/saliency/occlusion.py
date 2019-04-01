@@ -12,7 +12,7 @@ class OcclusionExplainer:
         self.window_shape = window_shape
         self.step = step
 
-    def explain(self, inp, ind=None):
+    def explain(self, inp, ind=None, raw_inp=None):
         self.model.eval()
         with torch.no_grad():
             return OcclusionExplainer._occlusion(inp, self.model, self.window_shape, self.step)

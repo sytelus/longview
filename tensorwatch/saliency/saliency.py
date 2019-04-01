@@ -4,9 +4,17 @@ from .backprop import VanillaGradExplainer, GradxInputExplainer, SaliencyExplain
 from .deeplift import DeepLIFTRescaleExplainer
 from .occlusion import OcclusionExplainer
 from .epsilon_lrp import EpsilonLrp
+from .lime_image_explainer import LimeImageExplainer, LimeImagenetExplainer
 import skimage.transform
 import torch
+import matplotlib.pyplot as plt
+import math
 from .. import img_utils
+
+class ImageSaliencyResult:
+    def __init__(self, raw_image, saliency, title, saliency_alpha=0.6, saliency_cmap='jet'):
+        self.raw_image, self.saliency, self.title = raw_image, saliency, title
+        self.saliency_alpha, self.saliency_cmap = saliency_alpha, saliency_cmap
 
 def _get_explainer(explainer_name, model, layer_path=None):
     if explainer_name == 'gradcam':
@@ -31,29 +39,74 @@ def _get_explainer(explainer_name, model, layer_path=None):
         return OcclusionExplainer(model)
     if explainer_name == 'lrp':
         return EpsilonLrp(model)
+    if explainer_name == 'lime_imagenet':
+        return LimeImagenetExplainer(model)
 
     raise ValueError('Explainer {} is not recognized'.format(explainer_name))
 
-def get_saliency(model, input, label, method='gradcam', layer_path=['avgpool']):
-    exp = _get_explainer(method, model, layer_path)
+def _get_layer_path(model):
+    if model.__class__.__name__ == 'VGG':
+        return ['features', '30'] # pool5
+    elif model.__class__.__name__ == 'GoogleNet':
+        return ['pool5']
+    elif model.__class__.__name__ == 'ResNet':
+        return ['avgpool'] #layer4
+    elif model.__class__.__name__ == 'Inception3':
+        return ['Mixed_7c', 'branch_pool'] # ['conv2d_94'], 'mixed10'
+    else: #unknown network
+        return None
 
+def get_saliency(model, raw_input, input, label, method='integrate_grad', layer_path=None):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     model.to(device)
     input = input.to(device)
     if label is not None:
         label = label.to(device)
 
-    saliency = exp.explain(input, label)
+    if input.grad is not None:
+        input.grad.zero_()
+    if label is not None and label.grad is not None:
+        label.grad.zero_()
+    model.eval()
+    model.zero_grad()
+
+    layer_path = layer_path or _get_layer_path(model)
+
+    exp = _get_explainer(method, model, layer_path)
+    saliency = exp.explain(input, label, raw_input)
 
     saliency = saliency.abs().sum(dim=1)[0].squeeze()
     saliency -= saliency.min()
     saliency /= (saliency.max() + 1e-20)
 
-    return saliency
+    return saliency.detach().cpu().numpy()
 
-def show_image_saliency(raw_image, saliency):
-    #upsampler = nn.Upsample(size=(raw_image.height, raw_image.width), mode='bilinear')
-    saliency_upsampled = skimage.transform.resize(saliency.detach().cpu().numpy(), 
-                                                  (raw_image.height, raw_image.width))
+def get_image_saliency_results(model, raw_image, input, label,
+                               methods=['lime_imagenet', 'gradcam', 'smooth_grad',
+                                        'guided_backprop', 'deeplift_rescale'], 
+                               layer_path=None):
+    results = []
+    for method in methods:
+        sal = get_saliency(model, raw_image, input, label, method=method)
+        results.append(ImageSaliencyResult(raw_image, sal, method))
+    return results
 
-    return img_utils.show_image(raw_image, img2=saliency_upsampled, alpha2=0.6, cmap2='jet')
+def get_image_saliency_plot(image_saliency_results, cols = 3, figsize = None):
+    rows = math.ceil(len(image_saliency_results) / cols)
+    figsize=figsize or (8, 3 * rows)
+    figure = plt.figure(figsize=figsize) #figsize=(8, 3)
+    
+    for i, r in enumerate(image_saliency_results):
+        ax = figure.add_subplot(rows, cols, i+1)
+        ax.set_xticks([])
+        ax.set_yticks([]) 
+        ax.set_title(r.title, fontdict={'fontsize': 18}) #'fontweight': 'light'
+
+        #upsampler = nn.Upsample(size=(raw_image.height, raw_image.width), mode='bilinear')
+        saliency_upsampled = skimage.transform.resize(r.saliency, 
+                                                      (r.raw_image.height, r.raw_image.width))
+
+        img_utils.show_image(r.raw_image, img2=saliency_upsampled, 
+                             alpha2=r.saliency_alpha, cmap2=r.saliency_cmap, ax=ax)
+    return figure

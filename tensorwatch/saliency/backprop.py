@@ -26,7 +26,7 @@ class VanillaGradExplainer(object):
         output.backward(grad_out)
         return inp.grad
 
-    def explain(self, inp, ind=None):
+    def explain(self, inp, ind=None, raw_inp=None):
         return self._backprop(inp, ind)
 
 
@@ -34,7 +34,7 @@ class GradxInputExplainer(VanillaGradExplainer):
     def __init__(self, model):
         super(GradxInputExplainer, self).__init__(model)
 
-    def explain(self, inp, ind=None):
+    def explain(self, inp, ind=None, raw_inp=None):
         grad = self._backprop(inp, ind)
         return inp * grad
 
@@ -43,7 +43,7 @@ class SaliencyExplainer(VanillaGradExplainer):
     def __init__(self, model):
         super(SaliencyExplainer, self).__init__(model)
 
-    def explain(self, inp, ind=None):
+    def explain(self, inp, ind=None, raw_inp=None):
         grad = self._backprop(inp, ind)
         return grad.abs()
 
@@ -53,7 +53,7 @@ class IntegrateGradExplainer(VanillaGradExplainer):
         super(IntegrateGradExplainer, self).__init__(model)
         self.steps = steps
 
-    def explain(self, inp, ind=None):
+    def explain(self, inp, ind=None, raw_inp=None):
         grad = 0
         inp_data = inp.clone()
 
@@ -133,7 +133,7 @@ class SmoothGradExplainer(object):
         self.nsamples = nsamples
         self.magnitude = magnitude
 
-    def explain(self, inp, ind=None):
+    def explain(self, inp, ind=None, raw_inp=None):
         stdev = self.stdev_spread * (inp.max() - inp.min())
 
         total_gradients = 0

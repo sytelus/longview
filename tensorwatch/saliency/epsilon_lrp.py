@@ -8,7 +8,7 @@ class EpsilonLrp(object):
     def __init__(self, model):
         self.model = InnvestigateModel(model)
 
-    def explain(self, inp, ind=None):
+    def explain(self, inp, ind=None, raw_inp=None):
         predicitions, saliency = self.model.innvestigate(inp, ind)
         return saliency
 

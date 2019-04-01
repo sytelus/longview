@@ -3,6 +3,7 @@ from PIL import Image
 from torchvision import transforms
 import numpy as np
 import math
+import time
 
 def _resize_image(img, size=None):
     if size is not None or (hasattr(img, 'shape') and len(img.shape) == 1):
@@ -15,15 +16,16 @@ def _resize_image(img, size=None):
     return img
 
 def show_image(img, size=None, alpha=None, cmap=None, 
-               img2=None, size2=None, alpha2=None, cmap2=None):
+               img2=None, size2=None, alpha2=None, cmap2=None, ax=None):
     img =_resize_image(img, size)
     img2 =_resize_image(img2, size2)
-    plt.imshow(img, alpha=alpha, cmap=cmap)
+
+    (ax or plt).imshow(img, alpha=alpha, cmap=cmap)
 
     if img2 is not None:
-        plt.imshow(img2, alpha=alpha2, cmap=cmap2)
+        (ax or plt).imshow(img2, alpha=alpha2, cmap=cmap2)
 
-    return plt.show()
+    return ax or plt.show()
 
 # convert_mode param is mode: https://pillow.readthedocs.io/en/5.1.x/handbook/concepts.html#modes
 # use convert_mode='RGB' to force 3 channels
@@ -59,7 +61,9 @@ def stack_images(imgs):
     return np.hstack(imgs)
 
 def plt_loop(sleep_time=1, plt_pause=0.01):
+    plt.ion()
+    plt.show(block=False)
     while(True):
-        plt.draw()
+        #plt.draw()
         plt.pause(plt_pause)
         time.sleep(sleep_time)

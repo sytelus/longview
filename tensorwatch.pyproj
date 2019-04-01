@@ -19,6 +19,11 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="tensorwatch\saliency\lime\lime_base.py" />
+    <Compile Include="tensorwatch\saliency\lime\lime_image.py" />
+    <Compile Include="tensorwatch\saliency\lime\wrappers\scikit_image.py" />
+    <Compile Include="tensorwatch\saliency\lime\wrappers\__init__.py" />
+    <Compile Include="tensorwatch\saliency\lime\__init__.py" />
     <Compile Include="tensorwatch\pytorch_utils.py">
       <SubType>Code</SubType>
     </Compile>
@@ -84,6 +89,9 @@
     <Compile Include="tensorwatch\saliency\epsilon_lrp.py" />
     <Compile Include="tensorwatch\saliency\gradcam.py" />
     <Compile Include="tensorwatch\saliency\inverter_util.py" />
+    <Compile Include="tensorwatch\saliency\lime_image_explainer.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\saliency\occlusion.py" />
     <Compile Include="tensorwatch\saliency\saliency.py">
       <SubType>Code</SubType>
@@ -104,12 +112,14 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="tensorwatch" />
+    <Folder Include="tensorwatch\saliency\lime\wrappers\" />
     <Folder Include="tensorwatch\model_graph\" />
     <Folder Include="tensorwatch\model_graph\hiddenlayer\" />
     <Folder Include="tensorwatch\model_graph\hiddenlayer\__pycache__\" />
     <Folder Include="tensorwatch\mpl\" />
     <Folder Include="tensorwatch\embeddings\" />
     <Folder Include="tensorwatch\data_explore\" />
+    <Folder Include="tensorwatch\saliency\lime\" />
     <Folder Include="tensorwatch\receptive_field\" />
     <Folder Include="tensorwatch\plotly\" />
     <Folder Include="tensorwatch\saliency\" />

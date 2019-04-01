@@ -38,7 +38,7 @@ class GradCAMExplainer(VanillaGradExplainer):
         self.intermediate_act = []
         self.intermediate_grad = []
 
-    def explain(self, inp, ind=None):
+    def explain(self, inp, ind=None, raw_inp=None):
         self._reset_intermediate_lists()
 
         _ = super(GradCAMExplainer, self)._backprop(inp, ind)

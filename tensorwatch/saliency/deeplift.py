@@ -72,7 +72,7 @@ class DeepLIFTRescaleExplainer(GradxInputExplainer):
 
         self.model.apply(backward_replace)
 
-    def explain(self, inp, ind=None):
+    def explain(self, inp, ind=None, raw_inp=None):
         self._reset_preference()
         self._baseline_forward(inp)
         g = super(DeepLIFTRescaleExplainer, self).explain(inp, ind)
