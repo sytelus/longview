@@ -79,9 +79,18 @@ def batch_stats():
 
     train_loss.show()
 
+    input("Waiting...")
     while(True):
         plt.draw()
         plt.pause(0.01)
         time.sleep(1)
 
-img_in_class()
+def text_stats():
+    trl = tw.open('lambda d:(d.x, d.metrics.batch_loss)', event_name='batch', type=None, 
+                  xtitle='Epoch', ytitle='Train Loss', clear_after_end=False)
+    trl.show()
+    input("Waiting...")
+
+#img_in_class()
+#text_stats()
+batch_stats()

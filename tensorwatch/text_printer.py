@@ -34,9 +34,10 @@ class TextPrinter:
                 self.df = self.df.append(pd.Series({TextPrinter._get_key_name(stream_event, 0) : val}), 
                                           sort=False, ignore_index=True)
             elif utils.is_array_like(val):
+                val_dict = {}
                 for i,val_i in enumerate(val):
-                    self.df = self.df.append(pd.Series({TextPrinter._get_key_name(stream_event, i) : val_i}), 
-                                              sort=False, ignore_index=True)
+                    val_dict[TextPrinter._get_key_name(stream_event, i)] = val_i
+                self.df = self.df.append(pd.Series(val_dict), sort=False, ignore_index=True)
             else:
                 self.df = self.df.append(pd.Series(val.__dict__), sort=False, ignore_index=True)
 

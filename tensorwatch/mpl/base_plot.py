@@ -30,7 +30,7 @@ class BasePlot:
         self._use_hbox = True
 
         utils.set_default(plot_args, 'width', '100%')
-        utils.set_default(plot_args, 'height', '3in')
+        utils.set_default(plot_args, 'height', '4in')
 
         self.cell = cell or widgets.HBox(layout=widgets.Layout(width=plot_args['width'], height=plot_args['height'])) \
             if self._use_hbox else None
@@ -133,7 +133,6 @@ class BasePlot:
                                 if self._use_hbox and get_ipython():
                                     self.widget.clear_output(wait=True)
                                     with self.widget:
-                                        #plt.pause(0.01)
                                         plt.show(self.figure)
 
                                         # everything else that doesn't work
@@ -143,7 +142,8 @@ class BasePlot:
                                         #flush_figures()
                                         #plt.show()
                                         #show_inline_matplotlib_plots()
-
+                                #elif not get_ipython():
+                                #    self.figure.canvas.draw()
 
                             # update for throttle
                             stream_plot.last_update = time.time()
@@ -196,7 +196,8 @@ class BasePlot:
                 return self.figure
         else:
             #plt.ion()
-            return plt.show(block=False)
+            #return plt.show(block=False)
+            plt.show()
 
     @staticmethod
     def _extract_vals(eval_result):
