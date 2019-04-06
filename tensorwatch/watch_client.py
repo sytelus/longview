@@ -97,7 +97,7 @@ class WatchClient:
 
 
     def _send_heartbeat(self):
-        if time.time() - self._last_server_hb > 6: #make configurable
+        if time.time() - self._last_server_hb > 15: #make configurable
             utils.debug_log("Server heartbeat lost, pausing client heartbeat", 
                 (time.time(), self._last_server_hb), verbosity=1)
             self._heartbeat_timer.pause()

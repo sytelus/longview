@@ -155,9 +155,10 @@ class WatchServer:
 
                 # check if client is still alive, bypass if client doesn't send hb
                 last_hb = self._client_heartbeats.get(stream_req.client_id, 0)
-                if last_hb > 0 and time.time() - last_hb > 3: #TODO: make configurable
-                    utils.debug_log("Event but no heartbeat since {} from ".format(last_hb, 
-                                    stream_req.client_id), event_name, verbosity=4)
+                time_now = time.time()
+                if last_hb > 0 and time_now - last_hb > 15: #TODO: make configurable
+                    utils.debug_log("Event at {} but no heartbeat since {} from {}".format(time_now, 
+                        last_hb, stream_req.client_id), event_name, verbosity=4)
                 else:
                     stream_req.last_sent = time.time()
                     events_vars = EventVars(self._global_vars, **self._event_vars[event_name])
