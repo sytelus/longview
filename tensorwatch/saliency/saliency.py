@@ -12,7 +12,7 @@ import math
 from .. import img_utils
 
 class ImageSaliencyResult:
-    def __init__(self, raw_image, saliency, title, saliency_alpha=0.6, saliency_cmap='jet'):
+    def __init__(self, raw_image, saliency, title, saliency_alpha=0.4, saliency_cmap='jet'):
         self.raw_image, self.saliency, self.title = raw_image, saliency, title
         self.saliency_alpha, self.saliency_cmap = saliency_alpha, saliency_cmap
 
@@ -33,7 +33,7 @@ def _get_explainer(explainer_name, model, layer_path=None):
         return GuidedBackpropExplainer(model)
     if explainer_name == 'smooth_grad':
         return SmoothGradExplainer(model)
-    if explainer_name == 'deeplift_rescale':
+    if explainer_name == 'deeplift':
         return DeepLIFTRescaleExplainer(model)
     if explainer_name == 'occlusion':
         return OcclusionExplainer(model)
@@ -84,7 +84,7 @@ def get_saliency(model, raw_input, input, label, method='integrate_grad', layer_
 
 def get_image_saliency_results(model, raw_image, input, label,
                                methods=['lime_imagenet', 'gradcam', 'smooth_grad',
-                                        'guided_backprop', 'deeplift_rescale'], 
+                                        'guided_backprop', 'deeplift', 'grad_x_input'], 
                                layer_path=None):
     results = []
     for method in methods:
@@ -92,7 +92,7 @@ def get_image_saliency_results(model, raw_image, input, label,
         results.append(ImageSaliencyResult(raw_image, sal, method))
     return results
 
-def get_image_saliency_plot(image_saliency_results, cols = 3, figsize = None):
+def get_image_saliency_plot(image_saliency_results, cols = 2, figsize = None):
     rows = math.ceil(len(image_saliency_results) / cols)
     figsize=figsize or (8, 3 * rows)
     figure = plt.figure(figsize=figsize) #figsize=(8, 3)
@@ -101,7 +101,7 @@ def get_image_saliency_plot(image_saliency_results, cols = 3, figsize = None):
         ax = figure.add_subplot(rows, cols, i+1)
         ax.set_xticks([])
         ax.set_yticks([]) 
-        ax.set_title(r.title, fontdict={'fontsize': 18}) #'fontweight': 'light'
+        ax.set_title(r.title, fontdict={'fontsize': 24}) #'fontweight': 'light'
 
         #upsampler = nn.Upsample(size=(raw_image.height, raw_image.width), mode='bilinear')
         saliency_upsampled = skimage.transform.resize(r.saliency, 
