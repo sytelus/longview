@@ -8,6 +8,7 @@ import types
 import re
 import uuid
 from collections import abc
+import textwrap 
 
 from functools import wraps
 import gc
@@ -350,3 +351,6 @@ def frange(start, stop=None, step=None, steps=None):
     for i in range(steps):
         yield start
         start += step  
+
+def wrap_string(s, chars_per_line=12):
+   return "\n".join(textwrap.wrap(s, chars_per_line))

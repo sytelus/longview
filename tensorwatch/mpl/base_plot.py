@@ -128,6 +128,7 @@ class BasePlot:
                             dirty = self._plot_eval_result(vals, stream_plot, eval_result)
 
                             if dirty:
+                                self.figure.tight_layout()
                                 if self._use_hbox and get_ipython():
                                     self.widget.clear_output(wait=True)
                                     with self.widget:
@@ -169,7 +170,6 @@ class BasePlot:
         if self.show_legend:
             self.figure.legend(loc='lower right')
         plt.subplots_adjust(hspace=0.6)
-        self.figure.tight_layout()
 
         stream.subscribe(self._add_eval_result)
 

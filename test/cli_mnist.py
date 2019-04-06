@@ -22,7 +22,7 @@ def img_in_class():
     imgs = cli_train.create_stream('batch',
         "top(l, out_xform=pyt_img_class_out_xform, order='rnd')", throttle=1)
     img_plot = tw.mpl.ImagePlot()
-    img_plot.add(imgs)
+    img_plot.add(imgs, viz_img_scale=3)
     img_plot.show()
 
     while(True):

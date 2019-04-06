@@ -75,7 +75,7 @@ class ImagePlot(BasePlot):
                 ax = stream_plot.axs[row][col] = \
                     self.figure.add_subplot(stream_plot.rows, stream_plot.cols, i+1)
                 ax.set_xticks([])
-                ax.set_yticks([]) 
+                ax.set_yticks([])  
 
             if img_viz is not None:
                 dim = len(img_viz.shape)
@@ -106,16 +106,18 @@ class ImagePlot(BasePlot):
                     dim == 2 else stream_plot.colormap
 
                 if stream_plot.viz_img_scale is not None:
-                    if len(img_viz.shape) > 2:
-                        scaled_shape = (*(img_viz.shape[:-1]*np.array(stream_plot.viz_img_scale)), img_viz.shape[-1])
-                    else:
-                        scaled_shape = tuple(img_viz.shape * np.array(stream_plot.viz_img_scale))
-                    img_viz = skimage.transform.resize(img_viz, scaled_shape, mode='constant')
+                    img_viz = skimage.transform.rescale(img_viz, (stream_plot.viz_img_scale, stream_plot.viz_img_scale), 
+                                                        mode='reflect', preserve_range=True)
 
                 stream_plot.ax_imgs[row][col] = ax.imshow(img_viz, interpolation="none", cmap=cmap)
                 dirty = True
 
-            ax.set_title(label_in, fontdict={'fontsize': 8}) #'fontweight': 'light'
+            if len(label_in) > 12:
+                label_in = utils.wrap_string(label_in) if len(label_in) > 24 else label_in
+                fontsize = 8
+            else:
+                fontsize = 12
+            ax.set_title(label_in, fontsize=fontsize) #'fontweight': 'light'
 
             col = col + 1
             if col >= stream_plot.cols:
@@ -126,7 +128,6 @@ class ImagePlot(BasePlot):
 
             i += 1
 
-        self.figure.tight_layout()
         return dirty
 
     
