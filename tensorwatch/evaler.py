@@ -40,6 +40,8 @@ class Evaler:
                     break
                 else:
                     yield self.event_vars
+                    # below will cause result=None, is_valid=False when
+                    # expression has reduce
                     self.eval_wait.set()
 
     def __init__(self, expr):

@@ -2,7 +2,7 @@ from .base_plot import *
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from ..lv_types import *
 from .. import utils
-import math
+import math, time
 import numpy as np
 import skimage.transform
 import ipywidgets as widgets
@@ -65,6 +65,9 @@ class ImagePlot(BasePlot):
                 ImagePlot.to_2d(stream_plot, img_tar), \
                 ImagePlot.to_2d(stream_plot, img_out), \
                 ImagePlot.to_2d(stream_plot, img_tar_weights)
+
+            #if i == 0:
+            #    print(time.time(), hash(img_in.data.tobytes()))
 
             # combine in out images
             non_none = tuple((img for img in (img_in, img_tar, img_out, img_tar_weights) if img is not None))

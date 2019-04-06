@@ -324,7 +324,8 @@ def set_debug_verbosity(verbosity=0):
     global _utils_debug_verbosity
     _utils_debug_verbosity = verbosity
 def debug_log(msg, param=None, verbosity=3):
-    if _utils_debug_verbosity >= verbosity:
+    global _utils_debug_verbosity
+    if _utils_debug_verbosity is not None and _utils_debug_verbosity >= verbosity:
         print("[Debug][{}]: {} : {} : t={:.2f}".format(verbosity, msg, param, time.time()-_utils_start_time))
 
 def get_uuid(hex = False):

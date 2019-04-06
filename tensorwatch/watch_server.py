@@ -11,7 +11,8 @@ from .repeated_timer import RepeatedTimer
 
 class WatchServer:
     _port_start = 40859
-    def __init__(self, pubsub_port:int=None, cliesrv_port:int=None):
+    def __init__(self, pubsub_port:int=None, cliesrv_port:int=None, heartbeat_timeout=600):
+        self.heartbeat_timeout = heartbeat_timeout
         self._reset()
         self.open(pubsub_port, cliesrv_port)
         utils.debug_log("WatchServer started", verbosity=1)
@@ -156,9 +157,9 @@ class WatchServer:
                 # check if client is still alive, bypass if client doesn't send hb
                 last_hb = self._client_heartbeats.get(stream_req.client_id, 0)
                 time_now = time.time()
-                if last_hb > 0 and time_now - last_hb > 15: #TODO: make configurable
+                if last_hb > 0 and time_now - last_hb > self.heartbeat_timeout:
                     utils.debug_log("Event at {} but no heartbeat since {} from {}".format(time_now, 
-                        last_hb, stream_req.client_id), event_name, verbosity=4)
+                        last_hb, stream_req.client_id), event_name, verbosity=5)
                 else:
                     stream_req.last_sent = time.time()
                     events_vars = EventVars(self._global_vars, **self._event_vars[event_name])

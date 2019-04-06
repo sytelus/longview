@@ -19,10 +19,10 @@ default_servers = []
 default_clients = []
 
 ########################## server APIs
-def start_watch(srv_id=0):
+def start_watch(srv_id=0, heartbeat_timeout=600):
     global default_servers
     if srv_id == len(default_servers):
-        default_servers.append(WatchServer())
+        default_servers.append(WatchServer(heartbeat_timeout=heartbeat_timeout))
     #TODO error handling
 
 def _ensure_server(srv_id):
@@ -41,10 +41,10 @@ def stop_watch(srv_id=0):
     default_servers[srv_id].close()
 
 ########################## client APIs
-def _ensure_client(cli_id):
+def _ensure_client(cli_id, heartbeat_timeout=600):
     global default_clients
     if cli_id == len(default_clients):
-        default_clients.append(WatchClient())
+        default_clients.append(WatchClient(heartbeat_timeout=heartbeat_timeout))
     #TODO error handling
 
 def _get_renderer(type, cell, title, images=None, images_reshape=None, width=None, height=None):
@@ -80,9 +80,9 @@ def open(expr=None, event_name:str='', stream_name:str=None, throttle=None,
             separate_yaxis=True, xtitle=None, ytitle=None, ztitle=None, color=None,
             xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=False, cli_id=0,
             rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
-            colormap=None, viz_img_scale=None, images=None, images_reshape=None, width=None, height=None):
+            colormap=None, viz_img_scale=None, images=None, images_reshape=None, width=None, height=None, heartbeat_timeout=600):
 
-    _ensure_client(cli_id)
+    _ensure_client(cli_id, heartbeat_timeout=heartbeat_timeout)
 
     if type:
         draw_line = 'scatter' not in type

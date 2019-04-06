@@ -128,10 +128,12 @@ class BasePlot:
                             dirty = self._plot_eval_result(vals, stream_plot, eval_result)
 
                             if dirty:
+                                utils.debug_log("Plot updated", eval_result.stream_name, verbosity=4)
                                 self.figure.tight_layout()
                                 if self._use_hbox and get_ipython():
                                     self.widget.clear_output(wait=True)
                                     with self.widget:
+                                        #plt.pause(0.01)
                                         plt.show(self.figure)
 
                                         # everything else that doesn't work
@@ -147,36 +149,36 @@ class BasePlot:
                             stream_plot.last_update = time.time()
                         else:
                             utils.debug_log("Value not plotted due to throttle", 
-                                            eval_result.event_name, verbosity=5)
+                                            eval_result.event_name, verbosity=4)
 
     def add(self, stream, title=None, throttle=None, clear_after_end=False, clear_after_each=False, 
             show:bool=None, history_len=1, dim_history=True, opacity=None, **stream_args):
-
-        # make sure figure is initialized
-        self.init_fig()
+        with self.lock:
+            # make sure figure is initialized
+            self.init_fig()
         
-        stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
-            clear_after_each, history_len, dim_history, opacity)
-        stream_plot.index = len(self._stream_plots)
-        stream_plot._clear_pending = False
-        stream_plot.stream_args = stream_args
+            stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
+                clear_after_each, history_len, dim_history, opacity)
+            stream_plot.index = len(self._stream_plots)
+            stream_plot._clear_pending = False
+            stream_plot.stream_args = stream_args
 
-        stream_plot.pending_events = queue.Queue()
-        self.init_stream_plot(stream, stream_plot, **stream_args) 
-        self._stream_plots[stream.stream_name] = stream_plot
+            stream_plot.pending_events = queue.Queue()
+            self.init_stream_plot(stream, stream_plot, **stream_args) 
+            self._stream_plots[stream.stream_name] = stream_plot
 
-        # redo the legend
-        #self.figure.legend(loc='center right', bbox_to_anchor=(1.5, 0.5))
-        if self.show_legend:
-            self.figure.legend(loc='lower right')
-        plt.subplots_adjust(hspace=0.6)
+            # redo the legend
+            #self.figure.legend(loc='center right', bbox_to_anchor=(1.5, 0.5))
+            if self.show_legend:
+                self.figure.legend(loc='lower right')
+            plt.subplots_adjust(hspace=0.6)
 
-        stream.subscribe(self._add_eval_result)
+            stream.subscribe(self._add_eval_result)
 
-        if show or (show is None and not self.is_shown):
-            return self.show()
+            if show or (show is None and not self.is_shown):
+                return self.show()
 
-        return None
+            return None
 
     def show(self):
         self.is_shown = True

@@ -51,7 +51,8 @@ class WatchClient:
 
     _port_start = 40859
 
-    def __init__(self, pubsub_port=None, cliesrv_port=None, server_index:int=0, host="localhost"):
+    def __init__(self, pubsub_port=None, cliesrv_port=None, server_index:int=0, host="localhost", heartbeat_timeout=600):
+        self.heartbeat_timeout = heartbeat_timeout
         self.client_id = str(uuid.uuid4())
         self._streams = {}
 
@@ -77,7 +78,7 @@ class WatchClient:
             utils.debug_log("Received event for stream", eval_result.stream_name, verbosity=5)
             self._streams[eval_result.stream_name].on_event_eval(eval_result)
         else:
-            utils.debug_log("Event for unknown stream", eval_result.stream_name, verbosity=3)
+            utils.debug_log("Event for unknown stream", eval_result.stream_name, verbosity=5)
 
     def _on_srv_mgmt(self, mgmt_msg:ServerMgmtMsg):
         utils.debug_log("Received - SeverMgmtevent", verbosity=6)
@@ -97,7 +98,7 @@ class WatchClient:
 
 
     def _send_heartbeat(self):
-        if time.time() - self._last_server_hb > 15: #make configurable
+        if time.time() - self._last_server_hb > self.heartbeat_timeout:
             utils.debug_log("Server heartbeat lost, pausing client heartbeat", 
                 (time.time(), self._last_server_hb), verbosity=1)
             self._heartbeat_timer.pause()
