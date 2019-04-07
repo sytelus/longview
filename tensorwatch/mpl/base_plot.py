@@ -50,6 +50,7 @@ class BasePlot:
         # matplotlib animation
         self.animation = None
         self.last_ex = None
+        self.layout_dirty = False
         #print(matplotlib.get_backend())
         #display.display(self.cell)
 
@@ -141,9 +142,18 @@ class BasePlot:
                             if dirty:
                                 utils.debug_log("Plot updated", eval_result.stream_name, verbosity=5)
 
-                                self.figure.tight_layout()
-                                self.figure.canvas.draw()
-                                self.figure.canvas.flush_events()
+                                if self.layout_dirty:
+                                    # do not do tight_layout() call on every update 
+                                    # that would jumble up the graphs! it should only called
+                                    # once each time there is change in layout
+                                    self.figure.tight_layout()
+                                    self.layout_dirty = False
+
+                                # below forces redraw and it was helpful to
+                                # repaint even if there was error in interval loop
+                                # but it does work in native UX and not in Jupyter Notebook
+                                #self.figure.canvas.draw()
+                                #self.figure.canvas.flush_events()
 
                                 if self._use_hbox and get_ipython():
                                     self.widget.clear_output(wait=True)
@@ -169,6 +179,7 @@ class BasePlot:
     def add(self, stream, title=None, throttle=None, clear_after_end=False, clear_after_each=False, 
             show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_args):
         with self.lock:
+            self.layout_dirty = True
             # make sure figure is initialized
             self.init_fig()
         
