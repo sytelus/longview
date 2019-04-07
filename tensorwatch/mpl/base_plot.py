@@ -19,6 +19,7 @@ from matplotlib.animation import FuncAnimation
 import time
 import threading
 import queue
+import logging
 from IPython import get_ipython, display
 import ipywidgets as widgets
 from ipywidgets.widgets.interaction import show_inline_matplotlib_plots
@@ -48,7 +49,7 @@ class BasePlot:
         self._ax_main = None
         # matplotlib animation
         self.animation = None
-
+        self.last_ex = None
         #print(matplotlib.get_backend())
         #display.display(self.cell)
 
@@ -95,7 +96,15 @@ class BasePlot:
     def _on_update(self, frame):
         try:
             self._on_update_internal(frame)
-        except:
+        except Exception as ex:
+            # when exception occurs here, animation will stop and there
+            # will be no further plot updates
+            # TODO: may be we don't need all of below but none of them
+            #   are popping up exception in Jupyter Notebook because these
+            #   exceptions occur in background?
+            self.last_ex = ex
+            print(ex)
+            logging.fatal(ex, exc_info=True) 
             traceback.print_exc(file=sys.stdout)
 
     def _on_update_internal(self, frame):
@@ -198,8 +207,12 @@ class BasePlot:
                 display.display(self.cell) # this method doesn't need returns
                 #return self.cell
             else:
+                # no need to return anything because %matplotlib notebook will 
+                # detect spawning of figure and paint it
+                # if self.figure is returned then you will see two of them
+                return None
                 #plt.show()
-                return self.figure
+                #return self.figure
         else:
             #plt.ion()
             #plt.show()

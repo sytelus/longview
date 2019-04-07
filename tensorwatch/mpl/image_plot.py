@@ -27,7 +27,7 @@ class ImagePlot(BasePlot):
                 img = stream_plot.ax_imgs[row][col]
                 if img:
                     x, y = img.get_size()
-                    img.set_data(np.zeros(x, y))
+                    img.set_data(np.zeros((x, y)))
 
     @staticmethod
     def to_2d(stream_plot, img_in):
@@ -121,7 +121,7 @@ class ImagePlot(BasePlot):
             else:
                 fontsize = 12
             ax.set_title(label_in, fontsize=fontsize) #'fontweight': 'light'
-
+            #ax.autoscale_view() # not needed?
             col = col + 1
             if col >= stream_plot.cols:
                 col = 0
