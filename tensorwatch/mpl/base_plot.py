@@ -52,6 +52,7 @@ class BasePlot:
         #print(matplotlib.get_backend())
         #display.display(self.cell)
 
+    # anim_interval in seconds
     def init_fig(self, anim_interval:float=1.0):
         """(for derived class) Initializes matplotlib figure"""
         if self._fig_init_done:
@@ -88,6 +89,7 @@ class BasePlot:
             if stream_plot is None:
                 utils.debug_log("Unrecognized stream received: {}".format(stream_event.stream_name))
                 return
+            utils.debug_log("Stream received: {}".format(stream_event.stream_name), verbosity=5)
             stream_plot.pending_events.put(stream_event)
 
     def _on_update(self, frame):
@@ -128,8 +130,12 @@ class BasePlot:
                             dirty = self._plot_eval_result(vals, stream_plot, eval_result)
 
                             if dirty:
-                                utils.debug_log("Plot updated", eval_result.stream_name, verbosity=4)
+                                utils.debug_log("Plot updated", eval_result.stream_name, verbosity=5)
+
                                 self.figure.tight_layout()
+                                self.figure.canvas.draw()
+                                self.figure.canvas.flush_events()
+
                                 if self._use_hbox and get_ipython():
                                     self.widget.clear_output(wait=True)
                                     with self.widget:
@@ -149,10 +155,10 @@ class BasePlot:
                             stream_plot.last_update = time.time()
                         else:
                             utils.debug_log("Value not plotted due to throttle", 
-                                            eval_result.event_name, verbosity=4)
+                                            eval_result.event_name, verbosity=5)
 
     def add(self, stream, title=None, throttle=None, clear_after_end=False, clear_after_each=False, 
-            show:bool=None, history_len=1, dim_history=True, opacity=None, **stream_args):
+            show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_args):
         with self.lock:
             # make sure figure is initialized
             self.init_fig()
@@ -180,11 +186,11 @@ class BasePlot:
 
             return None
 
-    def show(self):
+    def show(self, blocking=False):
         self.is_shown = True
 
         if self.anim_interval:
-            self.animation = FuncAnimation(self.figure, self._on_update, interval=self.anim_interval)
+            self.animation = FuncAnimation(self.figure, self._on_update, interval=self.anim_interval*1000.0)
 
         #plt.show() #must be done only once
         if get_ipython():
@@ -196,8 +202,8 @@ class BasePlot:
                 return self.figure
         else:
             #plt.ion()
-            #return plt.show(block=False)
-            plt.show()
+            #plt.show()
+            return plt.show(block=blocking)
 
     @staticmethod
     def _extract_vals(eval_result):

@@ -105,7 +105,7 @@ class WatchClient:
         clisrv_req = ClientServerRequest(CliSrvReqTypes.heartbeat, self.client_id)
         self._clisrv.send_obj(clisrv_req)
 
-    def create_stream(self, event_name:str, expr:str, stream_name:str=None, throttle=None):
+    def create_stream(self, event_name:str, expr:str, stream_name:str=None, throttle=0.1):
         utils.debug_log("Client - creating stream...", stream_name)
 
         stream = WatchClient.Stream(self.client_id, self._clisrv, event_name, expr, stream_name, throttle)

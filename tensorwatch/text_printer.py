@@ -22,7 +22,7 @@ class TextPrinter:
 
     @staticmethod
     def _get_key_name(stream_event, i):
-        return stream_event.display_name() + ':' + str(i)
+        return '[S.{}]:{}'.format(stream_event.display_name(), i)
 
     def append(self, stream_event, stream_plot, vals):
         if vals is None:

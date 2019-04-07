@@ -73,14 +73,15 @@ def get_server(srv_id):
     return default_servers[srv_id]
 
 
-def open(expr=None, event_name:str='', stream_name:str=None, throttle=None, 
+def open(expr=None, event_name:str='', stream_name:str=None, throttle=0.1, 
             clear_after_end=True, clear_after_each=False,
             cell=None, title=None, vis=None, type=None, only_summary=False, 
             history_len=1, dim_history=True, opacity=None,
             separate_yaxis=True, xtitle=None, ytitle=None, ztitle=None, color=None,
             xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=False, cli_id=0,
             rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
-            colormap=None, viz_img_scale=None, images=None, images_reshape=None, width=None, height=None, heartbeat_timeout=600):
+            colormap=None, viz_img_scale=None, images=None, images_reshape=None, width=None, 
+            height=None, heartbeat_timeout=600):
 
     _ensure_client(cli_id, heartbeat_timeout=heartbeat_timeout)
 

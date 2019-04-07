@@ -82,6 +82,9 @@ class StreamRequest:
         self.eval_f:EventEvalFunc = None
         self.disabled = False
         self._evaler = None
+        # max throughput n Lenovo P50 laptop for MNIST
+        # text console -> 0.1s
+        # matplotlib line graph -> 0.5s
         self.throttle = throttle
         self.last_sent=None
         self.stream_index = stream_index
