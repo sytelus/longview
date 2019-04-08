@@ -52,9 +52,11 @@ class ImagePlot(BasePlot):
 
         return img_in
 
-    def _plot_eval_result(self, vals, stream_plot, eval_result):
-        if not vals:
+    def _plot_eval_result(self, stream_plot, eval_results):
+        vals = BasePlot._extract_vals(eval_results[-1:])
+        if not len(vals):
             return False
+
         row, col, i = 0, 0, 0
         dirty = False
         for val in vals:

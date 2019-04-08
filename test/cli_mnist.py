@@ -86,6 +86,6 @@ def text_stats():
     trl.show()
     input('Paused...')
 
-img_in_class()
+#img_in_class()
 #text_stats()
-#batch_stats()
+batch_stats()

@@ -82,7 +82,8 @@ class LinePlot(BasePlot):
         else:
             return self._create_2d_trace(stream_plot, mode, hoverinfo, marker, line)  
 
-    def _plot_eval_result(self, vals, stream_plot, eval_result):
+    def _plot_eval_result(self, stream_plot, eval_result):
+        vals = BasePlot._extract_vals(eval_result)
         if vals is None:
             return False
 

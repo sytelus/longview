@@ -71,14 +71,14 @@ class LinePlot(BasePlot):
             label_info.remove()
         stream_plot.xylabel_refs.clear()
 
-    def _plot_eval_result(self, vals, stream_plot, eval_result):
-        if not vals:
+    def _plot_eval_result(self, stream_plot, eval_results):
+        vals = BasePlot._extract_vals(eval_results)
+        if not len(vals):
             return False
 
         line = stream_plot.ax.get_lines()[-1]
         xdata, ydata = line.get_data()
         zdata, anndata, txtdata, clrdata = [], [], [], []
-        dirty = False
 
         unpacker = lambda a0=None,a1=None,a2=None,a3=None,a4=None,a5=None, *_:(a0,a1,a2,a3,a4,a5)
 
@@ -91,7 +91,7 @@ class LinePlot(BasePlot):
         #   x [, y [, z, [annotation [, text [, color]]]]]
         for val in vals:
             # set defaults
-            x, y, z =  eval_result.event_index, None, None
+            x, y, z =  len(xdata), None, None
             ann, txt, clr = None, None, None
 
             # if val turns out to be array-like, extract x,y
