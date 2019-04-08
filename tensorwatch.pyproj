@@ -133,6 +133,7 @@
     <Content Include="tensorwatch\model_graph\hiddenlayer\__pycache__\pytorch_builder.cpython-36.pyc" />
     <Content Include="tensorwatch\model_graph\hiddenlayer\__pycache__\transforms.cpython-36.pyc" />
     <Content Include="tensorwatch\model_graph\hiddenlayer\__pycache__\__init__.cpython-36.pyc" />
+    <Content Include="TODO.md" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

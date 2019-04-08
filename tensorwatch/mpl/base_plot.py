@@ -33,8 +33,8 @@ class BasePlot:
         utils.set_default(plot_args, 'width', '100%')
         utils.set_default(plot_args, 'height', '4in')
 
-        self.cell = cell or widgets.HBox(layout=widgets.Layout(width=plot_args['width'], height=plot_args['height'])) \
-            if self._use_hbox else None
+        self.cell = cell or widgets.HBox(layout=widgets.Layout(\
+            width=plot_args['width'])) if self._use_hbox else None
         self.widget = widgets.Output()
         if self._use_hbox:
             self.cell.children += (self.widget,)

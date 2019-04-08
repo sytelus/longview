@@ -9,4 +9,6 @@
 * tw.create_viz on server side
 * tw.log for server side
 * experiment with IPC channel
+* confusion matrix as in https://pytorch.org/tutorials/intermediate/char_rnn_classification_tutorial.html
+* Speed up import
 
