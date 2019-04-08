@@ -5,9 +5,9 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="tensorwatch",
-    version="0.3.0",
+    version="0.3.2",
     author="Shital Shah",
-    author_email="sytelus@gmail.com",
+    author_email="shitals@microsoft.com",
     description="Interactive Realtime Debugging and Visualization for AI",
     long_description=long_description,
     long_description_content_type="text/markdown",
