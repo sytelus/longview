@@ -21,7 +21,7 @@ class ImagePlot(BasePlot):
         # axis image
         stream_plot.ax_imgs = [[None for _ in range(cols)] for _ in range(rows)] 
 
-    def clear_plot(self, stream_plot):
+    def clear_plot(self, stream_plot, clear_history):
         for row in range(stream_plot.rows):
             for col in range(stream_plot.cols):
                 img = stream_plot.ax_imgs[row][col]

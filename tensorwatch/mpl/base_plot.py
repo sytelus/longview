@@ -189,13 +189,13 @@ class BasePlot(ABC):
 
 
     def _process_event_results(self, stream_plot):
-        eval_results, needs_clearing = [], False
+        eval_results, clear_current, clear_history = [], False, False
         while not stream_plot.pending_events.empty():
             stream_event = stream_plot.pending_events.get()
             if stream_event.event_type == StreamEvent.Type.reset:
                 utils.debug_log("Stream reset", stream_event.stream_name)
                 eval_results.clear() # no need to process these events
-                needs_clearing = True
+                clear_current, clear_history = True, True
             elif stream_event.event_type == StreamEvent.Type.eval_result:
                 eval_result = stream_event.eval_result
                 # check if there was an exception
@@ -208,7 +208,7 @@ class BasePlot(ABC):
                 # if we need to clear plot before putting in data, do so
                 if stream_plot._clear_pending:
                     eval_results.clear()
-                    needs_clearing = True
+                    clear_current = True
                     stream_plot._clear_pending = False
                 if stream_plot.clear_after_each or (eval_result.ended and stream_plot.clear_after_end):
                     stream_plot._clear_pending = True
@@ -226,16 +226,16 @@ class BasePlot(ABC):
             else:
                 utils.debug_log("Unsupported event type received")
 
-        return eval_results, needs_clearing
+        return eval_results, clear_current, clear_history
 
     def _on_update_internal(self, frame):
         """Called on every graph animation update"""
         with self.lock:
             for stream_plot in self._stream_plots.values():
-                eval_results, needs_clearing = self._process_event_results(stream_plot)
+                eval_results, clear_current, clear_history = self._process_event_results(stream_plot)
 
-                if needs_clearing:
-                    self.clear_plot(stream_plot)
+                if clear_current:
+                    self.clear_plot(stream_plot, clear_history)
 
                 # if we have something to render
                 dirty = self._plot_eval_result(stream_plot, eval_results)
@@ -261,7 +261,7 @@ class BasePlot(ABC):
         """(for derived class) Create new plot info for this stream"""
         pass
     @abstractmethod
-    def clear_plot(self, stream_plot):
+    def clear_plot(self, stream_plot, clear_history):
         """(for derived class) Clears the data in specified plot before new data is redrawn"""
         pass
     @abstractmethod

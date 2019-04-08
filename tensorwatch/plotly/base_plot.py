@@ -51,7 +51,7 @@ class BasePlot(ABC):
             # rotate trace
             stream_plot.cur_history_index = (stream_plot.cur_history_index + 1) % stream_plot.history_len
             stream_plot.trace_index = stream_plot.trace_history[stream_plot.cur_history_index]
-            self.clear_plot(stream_plot)
+            self.clear_plot(stream_plot, False)
             self.widget.data[stream_plot.trace_index].opacity = stream_plot.opacity or 1
 
         cur_history_len = len(stream_plot.trace_history)
@@ -63,6 +63,25 @@ class BasePlot(ABC):
                                           stream_plot.cur_history_index+cur_history_len)):
                 trace_index = stream_plot.trace_history[thi % cur_history_len]
                 self.widget.data[trace_index].opacity = alphas[i]
+
+    @staticmethod
+    def get_pallet_color(i:int):
+        return plotly.colors.DEFAULT_PLOTLY_COLORS[i % len(plotly.colors.DEFAULT_PLOTLY_COLORS)]
+
+    @staticmethod
+    def _get_axis_common_props(title:str, axis_range:tuple):
+        props = {'showline':True, 'showgrid': True, 
+                       'showticklabels': True, 'ticks':'inside'}
+        if title:
+            props['title'] = title
+        if axis_range:
+            props['range'] = list(axis_range)
+        return props
+
+    def _clear_history(self, stream_plot):
+        for i in range(len(stream_plot.trace_history)):
+            stream_plot.trace_index = i
+            self.clear_plot(stream_plot)
 
     def add(self, stream, title=None, throttle=None, clear_after_end=True, clear_after_each=False, 
            show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_args):
@@ -101,25 +120,6 @@ class BasePlot(ABC):
         self.is_shown = True
         #plotly.offline.iplot(self.widget)
         return self.cell
-
-    @staticmethod
-    def get_pallet_color(i:int):
-        return plotly.colors.DEFAULT_PLOTLY_COLORS[i % len(plotly.colors.DEFAULT_PLOTLY_COLORS)]
-
-    @staticmethod
-    def _get_axis_common_props(title:str, axis_range:tuple):
-        props = {'showline':True, 'showgrid': True, 
-                       'showticklabels': True, 'ticks':'inside'}
-        if title:
-            props['title'] = title
-        if axis_range:
-            props['range'] = list(axis_range)
-        return props
-
-    def _clear_history(self, stream_plot):
-        for i in range(len(stream_plot.trace_history)):
-            stream_plot.trace_index = i
-            self.clear_plot(stream_plot)
 
     def _add_eval_result(self, stream_event:StreamEvent):
         """Callback whenever EvalResult becomes available"""

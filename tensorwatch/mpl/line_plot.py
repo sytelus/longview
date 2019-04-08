@@ -47,14 +47,16 @@ class LinePlot(BasePlot):
         if yrange is not None:
             stream_plot.ax.set_ylim(*yrange)
 
-    def clear_plot(self, stream_plot):
+    def clear_plot(self, stream_plot, clear_history):
         lines = stream_plot.ax.get_lines() 
         # if we need to keep history
         if stream_plot.history_len > 1:
-            while len(lines) > stream_plot.history_len-1:
+            # make sure we have history len - 1 lines
+            lines_keep = 0 if clear_history else stream_plot.history_len-1
+            while len(lines) > lines_keep:
                 lines.pop(0).remove()
             # dim old lines
-            if stream_plot.dim_history:
+            if stream_plot.dim_history and len(lines) > 0:
                 alphas = np.linspace(0.05, 1, len(lines))
                 for line, opacity in zip(lines, alphas):
                     line.set_alpha(opacity)
