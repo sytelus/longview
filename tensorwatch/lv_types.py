@@ -103,10 +103,11 @@ class CliSrvReqTypes:
 
 class StreamPlot:
     def __init__(self, stream, throttle, title, clear_after_end, 
-                clear_after_each, history_len, dim_history, opacity):
+                clear_after_each, history_len, dim_history, opacity,
+                index, stream_plot_args, last_update):
         self.stream = stream
         self.throttle = throttle
         self.title, self.opacity = title, opacity
         self.clear_after_end, self.clear_after_each = clear_after_end, clear_after_each
         self.history_len, self.dim_history = history_len, dim_history
-
+        self.index, self.stream_plot_args, self.last_update = index, stream_plot_args, last_update

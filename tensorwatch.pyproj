@@ -106,6 +106,9 @@
     <Compile Include="tensorwatch\text_printer.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tensorwatch\text_vis.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\utils.py" />
     <Compile Include="tensorwatch\watch_client.py" />
     <Compile Include="tensorwatch\watch_server.py" />

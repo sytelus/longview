@@ -41,7 +41,7 @@ class TextPrinter:
             else:
                 self.df = self.df.append(pd.Series(val.__dict__), sort=False, ignore_index=True)
 
-    def _add_eval_result(self, stream_event:StreamEvent):
+    def _on_stream_event(self, stream_event:StreamEvent):
         with self.lock:
             stream_plot = self._stream_plots.get(stream_event.stream_name, None)
             if stream_plot is None:
@@ -107,7 +107,7 @@ class TextPrinter:
         return title
 
     def add(self, stream, title=None, throttle=None, clear_after_end=True, clear_after_each=False, 
-            show:bool=None, only_summary=False, **stream_args):
+            show:bool=None, only_summary=False, **stream_plot_args):
 
         with self.lock:
             stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
@@ -116,7 +116,7 @@ class TextPrinter:
             stream_plot.text = self._get_title(stream_plot)
             stream_plot.only_summary = only_summary
             self._stream_plots[stream.stream_name] = stream_plot
-            stream.subscribe(self._add_eval_result)
+            stream.subscribe(self._on_stream_event)
             if show or (show is None and not self.is_shown):
                 return self.show()
 

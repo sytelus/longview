@@ -27,22 +27,20 @@ class BasePlot(ABC):
         self.q_last_processed = 0
 
     def add(self, stream, title=None, throttle=None, clear_after_end=False, clear_after_each=False, 
-            show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_args):
+            show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_plot_args):
         with self.lock:
             self.layout_dirty = True
         
             stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
-                clear_after_each, history_len, dim_history, opacity)
-            stream_plot.index = len(self._stream_plots)
+                clear_after_each, history_len, dim_history, opacity,
+                len(self._stream_plots), stream_plot_args, 0)
             stream_plot._clear_pending = False
-            stream_plot.stream_args = stream_args
-            stream_plot.pending_events = queue.Queue()
-            stream_plot.last_update = 0
+            stream_plot._pending_events = queue.Queue()
             self._stream_plots[stream.stream_name] = stream_plot
 
-            self._post_add(stream_plot, **stream_args)
+            self._post_add(stream_plot, **stream_plot_args)
 
-            stream.subscribe(self._add_eval_result)
+            stream.subscribe(self._on_stream_event)
 
             if show or (show is None and not self.is_shown):
                 return self.show()
@@ -60,20 +58,20 @@ class BasePlot(ABC):
         else:
             return self._show_widget_native(blocking)
 
-    def _add_eval_result(self, stream_event:StreamEvent):
+    def _on_stream_event(self, stream_event:StreamEvent):
         with self.lock: # this could be from separate thread!
             stream_plot = self._stream_plots.get(stream_event.stream_name, None)
             if stream_plot is None:
                 utils.debug_log("Unrecognized stream received: {}".format(stream_event.stream_name))
                 return
             utils.debug_log("Stream received: {}".format(stream_event.stream_name), verbosity=5)
-            stream_plot.pending_events.put(stream_event)
-        self._post_add_eval_result()
+            stream_plot._pending_events.put(stream_event)
+        self._post_stream_event()
 
-    def _process_event_results(self, stream_plot):
+    def _extract_event_results(self, stream_plot):
         eval_results, clear_current, clear_history = [], False, False
-        while not stream_plot.pending_events.empty():
-            stream_event = stream_plot.pending_events.get()
+        while not stream_plot._pending_events.empty():
+            stream_event = stream_plot._pending_events.get()
             if stream_event.event_type == StreamEvent.Type.reset:
                 utils.debug_log("Stream reset", stream_event.stream_name)
                 eval_results.clear() # no need to process these events
@@ -110,19 +108,19 @@ class BasePlot(ABC):
 
         return eval_results, clear_current, clear_history
 
-    def _on_update_internal(self, frame):
+    def _update_stream_plots(self, frame):
         with self.lock:
             self.q_last_processed = time.time()
             for stream_plot in self._stream_plots.values():
-                eval_results, clear_current, clear_history = self._process_event_results(stream_plot)
+                eval_results, clear_current, clear_history = self._extract_event_results(stream_plot)
 
                 if clear_current:
                     self.clear_plot(stream_plot, clear_history)
 
                 # if we have something to render
-                dirty = self._plot_eval_result(stream_plot, eval_results)
+                dirty = self._show_eval_results(stream_plot, eval_results)
                 if dirty:
-                    self._update_render(stream_plot)
+                    self._post_update_stream_plot(stream_plot)
                     stream_plot.last_update = time.time()
 
     def _extract_vals(self, eval_results):
@@ -142,11 +140,11 @@ class BasePlot(ABC):
         """(for derived class) Clears the data in specified plot before new data is redrawn"""
         pass
     @abstractmethod
-    def _plot_eval_result(self, stream_plot, eval_results):
+    def _show_eval_results(self, stream_plot, eval_results):
         """(for derived class) Plot the data in given axes"""
         pass
     @abstractmethod
-    def _post_add(self, stream_plot, **stream_args):
+    def _post_add(self, stream_plot, **stream_plot_args):
         pass
     @abstractmethod
     def _show_widget_native(self, blocking:bool):
@@ -155,8 +153,8 @@ class BasePlot(ABC):
     def _show_widget_notebook(self):
         pass
     @abstractmethod
-    def _post_add_eval_result(self):
+    def _post_stream_event(self):
         pass
     @abstractmethod
-    def _update_render(self, stream_plot):
+    def _post_update_stream_plot(self, stream_plot):
         pass

@@ -65,7 +65,7 @@ class BasePlotlyPlot(BasePlot):
             props['range'] = list(axis_range)
         return props
 
-    def _post_add(self, stream_plot, **stream_args):
+    def _post_add(self, stream_plot, **stream_plot_args):
         stream_plot.trace_history, stream_plot.cur_history_index = [], None
         self._add_trace_with_history(stream_plot)
         self._setup_layout(stream_plot)
@@ -84,11 +84,11 @@ class BasePlotlyPlot(BasePlot):
         #plotly.offline.iplot(self.widget)
         return None
 
-    def _post_add_eval_result(self):
+    def _post_stream_event(self):
         if time.time() - self.q_last_processed > 0.5: # make configurable
-            self._on_update_internal(None)
+            self._update_stream_plots(None)
 
-    def _update_render(self, stream_plot):
+    def _post_update_stream_plot(self, stream_plot):
         # not needed for plotly as FigureWidget stays upto date
         pass
 

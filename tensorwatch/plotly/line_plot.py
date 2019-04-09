@@ -55,20 +55,20 @@ class LinePlot(BasePlotlyPlot):
 
 
     def _create_trace(self, stream_plot):
-        stream_plot.separate_yaxis = stream_plot.stream_args.get('separate_yaxis', True)
-        stream_plot.xtitle = stream_plot.stream_args.get('xtitle',None)
-        stream_plot.ytitle = stream_plot.stream_args.get('ytitle',None)
-        stream_plot.ztitle = stream_plot.stream_args.get('ztitle',None)
-        stream_plot.color = stream_plot.stream_args.get('color',None)
-        stream_plot.xrange = stream_plot.stream_args.get('xrange',None)
-        stream_plot.yrange = stream_plot.stream_args.get('yrange',None)
-        stream_plot.zrange = stream_plot.stream_args.get('zrange',None)
-        draw_line = stream_plot.stream_args.get('draw_line',True)
-        draw_marker = stream_plot.stream_args.get('draw_marker',True)
-        draw_marker_text = stream_plot.stream_args.get('draw_marker_text',False)
-        hoverinfo = stream_plot.stream_args.get('hoverinfo',None)
-        marker = stream_plot.stream_args.get('marker',{})
-        line = stream_plot.stream_args.get('line',{})
+        stream_plot.separate_yaxis = stream_plot.stream_plot_args.get('separate_yaxis', True)
+        stream_plot.xtitle = stream_plot.stream_plot_args.get('xtitle',None)
+        stream_plot.ytitle = stream_plot.stream_plot_args.get('ytitle',None)
+        stream_plot.ztitle = stream_plot.stream_plot_args.get('ztitle',None)
+        stream_plot.color = stream_plot.stream_plot_args.get('color',None)
+        stream_plot.xrange = stream_plot.stream_plot_args.get('xrange',None)
+        stream_plot.yrange = stream_plot.stream_plot_args.get('yrange',None)
+        stream_plot.zrange = stream_plot.stream_plot_args.get('zrange',None)
+        draw_line = stream_plot.stream_plot_args.get('draw_line',True)
+        draw_marker = stream_plot.stream_plot_args.get('draw_marker',True)
+        draw_marker_text = stream_plot.stream_plot_args.get('draw_marker_text',False)
+        hoverinfo = stream_plot.stream_plot_args.get('hoverinfo',None)
+        marker = stream_plot.stream_plot_args.get('marker',{})
+        line = stream_plot.stream_plot_args.get('line',{})
         utils.set_default(line, 'color', stream_plot.color or BasePlotlyPlot.get_pallet_color(stream_plot.index))
         
         mode = 'lines' if draw_line else ''
@@ -82,7 +82,7 @@ class LinePlot(BasePlotlyPlot):
         else:
             return self._create_2d_trace(stream_plot, mode, hoverinfo, marker, line)  
 
-    def _plot_eval_result(self, stream_plot, eval_results):
+    def _show_eval_results(self, stream_plot, eval_results):
         vals = self._extract_vals(eval_results)
         if not len(vals):
             return False

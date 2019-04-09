@@ -55,14 +55,14 @@ class EmbeddingsPlot(LinePlot):
         return None
 
     def _create_trace(self, stream_plot):
-        stream_plot.stream_args.clear() #TODO remove this
-        utils.set_default(stream_plot.stream_args, 'draw_line', False)
-        utils.set_default(stream_plot.stream_args, 'draw_marker', True)
-        utils.set_default(stream_plot.stream_args, 'draw_marker_text', True)
-        utils.set_default(stream_plot.stream_args, 'hoverinfo', 'text')
-        utils.set_default(stream_plot.stream_args, 'marker', {})
+        stream_plot.stream_plot_args.clear() #TODO remove this
+        utils.set_default(stream_plot.stream_plot_args, 'draw_line', False)
+        utils.set_default(stream_plot.stream_plot_args, 'draw_marker', True)
+        utils.set_default(stream_plot.stream_plot_args, 'draw_marker_text', True)
+        utils.set_default(stream_plot.stream_plot_args, 'hoverinfo', 'text')
+        utils.set_default(stream_plot.stream_plot_args, 'marker', {})
 
-        marker = stream_plot.stream_args['marker']
+        marker = stream_plot.stream_plot_args['marker']
         utils.set_default(marker, 'size', 6)
         utils.set_default(marker, 'colorscale', 'Jet')
         utils.set_default(marker, 'showscale', False)

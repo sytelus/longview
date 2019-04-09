@@ -87,5 +87,5 @@ def text_stats():
     input('Paused...')
 
 #img_in_class()
-#text_stats()
-batch_stats()
+text_stats()
+#batch_stats()

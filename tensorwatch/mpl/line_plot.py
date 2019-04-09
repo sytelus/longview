@@ -14,7 +14,7 @@ class LinePlot(BaseMplPlot):
         self.is_3d = is_3d #TODO: not implemented for mpl
 
     def init_stream_plot(self, stream_plot, 
-            xtitle='', ytitle='', color=None, xrange=None, yrange=None, **stream_args):
+            xtitle='', ytitle='', color=None, xrange=None, yrange=None, **stream_plot_args):
         stream_plot.xylabel_refs = [] # annotation references
 
         # add main subplot
@@ -74,7 +74,7 @@ class LinePlot(BaseMplPlot):
             label_info.remove()
         stream_plot.xylabel_refs.clear()
 
-    def _plot_eval_result(self, stream_plot, eval_results):
+    def _show_eval_results(self, stream_plot, eval_results):
         vals = self._extract_vals(eval_results)
         if not len(vals):
             return False

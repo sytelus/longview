@@ -11,7 +11,7 @@ from IPython import get_ipython
 class ImagePlot(BaseMplPlot):
     def init_stream_plot(self, stream_plot, 
             rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
-            colormap=None, viz_img_scale=None, **stream_args):
+            colormap=None, viz_img_scale=None, **stream_plot_args):
         stream_plot.rows, stream_plot.cols = rows, cols
         stream_plot.img_channels, stream_plot.colormap = img_channels, colormap
         stream_plot.img_width, stream_plot.img_height = img_width, img_height
@@ -52,7 +52,7 @@ class ImagePlot(BaseMplPlot):
 
         return img_in
 
-    def _plot_eval_result(self, stream_plot, eval_results):
+    def _show_eval_results(self, stream_plot, eval_results):
         vals = self._extract_vals(eval_results[-1:])
         if not len(vals):
             return False

@@ -2,7 +2,7 @@ from . import mpl
 from . import plotly
 from .watch_server import WatchServer
 from .watch_client import WatchClient
-from .text_printer import TextPrinter
+from .text_vis import TextVis
 from .model_graph.hiddenlayer import graph
 from .array_stream import ArrayStream
 from .stream_base import StreamBase
@@ -49,10 +49,10 @@ def _ensure_client(cli_id, heartbeat_timeout=600):
 
 def _get_renderer(type, cell, title, images=None, images_reshape=None, width=None, height=None):
     if type is None:
-        return TextPrinter(cell=cell, title=title)
+        return TextVis(cell=cell, title=title)
 
     if type in ['text', 'summary']:
-        return TextPrinter(cell=cell, title=title)
+        return TextVis(cell=cell, title=title)
     elif type in ['line', 'plotly-line', 'scatter', 'plotly-scatter', 
                         'line3d', 'scatter3d', 'mesh3d']:
         return plotly.LinePlot(cell=cell, title=title, 

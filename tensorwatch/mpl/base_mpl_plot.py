@@ -67,7 +67,7 @@ class BaseMplPlot(BasePlot):
 
     def _on_update(self, frame):
         try:
-            self._on_update_internal(frame)
+            self._update_stream_plots(frame)
         except Exception as ex:
             # when exception occurs here, animation will stop and there
             # will be no further plot updates
@@ -84,7 +84,7 @@ class BaseMplPlot(BasePlot):
             self.animation = FuncAnimation(self.figure, self._on_update, interval=self.anim_interval*1000.0)
         super(BaseMplPlot, self).show(blocking)
 
-    def _update_render(self, stream_plot):
+    def _post_update_stream_plot(self, stream_plot):
         utils.debug_log("Plot updated", stream_plot.stream.stream_name, verbosity=5)
 
         if self.layout_dirty:
@@ -115,10 +115,10 @@ class BaseMplPlot(BasePlot):
         #elif not get_ipython():
         #    self.figure.canvas.draw()
 
-    def _post_add(self, stream_plot, **stream_args):
+    def _post_add(self, stream_plot, **stream_plot_args):
         # make sure figure is initialized
         self.init_fig()        
-        self.init_stream_plot(stream_plot, **stream_args) 
+        self.init_stream_plot(stream_plot, **stream_plot_args) 
 
         # redo the legend
         #self.figure.legend(loc='center right', bbox_to_anchor=(1.5, 0.5))
@@ -139,10 +139,10 @@ class BaseMplPlot(BasePlot):
         #plt.show()
         #return self.figure
 
-    def _post_add_eval_result(self):
+    def _post_stream_event(self):
         pass # we run interval timer which will flush the key
 
     @abstractmethod
-    def init_stream_plot(self, stream_plot, **stream_args):
+    def init_stream_plot(self, stream_plot, **stream_plot_args):
         """(for derived class) Create new plot info for this stream"""
         pass
