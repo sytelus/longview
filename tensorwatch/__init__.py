@@ -11,7 +11,7 @@ from .stream_base import StreamBase
 from .receptive_field.rf_utils import plot_receptive_field, plot_grads_at
 from .embeddings.tsne_utils import get_tsne_components
 from .model_graph.torchstat_utils import model_stats
-from .img_utils import show_image, open_image, img2pyt, linear_to_2d
+from .image_utils import show_image, open_image, img2pyt, linear_to_2d
 from .data_utils import pyt_ds2list, sample_by_class, col2array, search_similar
 
 

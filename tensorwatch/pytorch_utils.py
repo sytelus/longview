@@ -1,7 +1,7 @@
 from torchvision import models, transforms
 import torch
 import torch.nn.functional as F
-from . import utils, img_utils
+from . import utils, image_utils
 import os
 
 def get_model(model_name):
@@ -21,7 +21,7 @@ def int2tensor(val):
 def image_class2tensor(image_path, class_index=None, image_convert_mode=None, 
                        image_transform=None):
     
-    raw_input = img_utils.open_image(os.path.abspath(image_path), convert_mode=image_convert_mode)
+    raw_input = image_utils.open_image(os.path.abspath(image_path), convert_mode=image_convert_mode)
     if image_transform:
         input = image_transform(raw_input)
     else:

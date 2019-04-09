@@ -42,7 +42,7 @@
     <Compile Include="tensorwatch\imagenet_utils.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tensorwatch\img_utils.py">
+    <Compile Include="tensorwatch\image_utils.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\model_graph\hiddenlayer\ge.py" />
@@ -101,9 +101,6 @@
     </Compile>
     <Compile Include="tensorwatch\saliency\__init__.py" />
     <Compile Include="tensorwatch\stream_base.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tensorwatch\text_printer.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\text_vis.py">

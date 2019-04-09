@@ -1,5 +1,5 @@
 from torchvision import transforms
-from . import img_utils
+from . import image_utils
 from . import pytorch_utils
 import json
 

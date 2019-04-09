@@ -9,7 +9,7 @@ import skimage.transform
 import torch
 import matplotlib.pyplot as plt
 import math
-from .. import img_utils
+from .. import image_utils
 
 class ImageSaliencyResult:
     def __init__(self, raw_image, saliency, title, saliency_alpha=0.4, saliency_cmap='jet'):
@@ -107,6 +107,6 @@ def get_image_saliency_plot(image_saliency_results, cols = 2, figsize = None):
         saliency_upsampled = skimage.transform.resize(r.saliency, 
                                                       (r.raw_image.height, r.raw_image.width))
 
-        img_utils.show_image(r.raw_image, img2=saliency_upsampled, 
+        image_utils.show_image(r.raw_image, img2=saliency_upsampled, 
                              alpha2=r.saliency_alpha, cmap2=r.saliency_cmap, ax=ax)
     return figure

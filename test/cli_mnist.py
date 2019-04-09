@@ -24,7 +24,7 @@ def img_in_class():
     img_plot.add(imgs, viz_img_scale=3)
     img_plot.show()
 
-    tw.img_utils.plt_loop()
+    tw.image_utils.plt_loop()
 
 def plot_grads():
     train_cli = tw.WatchClient()
@@ -78,7 +78,7 @@ def batch_stats():
     #                     vis=train_loss, type='mpl-line')
 
     train_loss.show()
-    tw.img_utils.plt_loop()
+    tw.image_utils.plt_loop()
 
 def text_stats():
     trl = tw.open('lambda d:(d.x, d.metrics.batch_loss)', event_name='batch', type=None, 
