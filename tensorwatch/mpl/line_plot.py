@@ -1,5 +1,6 @@
-from .base_plot import *
-
+from .base_mpl_plot import BaseMplPlot
+import matplotlib
+import matplotlib.pyplot as plt
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from ..lv_types import *
 from .. import utils
@@ -7,12 +8,12 @@ import ipywidgets as widgets
 from IPython import get_ipython
 import numpy as np
 
-class LinePlot(BasePlot):
+class LinePlot(BaseMplPlot):
     def __init__(self, cell=None, title=None, show_legend:bool=True, is_3d:bool=False, **plot_args):
         super(LinePlot, self).__init__(cell, title, show_legend, **plot_args)
         self.is_3d = is_3d #TODO: not implemented for mpl
 
-    def init_stream_plot(self, stream, stream_plot, 
+    def init_stream_plot(self, stream_plot, 
             xtitle='', ytitle='', color=None, xrange=None, yrange=None, **stream_args):
         stream_plot.xylabel_refs = [] # annotation references
 
@@ -36,7 +37,7 @@ class LinePlot(BasePlot):
             pos = (len(self._stream_plots)) * 30
             stream_plot.ax.spines['right'].set_position(('outward', pos))
 
-        self._stream_plots[stream.stream_name] = stream_plot
+        self._stream_plots[stream_plot.stream.stream_name] = stream_plot
         stream_plot.ax.set_xlabel(xtitle)
         stream_plot.ax.set_ylabel(ytitle)
         stream_plot.ax.yaxis.label.set_color(color)
@@ -74,7 +75,7 @@ class LinePlot(BasePlot):
         stream_plot.xylabel_refs.clear()
 
     def _plot_eval_result(self, stream_plot, eval_results):
-        vals = BasePlot._extract_vals(eval_results)
+        vals = self._extract_vals(eval_results)
         if not len(vals):
             return False
 

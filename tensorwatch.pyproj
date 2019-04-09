@@ -19,6 +19,9 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="tensorwatch\base_plot.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\saliency\lime\lime_base.py" />
     <Compile Include="tensorwatch\saliency\lime\lime_image.py" />
     <Compile Include="tensorwatch\saliency\lime\wrappers\scikit_image.py" />
@@ -52,7 +55,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\model_graph\__init__.py" />
-    <Compile Include="tensorwatch\mpl\base_plot.py">
+    <Compile Include="tensorwatch\mpl\base_mpl_plot.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\evaler.py" />
@@ -67,7 +70,7 @@
     <Compile Include="tensorwatch\mpl\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tensorwatch\plotly\base_plot.py">
+    <Compile Include="tensorwatch\plotly\base_plotly_plot.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\plotly\line_plot.py" />

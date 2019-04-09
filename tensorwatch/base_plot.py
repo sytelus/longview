@@ -1,103 +1,35 @@
-#from IPython import get_ipython, display
-#if get_ipython():
-#    get_ipython().magic('matplotlib notebook')
-
-import matplotlib
-#if os.name == 'posix' and "DISPLAY" not in os.environ:
-#    matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
-import matplotlib.pyplot as plt
-import matplotlib.lines
-from matplotlib.animation import FuncAnimation
-from ipywidgets.widgets.interaction import show_inline_matplotlib_plots
-from ipykernel.pylab.backend_inline import flush_figures
-
 import os, sys, time, threading, traceback, logging, queue
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from abc import ABC, abstractmethod
-from ..lv_types import *
-from .. import utils
+from .lv_types import *
+from . import utils
 from IPython import get_ipython, display
 import ipywidgets as widgets
 
 class BasePlot(ABC):
-    def __init__(self, cell=None, title=None, show_legend:bool=None, **plot_args):
+    def __init__(self, widget, cell, title:str, show_legend:bool, **plot_args):
         self.lock = threading.Lock()
         self._use_hbox = True
         utils.set_default(plot_args, 'width', '100%')
         utils.set_default(plot_args, 'height', '4in')
 
-        self.widget = widgets.Output()
+        self.widget = widget
 
         self.cell = cell or widgets.HBox(layout=widgets.Layout(\
             width=plot_args['width'])) if self._use_hbox else None
-		if self._use_hbox:
-			self.cell.children += (self.widget,)
+        if self._use_hbox:
+            self.cell.children += (self.widget,)
         self._stream_plots = {}
         self.is_shown = cell is not None
         self.title = title
         self.last_ex = None
         self.layout_dirty = False
-
-        self._fig_init_done = False
-        self.show_legend = show_legend
-        # graph objects
-        self.figure = None
-        self._ax_main = None
-        # matplotlib animation
-        self.animation = None
-        #print(matplotlib.get_backend())
-        #display.display(self.cell)
-
-    # anim_interval in seconds
-    def init_fig(self, anim_interval:float=1.0):
-        """(for derived class) Initializes matplotlib figure"""
-        if self._fig_init_done:
-            return False
-
-        # create figure and animation
-        self.figure = plt.figure(figsize=(8, 3))
-        self.anim_interval = anim_interval
-
-        plt.set_cmap('Dark2')
-        plt.rcParams['image.cmap']='Dark2'
-
-        self._fig_init_done = True
-        return True
-
-    def get_main_axis(self):
-        # if we don't yet have main axis, create one
-        if not self._ax_main:
-            # by default assign one subplot to whole graph
-            self._ax_main = self.figure.add_subplot(111)
-            self._ax_main.grid(True)
-            # change the color of the top and right spines to opaque gray
-            self._ax_main.spines['right'].set_color((.8,.8,.8))
-            self._ax_main.spines['top'].set_color((.8,.8,.8))
-            if self.title is not None:
-                title = self._ax_main.set_title(self.title)
-                title.set_weight('bold')
-        return self._ax_main
-
-    def _on_update(self, frame):
-        try:
-            self._on_update_internal(frame)
-        except Exception as ex:
-            # when exception occurs here, animation will stop and there
-            # will be no further plot updates
-            # TODO: may be we don't need all of below but none of them
-            #   are popping up exception in Jupyter Notebook because these
-            #   exceptions occur in background?
-            self.last_ex = ex
-            print(ex)
-            logging.fatal(ex, exc_info=True) 
-            traceback.print_exc(file=sys.stdout)
+        self.q_last_processed = 0
 
     def add(self, stream, title=None, throttle=None, clear_after_end=False, clear_after_each=False, 
             show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_args):
         with self.lock:
             self.layout_dirty = True
-            # make sure figure is initialized
-            self.init_fig()
         
             stream_plot = StreamPlot(stream, throttle, title, clear_after_end, 
                 clear_after_each, history_len, dim_history, opacity)
@@ -105,16 +37,10 @@ class BasePlot(ABC):
             stream_plot._clear_pending = False
             stream_plot.stream_args = stream_args
             stream_plot.pending_events = queue.Queue()
-            stream_plot.q_last_processed = 0
-
-            self.init_stream_plot(stream, stream_plot, **stream_args) 
+            stream_plot.last_update = 0
             self._stream_plots[stream.stream_name] = stream_plot
 
-            # redo the legend
-            #self.figure.legend(loc='center right', bbox_to_anchor=(1.5, 0.5))
-            if self.show_legend:
-                self.figure.legend(loc='lower right')
-            plt.subplots_adjust(hspace=0.6)
+            self._post_add(stream_plot, **stream_args)
 
             stream.subscribe(self._add_eval_result)
 
@@ -123,70 +49,26 @@ class BasePlot(ABC):
 
             return None
 
-    def show(self, blocking=False):
+    def show(self, blocking:bool=False):
         self.is_shown = True
-
-        if self.anim_interval:
-            self.animation = FuncAnimation(self.figure, self._on_update, interval=self.anim_interval*1000.0)
-
-        #plt.show() #must be done only once
         if get_ipython():
             if self._use_hbox:
                 display.display(self.cell) # this method doesn't need returns
                 #return self.cell
             else:
-                # no need to return anything because %matplotlib notebook will 
-                # detect spawning of figure and paint it
-                # if self.figure is returned then you will see two of them
-                return None
-                #plt.show()
-                #return self.figure
+                return self._show_widget_notebook()
         else:
-            #plt.ion()
-            #plt.show()
-            return plt.show(block=blocking)
+            return self._show_widget_native(blocking)
 
     def _add_eval_result(self, stream_event:StreamEvent):
-        """Callback whenever EvalResult becomes available"""
-        with self.lock: # callbacks are from separate thread!
+        with self.lock: # this could be from separate thread!
             stream_plot = self._stream_plots.get(stream_event.stream_name, None)
             if stream_plot is None:
                 utils.debug_log("Unrecognized stream received: {}".format(stream_event.stream_name))
                 return
             utils.debug_log("Stream received: {}".format(stream_event.stream_name), verbosity=5)
             stream_plot.pending_events.put(stream_event)
-
-    def _update_render(self, stream_plot):
-        utils.debug_log("Plot updated", stream_plot.stream.stream_name, verbosity=5)
-
-        if self.layout_dirty:
-            # do not do tight_layout() call on every update 
-            # that would jumble up the graphs! it should only called
-            # once each time there is change in layout
-            self.figure.tight_layout()
-            self.layout_dirty = False
-
-        # below forces redraw and it was helpful to
-        # repaint even if there was error in interval loop
-        # but it does work in native UX and not in Jupyter Notebook
-        #self.figure.canvas.draw()
-        #self.figure.canvas.flush_events()
-
-        if self._use_hbox and get_ipython():
-            self.widget.clear_output(wait=True)
-            with self.widget:
-                plt.show(self.figure)
-
-                # everything else that doesn't work
-                #self.figure.show()
-                #display.clear_output(wait=True)
-                #display.display(self.figure)
-                #flush_figures()
-                #plt.show()
-                #show_inline_matplotlib_plots()
-        #elif not get_ipython():
-        #    self.figure.canvas.draw()
-
+        self._post_add_eval_result()
 
     def _process_event_results(self, stream_plot):
         eval_results, clear_current, clear_history = [], False, False
@@ -216,7 +98,7 @@ class BasePlot(ABC):
                 # check throttle
                 #TODO: throttle should be against server timestamp, not time.time()
                 if eval_result.ended or \
-                    stream_plot.throttle is None or stream_plot.last_update is None or \
+                    stream_plot.throttle is None or \
                     time.time() - stream_plot.last_update >= stream_plot.throttle:
 
                     eval_results.append(eval_result)
@@ -229,8 +111,8 @@ class BasePlot(ABC):
         return eval_results, clear_current, clear_history
 
     def _on_update_internal(self, frame):
-        """Called on every graph animation update"""
         with self.lock:
+            self.q_last_processed = time.time()
             for stream_plot in self._stream_plots.values():
                 eval_results, clear_current, clear_history = self._process_event_results(stream_plot)
 
@@ -243,8 +125,7 @@ class BasePlot(ABC):
                     self._update_render(stream_plot)
                     stream_plot.last_update = time.time()
 
-    @staticmethod
-    def _extract_vals(eval_results):
+    def _extract_vals(self, eval_results):
         vals = []
         for eval_result in eval_results:
             if eval_result.ended or eval_result.result is None:
@@ -257,10 +138,6 @@ class BasePlot(ABC):
         return vals
 
     @abstractmethod
-    def init_stream_plot(self, stream, stream_plot, **stream_args):
-        """(for derived class) Create new plot info for this stream"""
-        pass
-    @abstractmethod
     def clear_plot(self, stream_plot, clear_history):
         """(for derived class) Clears the data in specified plot before new data is redrawn"""
         pass
@@ -269,5 +146,17 @@ class BasePlot(ABC):
         """(for derived class) Plot the data in given axes"""
         pass
     @abstractmethod
-    def has_legend(self):
-        return self.show_legend or True
+    def _post_add(self, stream_plot, **stream_args):
+        pass
+    @abstractmethod
+    def _show_widget_native(self, blocking:bool):
+        pass
+    @abstractmethod
+    def _show_widget_notebook(self):
+        pass
+    @abstractmethod
+    def _post_add_eval_result(self):
+        pass
+    @abstractmethod
+    def _update_render(self, stream_plot):
+        pass

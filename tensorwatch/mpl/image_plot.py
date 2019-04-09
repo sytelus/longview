@@ -1,4 +1,4 @@
-from .base_plot import *
+from .base_mpl_plot import BaseMplPlot
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from ..lv_types import *
 from .. import utils
@@ -8,8 +8,8 @@ import skimage.transform
 import ipywidgets as widgets
 from IPython import get_ipython
 
-class ImagePlot(BasePlot):
-    def init_stream_plot(self, stream, stream_plot, 
+class ImagePlot(BaseMplPlot):
+    def init_stream_plot(self, stream_plot, 
             rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
             colormap=None, viz_img_scale=None, **stream_args):
         stream_plot.rows, stream_plot.cols = rows, cols
@@ -53,7 +53,7 @@ class ImagePlot(BasePlot):
         return img_in
 
     def _plot_eval_result(self, stream_plot, eval_results):
-        vals = BasePlot._extract_vals(eval_results[-1:])
+        vals = self._extract_vals(eval_results[-1:])
         if not len(vals):
             return False
 

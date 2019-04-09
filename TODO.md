@@ -11,4 +11,5 @@
 * experiment with IPC channel
 * confusion matrix as in https://pytorch.org/tutorials/intermediate/char_rnn_classification_tutorial.html
 * Speed up import
+* Do linting
 
