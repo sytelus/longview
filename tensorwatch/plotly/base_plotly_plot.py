@@ -1,7 +1,7 @@
 import plotly 
 import plotly.graph_objs as go
 
-from ..base_plot import BasePlot
+from ..base_vis import BaseVis
 
 import os, sys, time, threading, traceback, logging, queue
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
@@ -12,7 +12,7 @@ from IPython import get_ipython, display
 import ipywidgets as widgets
 
 
-class BasePlotlyPlot(BasePlot):
+class BasePlotlyPlot(BaseVis):
     def __init__(self, cell=None, title=None, show_legend:bool=None, **plot_args):
         super(BasePlotlyPlot, self).__init__(go.FigureWidget(), cell, title, show_legend, **plot_args)
 

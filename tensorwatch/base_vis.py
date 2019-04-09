@@ -6,7 +6,7 @@ from . import utils
 from IPython import get_ipython, display
 import ipywidgets as widgets
 
-class BasePlot(ABC):
+class BaseVis(ABC):
     def __init__(self, widget, cell, title:str, show_legend:bool, **plot_args):
         self.lock = threading.Lock()
         self._use_hbox = True
