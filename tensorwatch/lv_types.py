@@ -111,3 +111,10 @@ class StreamPlot:
         self.clear_after_end, self.clear_after_each = clear_after_end, clear_after_each
         self.history_len, self.dim_history = history_len, dim_history
         self.index, self.stream_plot_args, self.last_update = index, stream_plot_args, last_update
+
+class ImagePlotItem:
+    def __init__(self, images=None, title=None, alpha=None, cmap=None):
+        if not isinstance(images, tuple):
+            images = (images,)
+        self.images, self.alpha, self.cmap, self.title = images, alpha, cmap, title
+

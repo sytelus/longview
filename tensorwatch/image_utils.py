@@ -4,6 +4,52 @@ from torchvision import transforms
 import numpy as np
 import math
 import time
+from . import utils
+
+def guess_image_dims(img):
+    if len(img.shape) == 1:
+        # assume 2D monochrome (MNIST)
+        width = height = round(math.sqrt(img.shape[0]))
+        if width*height != img.shape[0]:
+            # assume 3 channels (CFAR, ImageNet)
+            width = height = round(math.sqrt(img.shape[0] / 3))
+            if width*height*3 != img.shape[0]:
+                raise ValueError("Cannot guess image dimensions for linearized pixels")
+            return (3, height, width)
+        return (1, height, width)
+    return img.shape
+
+def to_imshow_array(img, width=None, height=None):
+    # array from Pytorch has shape: [[channels,] height, width]
+    # image needed for imshow needs: [height, width, channels]
+    if img is not None:
+        # force max 3 dimensions
+        if len(img.shape) > 3:
+            # TODO allow config
+            # select first one in batch
+            img = img[0:1,:,:] 
+
+        if len(img.shape) == 1: # linearized pixels typically used for MLPs
+            if not(width and height):
+                channels, height, width = guess_image_dims(img)
+            img = img.reshape((-1, height, width))
+
+        if len(img.shape) == 3:
+            if img.shape[0] == 1: # single channel images
+                img = img.squeeze(0)
+            else:
+                img = np.swapaxes(img, 0, 2) # transpose H,W for imshow
+                img = np.swapaxes(img, 0, 1)
+        elif len(img.shape) == 2:
+            img = np.swapaxes(img, 0, 1) # transpose H,W for imshow
+        else: #zero dimensions
+            img = None
+
+    return img
+
+#width_dim=1 for imshow, 2 for pytorch arrays
+def stitch_horizontal(images, width_dim=1):
+    return np.concatenate(images, axis=width_dim)
 
 def _resize_image(img, size=None):
     if size is not None or (hasattr(img, 'shape') and len(img.shape) == 1):

@@ -6,6 +6,7 @@ from .text_vis import TextVis
 from .model_graph.hiddenlayer import graph
 from .array_stream import ArrayStream
 from .stream_base import StreamBase
+from .lv_types import ImagePlotItem
 
 ###### Import methods #########
 from .receptive_field.rf_utils import plot_receptive_field, plot_grads_at

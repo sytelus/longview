@@ -5,7 +5,8 @@ import torch
 import math
 import random
 from . import utils
-
+from .lv_types import ImagePlotItem
+from collections import OrderedDict
 
 def skip_mod(mod, g):
     for index, item in enumerate(g):
@@ -35,7 +36,7 @@ def pyt_img_class_out_xform(item): # (input, target, in_weight, out_weight, outp
     # turn log-probabilities in to (max log-probability, class ID)
     output = torch.max(item[4],0)
     # return image, text
-    return(input, "T:{},Pb:{:.2f},pd:{:.2f},L:{:.2f}".\
+    return ImagePlotItem((input,), title="T:{},Pb:{:.2f},pd:{:.2f},L:{:.2f}".\
         format(item[1], math.exp(output[0]), output[1], item[5]))
 
 # use this for image to image translation problems
@@ -46,8 +47,9 @@ def pyt_img_img_out_xform(item): # (input, target, in_weight, out_weight, output
     tar_weight = item[3].data.cpu().numpy() if item[3] is not None else None
 
     # return in-image, text, out-image, target-image
-    return(input, "L:{:.2f}, S:{:.2f}, {:.2f}-{:.2f}, {:.2f}-{:.2f}".format(item[5], input.std(), input.min(), input.max(), output.min(), output.max()), 
-           target, output, tar_weight)
+    return ImagePlotItem((input, target, output, tar_weight),
+                      title="L:{:.2f}, S:{:.2f}, {:.2f}-{:.2f}, {:.2f}-{:.2f}".\
+                          format(item[5], input.std(), input.min(), input.max(), output.min(), output.max()))
 
 def cols2rows(batch):
     in_weight = utils.fill_like(batch.in_weight, batch.input)
@@ -59,7 +61,7 @@ def cols2rows(batch):
                batch.output, losses))
 
 def top(l, topk=1, order='dsc', group_key=None, out_xform=lambda x:x):
-    min_result = {}
+    min_result = OrderedDict()
     for event_vars in l:
         batch = cols2rows(event_vars.batch)
         # by default group items in batch by target value
