@@ -13,13 +13,13 @@ class StreamBase:
         self._callbacks = []
         self.closed = False
 
-    def send_data(self, eval_result:EvalResult):
+    def send_data(self, stream_item:StreamItem):
         if self.closed:
             return
-        se = StreamEvent(StreamEvent.Type.eval_result, self.stream_name, eval_result)
+        se = StreamEvent(StreamEvent.Type.new_item, self.stream_name, stream_item)
         self._make_callbacks(se)
         if self._res_buf is not None:
-            self._res_buf[0].put(eval_result)
+            self._res_buf[0].put(stream_item)
             self._res_buf[1].set()
 
     def _make_callbacks(self, stream_event:StreamEvent):
@@ -63,13 +63,13 @@ class StreamBase:
         if self._res_buf is None:
             raise RuntimeError("iter() wasn't called before next()")
 
-        eval_result, stop_iter = None, False
+        stream_item, stop_iter = None, False
         if not self.closed:
             if self._res_buf[0].empty():
                 self._res_buf[1].wait()
                 self._res_buf[1].clear()
-            eval_result = self._res_buf[0].get()
-            stop_iter = eval_result.ended
+            stream_item = self._res_buf[0].get()
+            stop_iter = stream_item.ended
         else:
             stop_iter = True
 
@@ -77,7 +77,7 @@ class StreamBase:
             self._res_buf = None
             raise StopIteration()
         else:
-            return eval_result
+            return stream_item
 
     def send_reset(self):
         se = StreamEvent(StreamEvent.Type.reset, self.stream_name, None)

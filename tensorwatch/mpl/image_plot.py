@@ -29,20 +29,20 @@ class ImagePlot(BaseMplPlot):
                     x, y = img.get_size()
                     img.set_data(np.zeros((x, y)))
 
-    def _show_eval_results(self, stream_plot, eval_results):
+    def _show_stream_items(self, stream_plot, stream_items):
         # as we repaint each image plot, select last if multiple events were pending
-        eval_result = None
-        for er in reversed(eval_results):
-            if not(er.ended or er.result is None):
-                eval_result = er
+        stream_item = None
+        for er in reversed(stream_items):
+            if not(er.ended or er.value is None):
+                stream_item = er
                 break
-        if eval_result is None:
+        if stream_item is None:
             return False
 
         row, col, i = 0, 0, 0
         dirty = False
-        # eval_result.result is expected to be ImagePlotItems
-        for image_list in eval_result.result:
+        # stream_item.value is expected to be ImagePlotItems
+        for image_list in stream_item.value:
             # convert to imshow compatible, stitch images
             images = [image_utils.to_imshow_array(img, stream_plot.img_width, stream_plot.img_height) \
                 for img in image_list.images if img is not None]

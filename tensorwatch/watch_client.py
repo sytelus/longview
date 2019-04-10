@@ -20,9 +20,9 @@ class WatchClient:
 
             self._send_stream_req()
 
-        def on_event_eval(self, eval_result:EvalResult):
-            utils.debug_log("Event eval received", eval_result.event_name, verbosity=6)
-            self.send_data(eval_result)
+        def on_stream_item(self, stream_item:StreamItem):
+            utils.debug_log("Stream item received", stream_item.event_name, verbosity=6)
+            self.send_data(stream_item)
 
         def _close(self):
             if not self.closed:
@@ -62,7 +62,7 @@ class WatchClient:
         self._clisrv = ZmqPubSub.ClientServer(cliesrv_port, False)
 
         self._sub_event_eval = ZmqPubSub.Subscription(pubsub_port, 
-            TopicNames.event_eval, self._on_event_eval)
+            TopicNames.stream_item, self._on_stream_item)
         self._sub_srv_mgmt = ZmqPubSub.Subscription(pubsub_port, 
             TopicNames.srv_mgmt, self._on_srv_mgmt)
 
@@ -73,12 +73,12 @@ class WatchClient:
         self.server_id = None
         utils.debug_log("Client initialized")
 
-    def _on_event_eval(self, eval_result:EvalResult):
-        if eval_result.stream_name in self._streams:
-            utils.debug_log("Received event for stream", eval_result.stream_name, verbosity=5)
-            self._streams[eval_result.stream_name].on_event_eval(eval_result)
+    def _on_stream_item(self, stream_item:StreamItem):
+        if stream_item.stream_name in self._streams:
+            utils.debug_log("Received event for stream", stream_item.stream_name, verbosity=5)
+            self._streams[stream_item.stream_name].on_stream_item(stream_item)
         else:
-            utils.debug_log("Event for unknown stream", eval_result.stream_name, verbosity=5)
+            utils.debug_log("Event for unknown stream", stream_item.stream_name, verbosity=5)
 
     def _on_srv_mgmt(self, mgmt_msg:ServerMgmtMsg):
         utils.debug_log("Received - SeverMgmtevent", verbosity=6)

@@ -41,34 +41,35 @@ class EvalReturn:
         self.result, self.exception, self.is_valid = \
             None, None, False
 
-class EvalResult:
-    def __init__(self, event_name:str, event_index:int, eval_return:EvalReturn,
-            stream_name:str, server_id:str, stream_index:int, ended:bool=False):
+class StreamItem:
+    def __init__(self, event_name:str, event_index:int, value:any,
+            stream_name:str, server_id:str, stream_index:int,
+            ended:bool=False, exception:Exception=None):
         self.event_name = event_name
-        self.result = eval_return.result
-        self.exception = eval_return.exception
+        self.value = value
+        self.exception = exception
         self.stream_name = stream_name
         self.event_index = event_index
         self.ended = ended
         self.server_id = server_id
         self.stream_index = stream_index
 
-EventEvalFunc = Callable[[EventsVars], EvalResult]
+EventEvalFunc = Callable[[EventsVars], StreamItem]
 
 class StreamEvent:
     class Type:
-        eval_result = 'eval_result'
+        new_item = 'new_item'
         reset = 'reset'
 
-    def __init__(self, event_type, stream_name, eval_result):
-        self.event_type, self.stream_name, self.eval_result = \
-            event_type, stream_name, eval_result
+    def __init__(self, event_type, stream_name, stream_item):
+        self.event_type, self.stream_name, self.stream_item = \
+            event_type, stream_name, stream_item
 
     def display_name(self):
-        if not utils.is_uuid4(self.stream_name) or self.eval_result is None:
+        if not utils.is_uuid4(self.stream_name) or self.stream_item is None:
             return self.stream_name  
         else:
-           return str(self.eval_result.stream_index)
+           return str(self.stream_item.stream_index)
 
 class StreamRequest:
     def __init__(self, event_name:str, expr:str, stream_name:str, 
@@ -92,7 +93,7 @@ class StreamRequest:
 StreamRequests = Dict[str, StreamRequest] 
 
 class TopicNames:
-    event_eval = 'EventEval'
+    stream_item = 'StreamItem'
     srv_mgmt = 'ServerMgmt'
 
 class CliSrvReqTypes:

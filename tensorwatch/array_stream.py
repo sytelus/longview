@@ -11,7 +11,6 @@ class ArrayStream(StreamBase):
 
     def send_all(self):
         if self.array is not None:
-            eval_return = EvalReturn(result=self.array, is_valid=True)
-            eval_result = EvalResult(event_name=self.event_name, event_index=0, eval_return=eval_return,
-                stream_name=self.stream_name, server_id='', stream_index=0, ended=False)
-            self.send_data(eval_result)
+            stream_item = StreamItem(event_name=self.event_name, event_index=0, value=self.array,
+                stream_name=self.stream_name, server_id='', stream_index=0)
+            self.send_data(stream_item)

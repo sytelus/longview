@@ -38,8 +38,8 @@ def read_stream():
     cli = tw.WatchClient()
 
     with cli.create_stream("ev_i", 'map(lambda v:math.sqrt(v.val), l)') as s1:
-        for eval_result in s1:
-            print(eval_result.result)
+        for stream_item in s1:
+            print(stream_item.value)
     print('done')
     utils.wait_ley()
 

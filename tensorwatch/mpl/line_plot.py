@@ -74,8 +74,8 @@ class LinePlot(BaseMplPlot):
             label_info.remove()
         stream_plot.xylabel_refs.clear()
 
-    def _show_eval_results(self, stream_plot, eval_results):
-        vals = self._extract_vals(eval_results)
+    def _show_stream_items(self, stream_plot, stream_items):
+        vals = self._extract_vals(stream_items)
         if not len(vals):
             return False
 

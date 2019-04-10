@@ -1,7 +1,7 @@
 * Fix cell size issue
 * Refactor _plot* interface to accept all values, for ImagePlot only use last value
 * Refactor ImagePlot for arbitrary number of images with alpha, cmap
-* Change tw.create_vis -> tw.create_viz
+* Change tw.open -> tw.create_viz
 * Make sure streams have names as key, each data point has index
 * Add tw.open_viz(stream_name, from_index)_
 * Add persist=device_name option for streams

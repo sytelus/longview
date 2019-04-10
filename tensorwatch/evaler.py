@@ -66,12 +66,12 @@ class Evaler:
         while True:
             l = self.g.get_vals() # this var will be used by eval
             try:
-                eval_result = eval(self.expr)
-                if isinstance(eval_result, Iterator):
-                    for i, result in enumerate(eval_result):
+                result = eval(self.expr)
+                if isinstance(result, Iterator):
+                    for i, result in enumerate(result):
                         self.eval_return = EvalReturn(result, True)
                 else:
-                    self.eval_return = EvalReturn(eval_result, True)
+                    self.eval_return = EvalReturn(result, True)
             except Exception as e:
                 print(e, file=sys.stderr)
                 self.eval_return = EvalReturn(None, True, e)

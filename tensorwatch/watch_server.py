@@ -171,24 +171,26 @@ class WatchServer:
     def _end_stream_req(self, stream_req:StreamRequest, disable_stream:bool):
         eval_return = stream_req._evaler.post(ended=True, 
             continue_thread=not disable_stream)
-
+        # TODO: check eval_return.is_valid ?
         event_name = stream_req.event_name
         if disable_stream:
             stream_req.disabled = True
             utils.debug_log("{} stream disabled".format(stream_req.stream_name), verbosity=1)
 
-        eval_result = EvalResult(event_name, self.get_event_index(event_name), 
-            eval_return, stream_req.stream_name, self.server_id, stream_req.stream_index, ended=True)
-        self._publication.send_obj(eval_result, TopicNames.event_eval)
+        stream_item = StreamItem(event_name, self.get_event_index(event_name), 
+            eval_return.result, stream_req.stream_name, self.server_id, stream_req.stream_index,
+            exception=eval_return.exception, ended=True)
+        self._publication.send_obj(stream_item, TopicNames.stream_item)
 
     def _eval_event_send(self, stream_req:StreamRequest, event_vars:EventVars):
         eval_return = stream_req._evaler.post(event_vars)
         if eval_return.is_valid:
             event_name = stream_req.event_name
             event_index = self.get_event_index(event_name)
-            eval_result = EvalResult(event_name, event_index,
-                eval_return, stream_req.stream_name, self.server_id, stream_req.stream_index)
-            self._publication.send_obj(eval_result, TopicNames.event_eval)
+            stream_item = StreamItem(event_name, event_index,
+                eval_return.result, stream_req.stream_name, self.server_id, stream_req.stream_index,
+                exception=eval_return.exception)
+            self._publication.send_obj(stream_item, TopicNames.stream_item)
             utils.debug_log("eval_return sent", event_name, verbosity=5)
         else:
             utils.debug_log("Invalid eval_return not sent", verbosity=5)

@@ -69,70 +69,70 @@ class BaseVis(ABC):
         self._post_stream_event()
 
     def _extract_event_results(self, stream_plot):
-        eval_results, clear_current, clear_history = [], False, False
+        stream_items, clear_current, clear_history = [], False, False
         while not stream_plot._pending_events.empty():
             stream_event = stream_plot._pending_events.get()
             if stream_event.event_type == StreamEvent.Type.reset:
                 utils.debug_log("Stream reset", stream_event.stream_name)
-                eval_results.clear() # no need to process these events
+                stream_items.clear() # no need to process these events
                 clear_current, clear_history = True, True
-            elif stream_event.event_type == StreamEvent.Type.eval_result:
-                eval_result = stream_event.eval_result
+            elif stream_event.event_type == StreamEvent.Type.new_item:
+                stream_item = stream_event.stream_item
                 # check if there was an exception
-                if eval_result.exception is not None:
+                if stream_item.exception is not None:
                     #TODO: need better handling here?
-                    print(eval_result.exception, file=sys.stderr)
-                    raise eval_result.exception
+                    print(stream_item.exception, file=sys.stderr)
+                    raise stream_item.exception
 
                 # state management for _clear_pending
                 # if we need to clear plot before putting in data, do so
                 if stream_plot._clear_pending:
-                    eval_results.clear()
+                    stream_items.clear()
                     clear_current = True
                     stream_plot._clear_pending = False
-                if stream_plot.clear_after_each or (eval_result.ended and stream_plot.clear_after_end):
+                if stream_plot.clear_after_each or (stream_item.ended and stream_plot.clear_after_end):
                     stream_plot._clear_pending = True
                         
                 # check throttle
                 #TODO: throttle should be against server timestamp, not time.time()
-                if eval_result.ended or \
+                if stream_item.ended or \
                     stream_plot.throttle is None or \
                     time.time() - stream_plot.last_update >= stream_plot.throttle:
 
-                    eval_results.append(eval_result)
+                    stream_items.append(stream_item)
                 else:
                     utils.debug_log("Value not plotted due to throttle", 
-                                    eval_result.event_name, verbosity=5)
+                                    stream_item.event_name, verbosity=5)
             else:
                 utils.debug_log("Unsupported event type received")
 
-        return eval_results, clear_current, clear_history
+        return stream_items, clear_current, clear_history
 
     def _update_stream_plots(self, frame):
         with self.lock:
             self.q_last_processed = time.time()
             for stream_plot in self._stream_plots.values():
-                eval_results, clear_current, clear_history = self._extract_event_results(stream_plot)
+                stream_items, clear_current, clear_history = self._extract_event_results(stream_plot)
 
                 if clear_current:
                     self.clear_plot(stream_plot, clear_history)
 
                 # if we have something to render
-                dirty = self._show_eval_results(stream_plot, eval_results)
+                dirty = self._show_stream_items(stream_plot, stream_items)
                 if dirty:
                     self._post_update_stream_plot(stream_plot)
                     stream_plot.last_update = time.time()
 
-    def _extract_vals(self, eval_results):
+    def _extract_vals(self, stream_items):
         vals = []
-        for eval_result in eval_results:
-            if eval_result.ended or eval_result.result is None:
+        for stream_item in stream_items:
+            if stream_item.ended or stream_item.value is None:
                 pass # no values to add
             else:
-                if utils.is_array_like(eval_result.result, tuple_is_array=False):
-                    vals.extend(eval_result.result)
+                if utils.is_array_like(stream_item.value, tuple_is_array=False):
+                    vals.extend(stream_item.value)
                 else:
-                    vals.append(eval_result.result)
+                    vals.append(stream_item.value)
         return vals
 
     @abstractmethod
@@ -140,7 +140,7 @@ class BaseVis(ABC):
         """(for derived class) Clears the data in specified plot before new data is redrawn"""
         pass
     @abstractmethod
-    def _show_eval_results(self, stream_plot, eval_results):
+    def _show_stream_items(self, stream_plot, stream_items):
         """(for derived class) Plot the data in given axes"""
         pass
     @abstractmethod

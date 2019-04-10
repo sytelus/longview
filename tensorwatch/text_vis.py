@@ -37,13 +37,13 @@ class TextVis(BaseVis):
     def _post_stream_event(self):
         self._update_stream_plots(None)
 
-    def _show_eval_results(self, stream_plot, eval_results):
-        for eval_result in eval_results:
-            if eval_result.ended:
+    def _show_stream_items(self, stream_plot, stream_items):
+        for stream_item in stream_items:
+            if stream_item.ended:
                 self.df = self.df.append(pd.Series({'Ended':True}), 
                                                         sort=False, ignore_index=True)
             else:
-                vals = self._extract_vals((eval_result,))
+                vals = self._extract_vals((stream_item,))
                 self.append(stream_plot, vals)
         return True
 
