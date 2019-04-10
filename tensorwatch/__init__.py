@@ -74,7 +74,7 @@ def get_server(srv_id):
     return default_servers[srv_id]
 
 
-def open(expr=None, event_name:str='', stream_name:str=None, throttle=1, 
+def create_vis(expr=None, event_name:str='', stream_name:str=None, throttle=1, 
             clear_after_end=True, clear_after_each=False,
             cell=None, title=None, vis=None, type=None, only_summary=False, 
             history_len=1, dim_history=True, opacity=None,
