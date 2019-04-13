@@ -5,7 +5,7 @@ from .watch_client import WatchClient
 from .text_vis import TextVis
 from .model_graph.hiddenlayer import graph
 from .array_stream import ArrayStream
-from .stream_base import StreamBase
+from .stream import Stream
 from .lv_types import ImagePlotItem
 
 ###### Import methods #########
@@ -97,7 +97,7 @@ def create_vis(expr=None, event_name:str='', stream_name:str=None, throttle=1,
             expr=expr, stream_name=stream_name, throttle=throttle)
     elif utils.is_array_like(expr):
         stream = ArrayStream(expr)
-    elif isinstance(expr, StreamBase):
+    elif isinstance(expr, Stream):
         stream = expr
 
     s = vis.add(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,

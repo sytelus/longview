@@ -93,7 +93,7 @@ class StreamRequest:
 StreamRequests = Dict[str, StreamRequest] 
 
 class TopicNames:
-    stream_item = 'StreamItem'
+    subscription_item = 'SubscriptionItem'
     srv_mgmt = 'ServerMgmt'
 
 class CliSrvReqTypes:

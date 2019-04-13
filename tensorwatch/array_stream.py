@@ -1,7 +1,7 @@
-from .stream_base import StreamBase
+from .stream import Stream
 from .lv_types import *
 
-class ArrayStream(StreamBase):
+class ArrayStream(Stream):
     def __init__(self, array, stream_name:str=None, throttle=None, event_name:str='',
                  annotations=None, texts=None, colors=None):
         super(ArrayStream, self).__init__(stream_name, throttle)

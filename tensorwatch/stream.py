@@ -5,7 +5,7 @@ import weakref
 
 from .lv_types import *
 
-class StreamBase:
+class Stream:
     def __init__(self, stream_name:str=None, throttle=None):
         self.stream_name = stream_name if stream_name is not None else str(uuid.uuid4())
         # when values arrive from different thread than the one doind enumeration we need buffer
@@ -40,7 +40,7 @@ class StreamBase:
         if self._res_buf is not None:
             self._res_buf[1].set()
 
-    def _close(self):
+    def close(self):
         if not self.closed:
             self._callbacks = []
             self._res_buf = None
@@ -53,7 +53,7 @@ class StreamBase:
         self.close()
 
     def __del__(self):
-        self._close()
+        self.close()
 
     def __iter__(self):
         self._res_buf = (queue.Queue(), threading.Event())

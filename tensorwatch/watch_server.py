@@ -180,7 +180,7 @@ class WatchServer:
         stream_item = StreamItem(event_name, self.get_event_index(event_name), 
             eval_return.result, stream_req.stream_name, self.server_id, stream_req.stream_index,
             exception=eval_return.exception, ended=True)
-        self._publication.send_obj(stream_item, TopicNames.stream_item)
+        self._publication.send_obj(stream_item, TopicNames.subscription_item)
 
     def _eval_event_send(self, stream_req:StreamRequest, event_vars:EventVars):
         eval_return = stream_req._evaler.post(event_vars)
@@ -190,7 +190,7 @@ class WatchServer:
             stream_item = StreamItem(event_name, event_index,
                 eval_return.result, stream_req.stream_name, self.server_id, stream_req.stream_index,
                 exception=eval_return.exception)
-            self._publication.send_obj(stream_item, TopicNames.stream_item)
+            self._publication.send_obj(stream_item, TopicNames.subscription_item)
             utils.debug_log("eval_return sent", event_name, verbosity=5)
         else:
             utils.debug_log("Invalid eval_return not sent", verbosity=5)

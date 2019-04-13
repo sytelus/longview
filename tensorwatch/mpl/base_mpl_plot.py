@@ -11,7 +11,7 @@ from matplotlib.animation import FuncAnimation
 from ipywidgets.widgets.interaction import show_inline_matplotlib_plots
 from ipykernel.pylab.backend_inline import flush_figures
 
-from ..base_vis import BaseVis
+from ..vis_base import VisBase
 
 import os, sys, time, threading, traceback, logging, queue
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
@@ -21,7 +21,7 @@ from .. import utils
 from IPython import get_ipython, display
 import ipywidgets as widgets
 
-class BaseMplPlot(BaseVis):
+class BaseMplPlot(VisBase):
     def __init__(self, cell=None, title:str=None, show_legend:bool=None, **plot_args):
         super(BaseMplPlot, self).__init__(widgets.Output(), cell, title, show_legend, **plot_args)
 

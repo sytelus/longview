@@ -19,7 +19,7 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="tensorwatch\base_vis.py">
+    <Compile Include="tensorwatch\vis_base.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\saliency\lime\lime_base.py" />
@@ -100,7 +100,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\saliency\__init__.py" />
-    <Compile Include="tensorwatch\stream_base.py">
+    <Compile Include="tensorwatch\stream.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\text_vis.py">

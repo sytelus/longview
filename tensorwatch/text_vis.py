@@ -7,9 +7,9 @@ import time
 import ipywidgets as widgets
 from IPython import get_ipython, display
 
-from .base_vis import BaseVis
+from .vis_base import VisBase
 
-class TextVis(BaseVis):
+class TextVis(VisBase):
     def __init__(self, cell=None, title:str=None, show_legend:bool=None, **plot_args):
         super(TextVis, self).__init__(widgets.HTML(), cell, title, show_legend, **plot_args)
         self.df = pd.DataFrame([])
