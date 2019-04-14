@@ -12,5 +12,5 @@ class ArrayStream(Stream):
     def send_all(self):
         if self.array is not None:
             stream_item = StreamItem(event_name=self.event_name, event_index=0, value=self.array,
-                stream_name=self.stream_name, server_id='', stream_index=0)
+                stream_name=self.stream_name, source_id='', stream_index=0)
             self.send_data(stream_item)

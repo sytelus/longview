@@ -105,7 +105,7 @@ class WatchServer:
         self._global_vars = {}
         self._event_vars = {}
         self._client_heartbeats = {}
-        self.server_id = str(uuid.uuid4())
+        self.source_id = str(uuid.uuid4())
         
         self._publication = None 
         self._clisrv = None
@@ -178,7 +178,7 @@ class WatchServer:
             utils.debug_log("{} stream disabled".format(stream_req.stream_name), verbosity=1)
 
         stream_item = StreamItem(event_name, self.get_event_index(event_name), 
-            eval_return.result, stream_req.stream_name, self.server_id, stream_req.stream_index,
+            eval_return.result, stream_req.stream_name, self.source_id, stream_req.stream_index,
             exception=eval_return.exception, ended=True)
         self._publication.send_obj(stream_item, TopicNames.subscription_item)
 
@@ -188,7 +188,7 @@ class WatchServer:
             event_name = stream_req.event_name
             event_index = self.get_event_index(event_name)
             stream_item = StreamItem(event_name, event_index,
-                eval_return.result, stream_req.stream_name, self.server_id, stream_req.stream_index,
+                eval_return.result, stream_req.stream_name, self.source_id, stream_req.stream_index,
                 exception=eval_return.exception)
             self._publication.send_obj(stream_item, TopicNames.subscription_item)
             utils.debug_log("eval_return sent", event_name, verbosity=5)
@@ -197,6 +197,6 @@ class WatchServer:
 
                 
     def _send_heartbeat(self):
-        hb = ServerMgmtMsg('HB', self.server_id)
+        hb = ServerMgmtMsg('HB', self.source_id)
         self._publication.send_obj(hb, TopicNames.srv_mgmt)
         utils.debug_log("Sent - SeverMgmtevent", verbosity=6)

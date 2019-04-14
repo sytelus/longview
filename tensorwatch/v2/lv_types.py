@@ -1,6 +1,7 @@
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
-import queue
 from . import utils
+import uuid
+
 
 class EventVars:
     def __init__(self, globals, **vars):
@@ -23,28 +24,10 @@ class EventVars:
 
 EventsVars = List[EventVars]
 
-class ClientServerRequest:
-    def __init__(self, req_type:str, req_data:Any):
-        self.req_type = req_type
-        self.req_data = req_data
-
-class ServerMgmtMsg:
-    def __init__(self, event_name:str, event_args:Any=None):
-        self.event_name = event_name
-        self.event_args = event_args
-
-class EvalReturn:
-    def __init__(self, result=None, is_valid=False, exception=None):
-        self.result, self.exception, self.is_valid = \
-            result, exception, is_valid
-    def reset(self):
-        self.result, self.exception, self.is_valid = \
-            None, None, False
-
 class StreamItem:
-    def __init__(self, event_name:str, event_index:int, value:any,
+    def __init__(self, event_name:str, event_index:int, value:Any,
             stream_name:str, source_id:str, stream_index:int,
-            ended:bool=False, exception:Exception=None):
+            ended:bool=False, exception:Exception=None, stream_reset:bool=False):
         self.event_name = event_name
         self.value = value
         self.exception = exception
@@ -53,54 +36,27 @@ class StreamItem:
         self.ended = ended
         self.source_id = source_id
         self.stream_index = stream_index
+        self.stream_reset = stream_reset
+
+    def __repr__(self):
+        return str(self.__dict__)
 
 EventEvalFunc = Callable[[EventsVars], StreamItem]
 
-class StreamEvent:
-    class Type:
-        new_item = 'new_item'
-        reset = 'reset'
-
-    def __init__(self, event_type, stream_name, stream_item):
-        self.event_type, self.stream_name, self.stream_item = \
-            event_type, stream_name, stream_item
-
-    def display_name(self):
-        if not utils.is_uuid4(self.stream_name) or self.stream_item is None:
-            return self.stream_name  
-        else:
-           return str(self.stream_item.stream_index)
-
 class StreamRequest:
-    def __init__(self, event_name:str, expr:str, stream_name:str, 
-            throttle:float, client_id:str, stream_index:int=None):
+    def __init__(self, expr:str, event_name:str='', stream_name:str=None, 
+            throttle:float=None, client_id:str=None):
         self.event_name = event_name
         self.expr = expr
-        self.stream_name = stream_name
-        self.client_id = client_id
+        self.stream_name = stream_name or str(uuid.uuid4())
+        # used to detect if client no longer exist in which case don't publish for them
+        self.client_id = client_id 
 
-        # below will be set by server side
-        self.eval_f:EventEvalFunc = None
-        self.disabled = False
-        self._evaler = None
         # max throughput n Lenovo P50 laptop for MNIST
         # text console -> 0.1s
         # matplotlib line graph -> 0.5s
         self.throttle = throttle
-        self.last_sent=None
-        self.stream_index = stream_index
 
-StreamRequests = Dict[str, StreamRequest] 
-
-class TopicNames:
-    subscription_item = 'SubscriptionItem'
-    srv_mgmt = 'ServerMgmt'
-
-class CliSrvReqTypes:
-    create_stream = 'CreateStream'
-    del_stream = 'DeleteStream'
-    print_msg = 'PrintMsg'
-    heartbeat = 'Heartbeat'
 
 class StreamPlot:
     def __init__(self, stream, throttle, title, clear_after_end, 

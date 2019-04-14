@@ -19,6 +19,28 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="tensorwatch\v2\evaler.py" />
+    <Compile Include="tensorwatch\v2\evaler_utils.py" />
+    <Compile Include="tensorwatch\v2\lv_types.py" />
+    <Compile Include="tensorwatch\v2\mpl\base_mpl_plot.py" />
+    <Compile Include="tensorwatch\v2\mpl\image_plot.py" />
+    <Compile Include="tensorwatch\v2\mpl\line_plot.py" />
+    <Compile Include="tensorwatch\v2\mpl\__init__.py" />
+    <Compile Include="tensorwatch\v2\plotly\base_plotly_plot.py" />
+    <Compile Include="tensorwatch\v2\plotly\embeddings_plot.py" />
+    <Compile Include="tensorwatch\v2\plotly\line_plot.py" />
+    <Compile Include="tensorwatch\v2\plotly\__init__.py" />
+    <Compile Include="tensorwatch\v2\publisher.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tensorwatch\v2\utils.py" />
+    <Compile Include="tensorwatch\v2\vis_base.py" />
+    <Compile Include="tensorwatch\v2\watcher.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tensorwatch\v2\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\vis_base.py">
       <SubType>Code</SubType>
     </Compile>
@@ -115,6 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="tensorwatch" />
+    <Folder Include="tensorwatch\v2\" />
     <Folder Include="tensorwatch\saliency\lime\wrappers\" />
     <Folder Include="tensorwatch\model_graph\" />
     <Folder Include="tensorwatch\model_graph\hiddenlayer\" />
@@ -126,6 +149,8 @@
     <Folder Include="tensorwatch\receptive_field\" />
     <Folder Include="tensorwatch\plotly\" />
     <Folder Include="tensorwatch\saliency\" />
+    <Folder Include="tensorwatch\v2\mpl\" />
+    <Folder Include="tensorwatch\v2\plotly\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />

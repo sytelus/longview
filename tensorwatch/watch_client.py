@@ -38,7 +38,7 @@ class WatchClient:
             self.clisrv.send_obj(clisrv_req)
             utils.debug_log("sent create streamreq")
 
-        def server_changed(self, server_id):
+        def server_changed(self, source_id):
             utils.debug_log('sending stream req..')
             self._send_stream_req()
             utils.debug_log('sent stream req')
@@ -64,7 +64,7 @@ class WatchClient:
         self._heartbeat_timer = RepeatedTimer(1, self._send_heartbeat)
         self._heartbeat_timer.start()
 
-        self.server_id = None
+        self.source_id = None
         utils.debug_log("Client initialized")
 
     def _on_subscription_item(self, stream_item:StreamItem):
@@ -82,13 +82,13 @@ class WatchClient:
                 utils.debug_log("Server heartbeat received, restarting client heartbeat", 
                     verbosity=1)
                 self._heartbeat_timer.unpause()
-            server_id = mgmt_msg.event_args
-            if server_id != self.server_id and self.server_id is not None:
+            source_id = mgmt_msg.event_args
+            if source_id != self.source_id and self.source_id is not None:
                 utils.debug_log("Server change detected", verbosity=1)
                 for stream_handler in self._stream_handlers.values():
                     if not stream_handler.stream.closed:
-                        stream_handler.server_changed(server_id)
-            self.server_id = server_id
+                        stream_handler.server_changed(source_id)
+            self.source_id = source_id
 
 
     def _send_heartbeat(self):
