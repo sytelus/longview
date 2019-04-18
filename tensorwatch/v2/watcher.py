@@ -57,7 +57,7 @@ class Watcher:
 
         if subscribers is not None:
             for subscriber in subscribers:
-                stream.publisher.subscribe(subscriber.write)
+                subscriber.add_subscription(stream.publisher)
 
         return stream.publisher
 

@@ -23,7 +23,7 @@ class LinePlot(BaseMplPlot):
         else:
             stream_plot.ax = self.get_main_axis().twinx()
 
-        color = color or plt.cm.Dark2((len(self._stream_plots)%8)/8)
+        color = color or plt.cm.Dark2((len(self._stream_plots)%8)/8) #TODO: improve this
 
         # add default line in subplot
         stream_plot.line = matplotlib.lines.Line2D([], [], 
@@ -37,7 +37,6 @@ class LinePlot(BaseMplPlot):
             pos = (len(self._stream_plots)) * 30
             stream_plot.ax.spines['right'].set_position(('outward', pos))
 
-        self._stream_plots[stream_plot.stream.stream_name] = stream_plot
         stream_plot.ax.set_xlabel(xtitle)
         stream_plot.ax.set_ylabel(ytitle)
         stream_plot.ax.yaxis.label.set_color(color)

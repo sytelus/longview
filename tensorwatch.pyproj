@@ -21,6 +21,7 @@
   <ItemGroup>
     <Compile Include="tensorwatch\v2\evaler.py" />
     <Compile Include="tensorwatch\v2\evaler_utils.py" />
+    <Compile Include="tensorwatch\v2\image_utils.py" />
     <Compile Include="tensorwatch\v2\lv_types.py" />
     <Compile Include="tensorwatch\v2\mpl\base_mpl_plot.py" />
     <Compile Include="tensorwatch\v2\mpl\image_plot.py" />

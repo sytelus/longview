@@ -9,8 +9,8 @@ class c1:
 
 k = c1()
 p1 = Publisher()
-p1.subscribe(k.m1)
-p1.subscribe(k.m2)
+p1.add_callback(k.m1)
+p1.add_callback(k.m2)
 
 p1.write('ha1')
 p1.write('ha2')

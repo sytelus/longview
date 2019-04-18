@@ -70,10 +70,8 @@ class EmbeddingsPlot(LinePlot):
 
         return super(EmbeddingsPlot, self)._create_trace(stream_plot)
 
-    def add(self, *kargs, **kwargs):
-        super(EmbeddingsPlot, self).add(*kargs, **kwargs)
-        # add hover event for the first plot
-        #TODO: may be we shouldn't depend on first plot?
-        stream_plot = next(iter(self._stream_plots.values()))
+    def add_subscription(self, publisher):
+        super(EmbeddingsPlot, self).add_subscription(publisher)
+        stream_plot = self._stream_plots[publisher.name]
         if stream_plot.index == 0 and self.images is not None:
             self.widget.data[stream_plot.trace_index].on_hover(self.hover_fn)

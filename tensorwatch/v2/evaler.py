@@ -59,7 +59,7 @@ class Evaler:
         self.expr = expr
         self.reset()
 
-        self.th = threading.Thread(target=self._runner, name='evaler')
+        self.th = threading.Thread(target=self._runner, daemon=True, name='evaler')
         self.th.start()
         self.running = True
 

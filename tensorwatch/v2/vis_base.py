@@ -1,5 +1,6 @@
-import os, sys, time, threading, traceback, logging, queue
+import os, sys, time, threading, traceback, logging, queue, functools
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
+from types import MethodType
 from abc import ABCMeta, abstractmethod
 
 from .lv_types import *
@@ -30,8 +31,9 @@ class VisBase(Publisher, metaclass=ABCMeta):
         self.layout_dirty = False
         self.q_last_processed = 0
 
-    def add(self, publisher, stream_name:str, title=None, throttle=None, clear_after_end=False, clear_after_each=False, 
+    def add_subscription(self, publisher, title=None, throttle=None, clear_after_end=False, clear_after_each=False, 
             show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_plot_args):
+        # in this ovedrride we don't call base class method
         with self.lock:
             self.layout_dirty = True
         
@@ -40,16 +42,16 @@ class VisBase(Publisher, metaclass=ABCMeta):
                 len(self._stream_plots), stream_plot_args, 0)
             stream_plot._clear_pending = False
             stream_plot._pending_items = queue.Queue()
-            self._stream_plots[stream_name] = stream_plot
+            self._stream_plots[publisher.name] = stream_plot
 
             self._post_add(stream_plot, **stream_plot_args)
 
-            publisher.subscribe(self._on_stream_item)
+            write_fn = functools.partial(VisBase.write_stream_plot, self)
+            stream_plot.write_fn = MethodType(write_fn, stream_plot) # weakref doesn't allow unfound methods
+            publisher.add_callback(stream_plot.write_fn)
 
             if show or (show is None and not self.is_shown):
                 return self.show()
-
-            return None
 
     def show(self, blocking:bool=False):
         self.is_shown = True
@@ -62,15 +64,26 @@ class VisBase(Publisher, metaclass=ABCMeta):
         else:
             return self._show_widget_native(blocking)
 
-    def _on_stream_item(self, stream_item:StreamItem):
-        with self.lock: # this could be from separate thread!
-            stream_plot = self._stream_plots.get(stream_item.stream_name, None)
-            if stream_plot is None:
-                utils.debug_log("Unrecognized stream received: {}".format(stream_item.stream_name))
-                return
+    def write(self, val:Any):
+        # let the base class know about new item, this will notify any subscribers
+        super(VisBase, self).write(stream_item)
+
+        # use first stream_plot as default
+        stream_plot = next(iter(self._stream_plots.values()))
+
+        VisBase.write_stream_plot(self, stream_plot, val)
+
+    @staticmethod
+    def write_stream_plot(vis, stream_plot:StreamPlot, stream_item:StreamItem):
+        with vis.lock: # this could be from separate thread!
+            #if stream_plot is None:
+            #    utils.debug_log('stream_plot not specified in VisBase.write')
+            #    stream_plot = next(iter(vis._stream_plots.values())) # use first as default
             utils.debug_log("Stream received: {}".format(stream_item.stream_name), verbosity=5)
             stream_plot._pending_items.put(stream_item)
-        self._post_stream_item()
+
+        # if we accumulated enough of pending items then let's process them
+        vis._post_stream_item()
 
     def _extract_results(self, stream_plot):
         stream_items, clear_current, clear_history = [], False, False
@@ -80,7 +93,7 @@ class VisBase(Publisher, metaclass=ABCMeta):
                 utils.debug_log("Stream reset", stream_item.stream_name)
                 stream_items.clear() # no need to process these events
                 clear_current, clear_history = True, True
-            else
+            else:
                 # check if there was an exception
                 if stream_item.exception is not None:
                     #TODO: need better handling here?
