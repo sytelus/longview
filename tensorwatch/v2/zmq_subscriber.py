@@ -6,7 +6,7 @@ from . import utils
 
 # on writes send data on ZMQ transport
 class ZmqSubscriber(Publisher):
-    DefaultPort = 40859
+    DefaultPubSubPort = 40859
     DefaultTopic = 'StreamItem'
 
     def __init__(self, port_offset:int=0, topic=DefaultTopic, name:str=None, console_debug:bool=False):
@@ -24,7 +24,7 @@ class ZmqSubscriber(Publisher):
 
     def _open(self, port_offset:int):
         if self.closed:
-            self._subscription = ZmqPubSub.Subscription(port=ZmqSubscriber.DefaultPort+port_offset, 
+            self._subscription = ZmqPubSub.Subscription(port=ZmqSubscriber.DefaultPubSubPort+(port_offset or 0), 
                                                        topic=self.topic, callback=self._on_subscription_item)
             self.closed = False
         else:

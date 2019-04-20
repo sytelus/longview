@@ -117,8 +117,7 @@ class VisBase(Publisher, metaclass=ABCMeta):
 
                     stream_items.append(stream_item)
                 else:
-                    utils.debug_log("Value not plotted due to throttle", 
-                                    stream_item.event_name, verbosity=5)
+                    utils.debug_log("Value not plotted due to throttle", verbosity=5)
 
         return stream_items, clear_current, clear_history
 

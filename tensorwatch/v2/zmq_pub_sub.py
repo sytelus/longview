@@ -2,9 +2,7 @@ import zmq
 import dill
 from zmq.eventloop import ioloop, zmqstream
 import zmq.utils.monitor
-import functools
-import sys
-import time
+import functools, sys, time, logging, traceback
 from threading import Thread, Event
 from . import utils
 import weakref
@@ -74,8 +72,13 @@ class ZmqPubSub:
                 self.val = val
 
         def wrapper(f, e, r, *kargs, **kwargs):
-            r.val = f(*kargs, **kwargs)
-            e.set()
+            try:
+                r.val = f(*kargs, **kwargs)
+                e.set()
+            except Exception as ex:
+                print(ex)
+                logging.fatal(ex, exc_info=True) 
+                traceback.print_exc(file=sys.stdout)
 
         # We will add callback in IO Loop and then wait for that
         # call back to be completed

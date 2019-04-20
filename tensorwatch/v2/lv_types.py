@@ -25,14 +25,13 @@ class EventVars:
 EventsVars = List[EventVars]
 
 class StreamItem:
-    def __init__(self, event_name:str, event_index:int, value:Any,
+    def __init__(self, item_index:int, value:Any,
             stream_name:str, source_id:str, stream_index:int,
             ended:bool=False, exception:Exception=None, stream_reset:bool=False):
-        self.event_name = event_name
         self.value = value
         self.exception = exception
         self.stream_name = stream_name
-        self.event_index = event_index
+        self.item_index = item_index
         self.ended = ended
         self.source_id = source_id
         self.stream_index = stream_index
@@ -57,6 +56,14 @@ class StreamRequest:
         # matplotlib line graph -> 0.5s
         self.throttle = throttle
 
+class ClientServerRequest:
+    def __init__(self, req_type:str, req_data:Any):
+        self.req_type = req_type
+        self.req_data = req_data
+
+class CliSrvReqTypes:
+    create_stream = 'CreateStream'
+    del_stream = 'DeleteStream'
 
 class StreamPlot:
     def __init__(self, stream, throttle, title, clear_after_end, 

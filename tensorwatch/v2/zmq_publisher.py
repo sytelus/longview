@@ -6,7 +6,7 @@ from . import utils
 
 # on writes send data on ZMQ transport
 class ZmqPublisher(Publisher):
-    DefaultPort = 40859
+    DefaultPubSubPort = 40859
     DefaultTopic = 'StreamItem'
 
     def __init__(self, port_offset:int=0, topic=DefaultTopic, name:str=None, console_debug:bool=False):
@@ -24,7 +24,7 @@ class ZmqPublisher(Publisher):
 
     def _open(self, port_offset:int):
         if self.closed:
-            self._publication = ZmqPubSub.Publication(port = ZmqPublisher.DefaultPort+port_offset)
+            self._publication = ZmqPubSub.Publication(port = ZmqPublisher.DefaultPubSubPort+(port_offset or 0))
             self.closed = False
         else:
             raise RuntimeError('ZmqPublisher is already open and must be closed before open() call')

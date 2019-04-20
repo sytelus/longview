@@ -5,6 +5,8 @@ from .evaler import Evaler
 from .publisher import Publisher
 import uuid
 import time
+from . import utils
+
 
 class Watcher:
     class StreamInfo:
@@ -12,13 +14,21 @@ class Watcher:
                      index:int, disabled=False, last_sent:float=None) -> None:
             self.req, self.evaler, self.publisher = req, evaler, publisher
             self.index, self.disabled, self.last_sent = index, disabled, last_sent
+            self.item_count = 0
 
     def __init__(self) -> None:
         self._reset(False)
 
+    '''Note on event_name and stream_name
+    Each stream should be uniquely identifiable by stream_name. The create_stream returns old
+    stream is stream already exist (we should probably change that). The watcher organizes streams
+    under events so for each occurrence of event, we don't have scan entire list of stream. This is
+    however just optimization and stream_name still needs to be unique across all events.
+    The stream name will be stamped on each stream_item.
+    '''
+
     def _reset(self, closed:bool):
         self._event_streams:Dict[str, Dict[str, Watcher.StreamInfo]] = {}
-        self._event_counts:Dict[str, int] = {}
         self._global_vars:Dict[str, Any] = {}
         self._stream_count = 0
         self.source_id = str(uuid.uuid4())
@@ -35,7 +45,7 @@ class Watcher:
 
     def create_stream(self, stream_req:Union[StreamRequest, str], subscribers:Iterable[Publisher]=None) -> Publisher:
         if isinstance(stream_req, str):
-            stream_req = StreamRequest(expr=stream_req)
+            stream_req = StreamRequest(expr=stream_req, stream_name=stream_req)
 
         # modify expression if needed
         expr = stream_req.expr
@@ -50,14 +60,20 @@ class Watcher:
         # if first for this event, create dictionary
         if streams is None:
             streams = self._event_streams[stream_req.event_name] = {}
-        stream = streams[stream.req.stream_name] = Watcher.StreamInfo(stream_req, Evaler(expr),
-                                                     Publisher(), self._stream_count)
 
-        self._stream_count += 1
+        stream = streams.get(stream_req.stream_name, None)
+        if not stream:
+            utils.debug_log("Creating stream", stream_req.stream_name)
+            stream = streams[stream_req.stream_name] = Watcher.StreamInfo(stream_req, Evaler(expr),
+                                                         Publisher(), self._stream_count)
 
-        if subscribers is not None:
-            for subscriber in subscribers:
-                subscriber.add_subscription(stream.publisher)
+            self._stream_count += 1
+
+            if subscribers is not None:
+                for subscriber in subscribers:
+                    subscriber.add_subscription(stream.publisher)
+        else:
+            utils.debug_log("Stream already exist, not creating again", stream_req.stream_name)
 
         return stream.publisher
 
@@ -65,10 +81,6 @@ class Watcher:
         self._global_vars.update(vars)
 
     def observe(self, event_name:str='', **vars) -> None:
-        # update event index for this event
-        event_index = self.get_event_index(event_name)
-        self._event_counts[event_name] = event_index + 1
-
         # get stream requests for this event
         streams = self._event_streams.get(event_name, {})
 
@@ -92,11 +104,11 @@ class Watcher:
         eval_return = stream.evaler.post(event_vars)
         if eval_return.is_valid:
             event_name = stream.req.event_name
-            event_index = self.get_event_index(event_name)
-            stream_item = StreamItem(event_name, event_index,
+            stream_item = StreamItem(stream.item_count,
                 eval_return.result, stream.req.stream_name, self.source_id, stream.index,
                 exception=eval_return.exception)
             stream.publisher.write(stream_item)
+            stream.item_count += 1
             utils.debug_log("eval_return sent", event_name, verbosity=5)
         else:
             utils.debug_log("Invalid eval_return not sent", verbosity=5)
@@ -116,19 +128,19 @@ class Watcher:
             stream.disabled = True
             utils.debug_log("{} stream disabled".format(stream.req.stream_name), verbosity=1)
 
-        stream_item = StreamItem(event_name, self.get_event_index(event_name), 
+        stream_item = StreamItem(stream.item_count, 
             eval_return.result, stream.req.stream_name, self.source_id, stream.index,
             exception=eval_return.exception, ended=True)
         stream.publisher.write(stream_item)
+        stream.item_count += 1
 
-    def get_event_index(self, event_name:str):
-        return self._event_counts.get(event_name, -1)
-
-    def del_stream(self, event_name:str, stream_name:str):
+    def del_stream(self, stream_name:str) -> None:
         utils.debug_log("deleting stream", stream_name)
-        streams = self._event_streams.get(event_name, {})
-        stream = streams[stream_name]
-        stream.disabled = True
-        stream.evaler.abort()
-        #TODO: to enable delete we need to protect iteration in set_vars
-        #del stream_reqs[stream.req.stream_name]
+        for streams in self._event_streams.values():
+            stream = streams.get(stream_name, None)
+            if stream:
+                stream.disabled = True
+                stream.evaler.abort()
+                break
+                #TODO: to enable delete we need to protect iteration in set_vars
+                #del stream_reqs[stream.req.stream_name]

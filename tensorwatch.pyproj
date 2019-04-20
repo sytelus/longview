@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{cc8abc7f-ede1-4e13-b6b7-0041a5ec66a7}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>test\test_server.py</StartupFile>
+    <StartupFile>tensorwatch\v2\zmq_watcher_server.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -21,6 +21,9 @@
   <ItemGroup>
     <Compile Include="tensorwatch\v2\evaler.py" />
     <Compile Include="tensorwatch\v2\evaler_utils.py" />
+    <Compile Include="tensorwatch\v2\filtered_stream.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\v2\image_utils.py" />
     <Compile Include="tensorwatch\v2\lv_types.py" />
     <Compile Include="tensorwatch\v2\mpl\base_mpl_plot.py" />
@@ -34,6 +37,9 @@
     <Compile Include="tensorwatch\v2\publisher.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tensorwatch\v2\publisher_factory.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\v2\utils.py" />
     <Compile Include="tensorwatch\v2\vis_base.py" />
     <Compile Include="tensorwatch\v2\watcher.py">
@@ -42,6 +48,10 @@
     <Compile Include="tensorwatch\v2\zmq_subscriber.py" />
     <Compile Include="tensorwatch\v2\zmq_publisher.py" />
     <Compile Include="tensorwatch\v2\zmq_pub_sub.py" />
+    <Compile Include="tensorwatch\v2\zmq_watcher_client.py" />
+    <Compile Include="tensorwatch\v2\zmq_watcher_server.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\v2\__init__.py">
       <SubType>Code</SubType>
     </Compile>
