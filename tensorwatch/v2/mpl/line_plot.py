@@ -9,8 +9,8 @@ from IPython import get_ipython
 import numpy as np
 
 class LinePlot(BaseMplPlot):
-    def __init__(self, cell=None, title=None, show_legend:bool=True, is_3d:bool=False, **plot_args):
-        super(LinePlot, self).__init__(cell, title, show_legend, **plot_args)
+    def __init__(self, cell=None, title=None, show_legend:bool=True, name:str=None, console_debug:bool=False, is_3d:bool=False, **plot_args):
+        super(LinePlot, self).__init__(cell, title, show_legend, name=name, console_debug=console_debug, **plot_args)
         self.is_3d = is_3d #TODO: not implemented for mpl
 
     def init_stream_plot(self, stream_plot, 

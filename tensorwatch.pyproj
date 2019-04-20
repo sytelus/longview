@@ -39,6 +39,9 @@
     <Compile Include="tensorwatch\v2\watcher.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tensorwatch\v2\zmq_subscriber.py" />
+    <Compile Include="tensorwatch\v2\zmq_publisher.py" />
+    <Compile Include="tensorwatch\v2\zmq_pub_sub.py" />
     <Compile Include="tensorwatch\v2\__init__.py">
       <SubType>Code</SubType>
     </Compile>

@@ -11,8 +11,8 @@ from IPython import get_ipython, display
 import ipywidgets as widgets
 
 class VisBase(Publisher, metaclass=ABCMeta):
-    def __init__(self, widget, cell, title:str, show_legend:bool, **plot_args):
-        super(VisBase, self).__init__()
+    def __init__(self, widget, cell, title:str, show_legend:bool, name:str=None, console_debug:bool=False, **plot_args):
+        super(VisBase, self).__init__(name=name, console_debug=console_debug)
 
         self.lock = threading.Lock()
         self._use_hbox = True
@@ -66,7 +66,7 @@ class VisBase(Publisher, metaclass=ABCMeta):
 
     def write(self, val:Any):
         # let the base class know about new item, this will notify any subscribers
-        super(VisBase, self).write(stream_item)
+        super(VisBase, self).write(val)
 
         # use first stream_plot as default
         stream_plot = next(iter(self._stream_plots.values()))

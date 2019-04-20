@@ -22,8 +22,8 @@ from IPython import get_ipython, display
 import ipywidgets as widgets
 
 class BaseMplPlot(VisBase):
-    def __init__(self, cell=None, title:str=None, show_legend:bool=None, **plot_args):
-        super(BaseMplPlot, self).__init__(widgets.Output(), cell, title, show_legend, **plot_args)
+    def __init__(self, cell=None, title:str=None, show_legend:bool=None, name:str=None, console_debug:bool=False, **plot_args):
+        super(BaseMplPlot, self).__init__(widgets.Output(), cell, title, show_legend, name=name, console_debug=console_debug, **plot_args)
 
         self._fig_init_done = False
         self.show_legend = show_legend

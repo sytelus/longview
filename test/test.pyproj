@@ -5,7 +5,7 @@
     <ProjectGuid>9a7fe67e-93f0-42b5-b58f-77320fc639e4</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>v2\plotly_line_test.py</StartupFile>
+    <StartupFile>v2\zmq_publisher_test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -71,6 +71,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="v2\publisher_test.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="v2\zmq_publisher_test.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="zmq_cli.py">
