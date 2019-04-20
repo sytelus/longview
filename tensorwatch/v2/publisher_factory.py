@@ -17,7 +17,7 @@ class PublisherFactory:
             return publisher
 
         if parts[0] == 'zmq':
-            publisher = ZmqPublisher(int(parts[1]))
+            publisher = ZmqPublisher(int(parts[1]), name=normalized_name)
         else:
              raise ValueError('Publisher name "{}" has unknown type'.format(name))
 

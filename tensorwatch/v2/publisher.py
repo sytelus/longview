@@ -1,5 +1,6 @@
 import weakref, uuid
 from typing import Any
+from . import utils
 
 class Publisher:
     def __init__(self, name:str=None, console_debug:bool=False):
@@ -24,9 +25,11 @@ class Publisher:
         self._callbacks.append(weakref.WeakMethod(callback))
 
     def add_subscriber(self, pub:'Publisher'): # notify other publisher
+        utils.debug_log('{} added {} as subscriber'.format(self.name, pub.name))
         self.add_callback(pub.write)
 
     def add_subscription(self, pub:'Publisher'): # notify other publisher
+        utils.debug_log('{} added {} as subscription'.format(self.name, pub.name))
         pub.add_subscriber(self)
 
     def remove_callback(self, callback):

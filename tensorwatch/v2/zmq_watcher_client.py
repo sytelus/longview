@@ -16,10 +16,11 @@ class ZmqWatcherClient:
         self._open()
 
     def _open(self, port_offset:int=None):
+        port_offset = port_offset or 0
         if self.closed:
-            self._clisrv = ZmqPubSub.ClientServer(port=ZmqWatcherClient.DefaultCliSrvPort+(port_offset or 0), 
+            self._clisrv = ZmqPubSub.ClientServer(port=ZmqWatcherClient.DefaultCliSrvPort+port_offset, 
                 is_server=False)
-            self._zmq_subscriber = ZmqSubscriber(port_offset=port_offset)
+            self._zmq_subscriber = ZmqSubscriber(port_offset=port_offset, name='zmq_sub:'+str(port_offset))
             self.closed = False
         else:
             raise RuntimeError("ZmqWatcherClient is already open and must be closed before open() call")
@@ -46,7 +47,8 @@ class ZmqWatcherClient:
         for i in range(len(subscribers)):
             if subscribers[i] == 'zmq':
                 subscribers[i] = subscribers[i] + ':' + str(self.port_offset)
-                publisher = self._filtered_streams[stream_name] = FilteredStream(self._zmq_subscriber, stream_name)
+                publisher = self._filtered_streams[stream_name] = FilteredStream(self._zmq_subscriber, stream_name, 
+                                                                                 self._zmq_subscriber.name+':'+stream_name)
         clisrv_req = ClientServerRequest(CliSrvReqTypes.create_stream, (stream_req, subscribers))
         self._clisrv.send_obj(clisrv_req)
         utils.debug_log("sent create streamreq")
