@@ -98,6 +98,7 @@ class ZmqPubSub:
     class Publication:
         def __init__(self, port, host="*"):
             ZmqPubSub.initialize()
+            utils.debug_log('Creating Publication', port, verbosity=1)
             # make sure the call blocks until connection is made
             ZmqPubSub._io_loop_call(True, self._start_srv, port, host)
 
@@ -132,6 +133,7 @@ class ZmqPubSub:
         def __init__(self, port, topic="", callback=None, host="localhost"):
             self._socket = None
             ZmqPubSub.initialize()
+            utils.debug_log('Creating Subscription', port, verbosity=1)
             ZmqPubSub._io_loop_call(False, self._add_sub,
                 port, topic=topic, callback=callback, host=host)
 
@@ -191,6 +193,8 @@ class ZmqPubSub:
     class ClientServer:
         def __init__(self, port, is_server, callback=None, host=None):
             ZmqPubSub.initialize()
+            utils.debug_log('Creating ClientServer', (is_server, port), verbosity=1)
+
             # make sure call blocks until connection is made
             # otherwise variables would not be available
             ZmqPubSub._io_loop_call(True, self._connect,
