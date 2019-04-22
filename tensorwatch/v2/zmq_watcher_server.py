@@ -2,19 +2,17 @@ from typing import Any
 from .zmq_pub_sub import ZmqPubSub
 from .watcher import Watcher
 from .publisher_factory import PublisherFactory
-from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes
+from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, DefaultPorts
 from . import utils
 
 class ZmqWatcherServer(Watcher):
-    DefaultCliSrvPort = 41459
-
-    def __init__(self, port_offset:int=None):
+    def __init__(self, port_offset:int=0):
         super(ZmqWatcherServer, self).__init__()
         self._publisher_factory = PublisherFactory()
         self._open()
 
-    def _open(self, port_offset:int=None):
-        self._clisrv = ZmqPubSub.ClientServer(port=ZmqWatcherServer.DefaultCliSrvPort+(port_offset or 0), 
+    def _open(self, port_offset:int):
+        self._clisrv = ZmqPubSub.ClientServer(port=DefaultPorts.PubSub+port_offset, 
             is_server=True, callback=self._clisrv_callback)
 
     def close(self):

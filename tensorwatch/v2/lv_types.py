@@ -82,3 +82,10 @@ class ImagePlotItem:
             images = (images,)
         self.images, self.alpha, self.cmap, self.title = images, alpha, cmap, title
 
+class DefaultPorts:
+    PubSub = 40859
+    CliSrv = 41459
+
+class PublisherTopics:
+    StreamItem = 'StreamItem'
+    ServerMgmt = 'ServerMgmt'

@@ -1,24 +1,21 @@
 from typing import Any, Dict, Union, List
 from .zmq_pub_sub import ZmqPubSub
-from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, ClientServerRequest
+from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, ClientServerRequest, DefaultPorts
 from .publisher import Publisher
 from .zmq_subscriber import ZmqSubscriber
 from .filtered_stream import FilteredStream
 from . import utils
 
 class ZmqWatcherClient:
-    DefaultCliSrvPort = 41459
-          
-    def __init__(self, port_offset:int=None):
+    def __init__(self, port_offset:int=0):
         self.closed = True
-        self.port_offset = port_offset or 0
+        self.port_offset = port_offset
         self._filtered_streams:Dict[str,Publisher] = {}
         self._open()
 
-    def _open(self, port_offset:int=None):
-        port_offset = port_offset or 0
+    def _open(self, port_offset:int):
         if self.closed:
-            self._clisrv = ZmqPubSub.ClientServer(port=ZmqWatcherClient.DefaultCliSrvPort+port_offset, 
+            self._clisrv = ZmqPubSub.ClientServer(port=DefaultPorts.PubSub+port_offset, 
                 is_server=False)
             self._zmq_subscriber = ZmqSubscriber(port_offset=port_offset, name='zmq_sub:'+str(port_offset))
             self.closed = False

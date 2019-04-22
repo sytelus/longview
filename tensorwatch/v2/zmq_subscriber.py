@@ -1,15 +1,12 @@
 from typing import Any
 from .zmq_pub_sub import ZmqPubSub
 from .publisher import Publisher
-from .lv_types import StreamItem
+from .lv_types import StreamItem, DefaultPorts, PublisherTopics
 from . import utils
 
 # on writes send data on ZMQ transport
 class ZmqSubscriber(Publisher):
-    DefaultPubSubPort = 40859
-    DefaultTopic = 'StreamItem'
-
-    def __init__(self, port_offset:int=0, topic=DefaultTopic, name:str=None, console_debug:bool=False):
+    def __init__(self, port_offset:int=0, topic=PublisherTopics.StreamItem, name:str=None, console_debug:bool=False):
         super(ZmqSubscriber, self).__init__(name=name, console_debug=console_debug)
 
         self._reset()
@@ -24,7 +21,7 @@ class ZmqSubscriber(Publisher):
 
     def _open(self, port_offset:int):
         if self.closed:
-            self._subscription = ZmqPubSub.Subscription(port=ZmqSubscriber.DefaultPubSubPort+(port_offset or 0), 
+            self._subscription = ZmqPubSub.Subscription(port=DefaultPorts.PubSub+port_offset, 
                                                        topic=self.topic, callback=self._on_subscription_item)
             self.closed = False
         else:
