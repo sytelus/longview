@@ -12,6 +12,7 @@ class ZmqPubSub:
     _thread:Thread = None
     _ioloop:ioloop.IOLoop = None
     _start_event:Event = None
+    _ioloop_block:Event = None # indicates if there is any blocking IOLoop call in progress
 
     @staticmethod
     def initialize():
@@ -19,6 +20,8 @@ class ZmqPubSub:
         if ZmqPubSub._thread is None:
             ZmqPubSub._thread = Thread(target=ZmqPubSub._run_io_loop, name='ZMQIOLoop', daemon=True)
             ZmqPubSub._start_event = Event()
+            ZmqPubSub._ioloop_block = Event()
+            ZmqPubSub._ioloop_block.set() # no blocking call in progress right now
             ZmqPubSub._thread.start()
             # this is needed to make sure IO Loop has enough time to start
             ZmqPubSub._start_event.wait() 
@@ -27,6 +30,7 @@ class ZmqPubSub:
     def close():
         # terminate the IO Loop
         if ZmqPubSub._thread is not None:
+            ZmqPubSub._ioloop_block.set() # free any blocking call
             ZmqPubSub._ioloop.add_callback(ZmqPubSub._ioloop.stop)
             ZmqPubSub._thread = None
             ZmqPubSub._ioloop = None
@@ -55,9 +59,9 @@ class ZmqPubSub:
                 ZmqPubSub._start_event.set()
                 utils.debug_log("starting ioloop...")
                 ZmqPubSub._ioloop.start()
-            except zmq.ZMQError as e:
-                if e.errno == errno.EINTR:
-                    print("Cannot start IOLoop! ZMQError: {}".format(e), file=sys.stderr)
+            except zmq.ZMQError as ex:
+                if ex.errno == errno.EINTR:
+                    print("Cannot start IOLoop! ZMQError: {}".format(ex), file=sys.stderr)
                     continue
                 else:
                     raise
@@ -71,10 +75,10 @@ class ZmqPubSub:
             def __init__(self, val=None):
                 self.val = val
 
-        def wrapper(f, e, r, *kargs, **kwargs):
+        def wrapper(f, r, *kargs, **kwargs):
             try:
                 r.val = f(*kargs, **kwargs)
-                e.set()
+                ZmqPubSub._ioloop_block.set()
             except Exception as ex:
                 print(ex)
                 logging.fatal(ex, exc_info=True) 
@@ -84,12 +88,15 @@ class ZmqPubSub:
         # call back to be completed
         # If result is expected then we wait other wise fire and forget
         if has_result:
-            e = Event()
+            if not ZmqPubSub._ioloop_block.is_set():
+                # TODO: better way to raise this error?
+                print('Previous blocking call on IOLoop is not yet complete!')
+            ZmqPubSub._ioloop_block.clear()
             r = Result()
-            f_wrapped = functools.partial(wrapper, f, e, r, *kargs, **kwargs)
+            f_wrapped = functools.partial(wrapper, f, r, *kargs, **kwargs)
             ZmqPubSub._ioloop.add_callback(f_wrapped)
             utils.debug_log("Waiting for call on ioloop", f, verbosity=5)
-            e.wait()
+            ZmqPubSub._ioloop_block.wait()
             utils.debug_log("Call on ioloop done", f, verbosity=5)
             return r.val
         else:
@@ -97,16 +104,18 @@ class ZmqPubSub:
             ZmqPubSub._ioloop.add_callback(f_wrapped)
 
     class Publication:
-        def __init__(self, port, host="*"):
+        def __init__(self, port, host="*", block_until_connected=True):
             ZmqPubSub.initialize()
             utils.debug_log('Creating Publication', port, verbosity=1)
             # make sure the call blocks until connection is made
-            ZmqPubSub._io_loop_call(True, self._start_srv, port, host)
+            ZmqPubSub._io_loop_call(block_until_connected, self._start_srv, port, host)
 
         def _start_srv(self, port, host):
             context = zmq.Context()
             self._socket = context.socket(zmq.PUB)
+            utils.debug_log('Binding socket', (host, port), verbosity=5)
             self._socket.bind("tcp://%s:%d" % (host, port))
+            utils.debug_log('Bound socket', (host, port), verbosity=5)
             self._mon_socket = self._socket.get_monitor_socket(zmq.EVENT_CONNECTED | zmq.EVENT_DISCONNECTED)
             self._mon_stream = zmqstream.ZMQStream(self._mon_socket)
             self._mon_stream.on_recv(self._on_mon)
@@ -148,8 +157,8 @@ class ZmqPubSub:
                 try:
                     if weak_callback and weak_callback():
                         weak_callback()(dill.loads(obj_s))
-                except Exception as e:
-                    print(e, file=sys.stderr)
+                except Exception as ex:
+                    print(ex, file=sys.stderr) # TODO: standardize this
                     raise
 
             # connect to publisher socket
@@ -214,10 +223,10 @@ class ZmqPubSub:
                     ret = callback(self, dill.loads(obj_s))
                     # we must send reply to complete the cycle
                     self._socket.send_multipart([dill.dumps((ret, None))])
-                except Exception as e:
-                    print("ClientServer call raised exception: ", e, file=sys.stderr)
+                except Exception as ex:
+                    print("ClientServer call raised exception: ", ex, file=sys.stderr)
                     # we must send reply to complete the cycle
-                    self._socket.send_multipart([dill.dumps((None, e))])
+                    self._socket.send_multipart([dill.dumps((None, ex))])
                 
                 utils.debug_log("Server sent response", verbosity=6)
                 

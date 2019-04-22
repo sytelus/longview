@@ -17,11 +17,12 @@ class PublisherFactory:
             return publisher
 
         if parts[0] == 'zmq':
-            publisher = ZmqPublisher(int(parts[1]), name=normalized_name)
+            publisher = ZmqPublisher(int(parts[1]), name=normalized_name, 
+                                     block_until_connected=False) # should this be configurable? Is it even needed?
         else:
              raise ValueError('Publisher name "{}" has unknown type'.format(name))
 
-        self.append(normalize_name, publisher)
+        self.append(normalized_name, publisher)
         return publisher
 
     @staticmethod
