@@ -10,7 +10,7 @@ def main():
 
     for i in range(5000):
         watcher.observe(x=i)
-        print(i)
+        # print(i)
         time.sleep(1)
 
 main()

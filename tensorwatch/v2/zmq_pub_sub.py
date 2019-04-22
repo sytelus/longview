@@ -88,8 +88,9 @@ class ZmqPubSub:
             r = Result()
             f_wrapped = functools.partial(wrapper, f, e, r, *kargs, **kwargs)
             ZmqPubSub._ioloop.add_callback(f_wrapped)
-            utils.debug_log("Waiting for call on ioloop", verbosity=5)
+            utils.debug_log("Waiting for call on ioloop", f, verbosity=5)
             e.wait()
+            utils.debug_log("Call on ioloop done", f, verbosity=5)
             return r.val
         else:
             f_wrapped = functools.partial(f, *kargs, **kwargs)
