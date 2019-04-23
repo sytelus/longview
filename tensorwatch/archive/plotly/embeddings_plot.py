@@ -7,11 +7,10 @@ import time
 from .. import utils
 
 class EmbeddingsPlot(LinePlot):
-    def __init__(self, cell=None, title=None, show_legend:bool=False, name:str=None, console_debug:bool=False,
-                  is_3d:bool=True, images=None, images_reshape=None, **plot_args):
+    def __init__(self, cell=None, title=None, show_legend:bool=False, is_3d:bool=True, 
+                 images=None, images_reshape=None, **plot_args):
         utils.set_default(plot_args, 'height', '8in')
-        super(EmbeddingsPlot, self).__init__(cell, title, show_legend, 
-                                             name=name, console_debug=console_debug, is_3d=is_3d, **plot_args)
+        super(EmbeddingsPlot, self).__init__(cell, title, show_legend, is_3d=is_3d, **plot_args)
         if images is not None:
             plt.ioff()
             self.image_output = Output()
@@ -71,8 +70,10 @@ class EmbeddingsPlot(LinePlot):
 
         return super(EmbeddingsPlot, self)._create_trace(stream_plot)
 
-    def add_subscription(self, publisher):
-        super(EmbeddingsPlot, self).add_subscription(publisher)
-        stream_plot = self._stream_plots[publisher.name]
+    def add(self, *kargs, **kwargs):
+        super(EmbeddingsPlot, self).add(*kargs, **kwargs)
+        # add hover event for the first plot
+        #TODO: may be we shouldn't depend on first plot?
+        stream_plot = next(iter(self._stream_plots.values()))
         if stream_plot.index == 0 and self.images is not None:
             self.widget.data[stream_plot.trace_index].on_hover(self.hover_fn)

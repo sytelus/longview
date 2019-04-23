@@ -22,8 +22,8 @@ from IPython import get_ipython, display
 import ipywidgets as widgets
 
 class BaseMplPlot(VisBase):
-    def __init__(self, cell=None, title:str=None, show_legend:bool=None, **plot_args):
-        super(BaseMplPlot, self).__init__(widgets.Output(), cell, title, show_legend, **plot_args)
+    def __init__(self, cell=None, title:str=None, show_legend:bool=None, name:str=None, console_debug:bool=False, **plot_args):
+        super(BaseMplPlot, self).__init__(widgets.Output(), cell, title, show_legend, name=name, console_debug=console_debug, **plot_args)
 
         self._fig_init_done = False
         self.show_legend = show_legend
@@ -85,7 +85,7 @@ class BaseMplPlot(VisBase):
         super(BaseMplPlot, self).show(blocking)
 
     def _post_update_stream_plot(self, stream_plot):
-        utils.debug_log("Plot updated", stream_plot.stream.stream_name, verbosity=5)
+        utils.debug_log("Plot updated", stream_plot.stream.name, verbosity=5)
 
         if self.layout_dirty:
             # do not do tight_layout() call on every update 
@@ -139,7 +139,7 @@ class BaseMplPlot(VisBase):
         #plt.show()
         #return self.figure
 
-    def _post_stream_event(self):
+    def _post_stream_item(self):
         pass # we run interval timer which will flush the key
 
     @abstractmethod

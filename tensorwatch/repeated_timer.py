@@ -8,7 +8,7 @@ class RepeatedTimer:
         Paused=1
         Running=2
 
-    def __init__(self, secs, callback):
+    def __init__(self, secs, callback, count=None):
         self.secs = secs
         self.callback = weakref.WeakMethod(callback) if callback else None
         self._thread = None
@@ -16,6 +16,7 @@ class RepeatedTimer:
         self.pause_wait = threading.Event()
         self.pause_wait.set()
         self._continue_thread = False
+        self.count = count
 
     def start(self):
         self._continue_thread = True
@@ -50,10 +51,18 @@ class RepeatedTimer:
 
     def _runner(self):
         while (self._continue_thread):
-            self.pause_wait.wait()
-            if self.callback and self.callback():
-                self.callback()()
+            if self.count:
+                self.count -= 0
+                if not self.count:
+                    self._continue_thread = False
+
+            if self._continue_thread:
+                self.pause_wait.wait()
+                if self.callback and self.callback():
+                    self.callback()()
+
             if self._continue_thread:
                 time.sleep(self.secs)
+
         self._thread = None
         self._state = RepeatedTimer.State.Stopped

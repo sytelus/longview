@@ -3,16 +3,24 @@ import math
 import queue
 import threading
 import sys
-from functools import *
 from collections.abc import Iterable, Iterator
+from .lv_types import EventVars
 
+from functools import *
 from itertools import *
 from statistics import *
 import numpy as np
-from .lv_types import *
 from .evaler_utils import *
 
 class Evaler:
+    class EvalReturn:
+        def __init__(self, result=None, is_valid=False, exception=None):
+            self.result, self.exception, self.is_valid = \
+                result, exception, is_valid
+        def reset(self):
+            self.result, self.exception, self.is_valid = \
+                None, None, False
+
     class PostableIterator:
         def __init__(self, eval_wait):
             self.eval_wait = eval_wait
@@ -51,7 +59,7 @@ class Evaler:
         self.expr = expr
         self.reset()
 
-        self.th = threading.Thread(target=self._runner, name='evaler')
+        self.th = threading.Thread(target=self._runner, daemon=True, name='evaler')
         self.th.start()
         self.running = True
 
@@ -59,7 +67,7 @@ class Evaler:
         self.g.reset()
         self.eval_wait.clear()
         self.reset_wait.clear()
-        self.eval_return = EvalReturn()
+        self.eval_return = Evaler.EvalReturn()
         self.continue_thread = True
         
     def _runner(self):
@@ -69,12 +77,12 @@ class Evaler:
                 result = eval(self.expr)
                 if isinstance(result, Iterator):
                     for i, result in enumerate(result):
-                        self.eval_return = EvalReturn(result, True)
+                        self.eval_return = Evaler.EvalReturn(result, True)
                 else:
-                    self.eval_return = EvalReturn(result, True)
+                    self.eval_return = Evaler.EvalReturn(result, True)
             except Exception as e:
                 print(e, file=sys.stderr)
-                self.eval_return = EvalReturn(None, True, e)
+                self.eval_return = Evaler.EvalReturn(None, True, e)
             self.eval_wait.set()
             self.reset_wait.wait()
             if not self.continue_thread:

@@ -9,8 +9,8 @@ from IPython import get_ipython
 import numpy as np
 
 class LinePlot(BaseMplPlot):
-    def __init__(self, cell=None, title=None, show_legend:bool=True, name:str=None, console_debug:bool=False, is_3d:bool=False, **plot_args):
-        super(LinePlot, self).__init__(cell, title, show_legend, name=name, console_debug=console_debug, **plot_args)
+    def __init__(self, cell=None, title=None, show_legend:bool=True, is_3d:bool=False, **plot_args):
+        super(LinePlot, self).__init__(cell, title, show_legend, **plot_args)
         self.is_3d = is_3d #TODO: not implemented for mpl
 
     def init_stream_plot(self, stream_plot, 
@@ -23,7 +23,7 @@ class LinePlot(BaseMplPlot):
         else:
             stream_plot.ax = self.get_main_axis().twinx()
 
-        color = color or plt.cm.Dark2((len(self._stream_plots)%8)/8) #TODO: improve this
+        color = color or plt.cm.Dark2((len(self._stream_plots)%8)/8)
 
         # add default line in subplot
         stream_plot.line = matplotlib.lines.Line2D([], [], 
@@ -37,6 +37,7 @@ class LinePlot(BaseMplPlot):
             pos = (len(self._stream_plots)) * 30
             stream_plot.ax.spines['right'].set_position(('outward', pos))
 
+        self._stream_plots[stream_plot.stream.stream_name] = stream_plot
         stream_plot.ax.set_xlabel(xtitle)
         stream_plot.ax.set_ylabel(ytitle)
         stream_plot.ax.yaxis.label.set_color(color)

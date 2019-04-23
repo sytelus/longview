@@ -20,11 +20,13 @@ class ZmqWatcherServer(Watcher):
 
         # notify existing listners of our ID
         self._zmq_publisher = self._publisher_factory.create_publisher('zmq')
+
+        # ZMQ quirk: we must wait a bit after opening port and before sending message
+        # TODO: can we do better?
         self._th = threading.Thread(target=self._send_server_start)
         self._th.start()
 
     def _send_server_start(self):
-        # ZMQ quirk: we must wait a bit after opening port and before sending message
         time.sleep(2)
         self._zmq_publisher.write(ServerMgmtMsg(ServerMgmtMsg.EventServerStart, self.srv_name), 
                                   topic=PublisherTopics.ServerMgmt)

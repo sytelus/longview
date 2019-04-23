@@ -109,7 +109,7 @@ def stack_images(imgs):
 def plt_loop(sleep_time=1, plt_pause=0.01):
     plt.ion()
     plt.show(block=False)
-    while(True):
+    while(not plt.waitforbuttonpress(plt_pause)):
         #plt.draw()
         plt.pause(plt_pause)
         time.sleep(sleep_time)

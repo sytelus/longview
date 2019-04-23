@@ -19,43 +19,9 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="tensorwatch\v2\evaler.py" />
-    <Compile Include="tensorwatch\v2\evaler_utils.py" />
-    <Compile Include="tensorwatch\v2\filtered_stream.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tensorwatch\v2\image_utils.py" />
-    <Compile Include="tensorwatch\v2\lv_types.py" />
-    <Compile Include="tensorwatch\v2\mpl\base_mpl_plot.py" />
-    <Compile Include="tensorwatch\v2\mpl\image_plot.py" />
-    <Compile Include="tensorwatch\v2\mpl\line_plot.py" />
-    <Compile Include="tensorwatch\v2\mpl\__init__.py" />
-    <Compile Include="tensorwatch\v2\plotly\base_plotly_plot.py" />
-    <Compile Include="tensorwatch\v2\plotly\embeddings_plot.py" />
-    <Compile Include="tensorwatch\v2\plotly\line_plot.py" />
-    <Compile Include="tensorwatch\v2\plotly\__init__.py" />
-    <Compile Include="tensorwatch\v2\publisher.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tensorwatch\v2\publisher_factory.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tensorwatch\v2\repeated_timer.py" />
-    <Compile Include="tensorwatch\v2\utils.py" />
-    <Compile Include="tensorwatch\v2\vis_base.py" />
-    <Compile Include="tensorwatch\v2\watcher.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tensorwatch\v2\zmq_subscriber.py" />
-    <Compile Include="tensorwatch\v2\zmq_publisher.py" />
-    <Compile Include="tensorwatch\v2\zmq_pub_sub.py" />
-    <Compile Include="tensorwatch\v2\zmq_watcher_client.py" />
-    <Compile Include="tensorwatch\v2\zmq_watcher_server.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tensorwatch\v2\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="tensorwatch\filtered_stream.py" />
+    <Compile Include="tensorwatch\publisher.py" />
+    <Compile Include="tensorwatch\publisher_factory.py" />
     <Compile Include="tensorwatch\vis_base.py">
       <SubType>Code</SubType>
     </Compile>
@@ -137,22 +103,21 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\saliency\__init__.py" />
-    <Compile Include="tensorwatch\stream.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="tensorwatch\text_vis.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\utils.py" />
-    <Compile Include="tensorwatch\watch_client.py" />
-    <Compile Include="tensorwatch\watch_server.py" />
+    <Compile Include="tensorwatch\watcher.py" />
+    <Compile Include="tensorwatch\zmq_publisher.py" />
     <Compile Include="tensorwatch\zmq_pub_sub.py" />
+    <Compile Include="tensorwatch\zmq_subscriber.py" />
+    <Compile Include="tensorwatch\zmq_watcher_client.py" />
+    <Compile Include="tensorwatch\zmq_watcher_server.py" />
     <Compile Include="tensorwatch\__init__.py" />
     <Compile Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="tensorwatch" />
-    <Folder Include="tensorwatch\v2\" />
     <Folder Include="tensorwatch\saliency\lime\wrappers\" />
     <Folder Include="tensorwatch\model_graph\" />
     <Folder Include="tensorwatch\model_graph\hiddenlayer\" />
@@ -164,13 +129,12 @@
     <Folder Include="tensorwatch\receptive_field\" />
     <Folder Include="tensorwatch\plotly\" />
     <Folder Include="tensorwatch\saliency\" />
-    <Folder Include="tensorwatch\v2\mpl\" />
-    <Folder Include="tensorwatch\v2\plotly\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".gitignore" />
     <Content Include="tensorwatch\model_graph\hiddenlayer\__pycache__\ge.cpython-36.pyc" />
     <Content Include="tensorwatch\model_graph\hiddenlayer\__pycache__\graph.cpython-36.pyc" />
     <Content Include="tensorwatch\model_graph\hiddenlayer\__pycache__\pytorch_builder.cpython-36.pyc" />
