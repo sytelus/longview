@@ -1,19 +1,33 @@
 from typing import Any
+import uuid
 from .zmq_pub_sub import ZmqPubSub
 from .watcher import Watcher
 from .publisher_factory import PublisherFactory
-from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, DefaultPorts
+from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, DefaultPorts, PublisherTopics, ServerMgmtMsg
 from . import utils
+import threading, time
 
 class ZmqWatcherServer(Watcher):
-    def __init__(self, port_offset:int=0):
+    def __init__(self, port_offset:int=0, srv_name:str=None):
         super(ZmqWatcherServer, self).__init__()
+        self.srv_name = srv_name or str(uuid.uuid4()) # used to detect server restarts 
         self._publisher_factory = PublisherFactory()
-        self._open()
+        self._open(port_offset)
 
     def _open(self, port_offset:int):
-        self._clisrv = ZmqPubSub.ClientServer(port=DefaultPorts.PubSub+port_offset, 
+        self._clisrv = ZmqPubSub.ClientServer(port=DefaultPorts.CliSrv+port_offset, 
             is_server=True, callback=self._clisrv_callback)
+
+        # notify existing listners of our ID
+        self._zmq_publisher = self._publisher_factory.create_publisher('zmq')
+        self._th = threading.Thread(target=self._send_server_start)
+        self._th.start()
+
+    def _send_server_start(self):
+        # ZMQ quirk: we must wait a bit after opening port and before sending message
+        time.sleep(2)
+        self._zmq_publisher.write(ServerMgmtMsg(ServerMgmtMsg.EventServerStart, self.srv_name), 
+                                  topic=PublisherTopics.ServerMgmt)
 
     def close(self):
         if not self.closed:

@@ -1,6 +1,6 @@
-from typing import Any, Dict, Union, List
+from typing import Any, Dict, Union, List, Tuple
 from .zmq_pub_sub import ZmqPubSub
-from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, ClientServerRequest, DefaultPorts
+from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, ClientServerRequest, DefaultPorts, PublisherTopics, ServerMgmtMsg
 from .publisher import Publisher
 from .zmq_subscriber import ZmqSubscriber
 from .filtered_stream import FilteredStream
@@ -11,21 +11,33 @@ class ZmqWatcherClient:
         self.closed = True
         self.port_offset = port_offset
         self._filtered_streams:Dict[str,Publisher] = {}
-        self._open()
+        self._streams:Tuple[Dict[str,Union[StreamRequest, str]], List[str]] = {}
+        self._open(port_offset)
 
     def _open(self, port_offset:int):
         if self.closed:
-            self._clisrv = ZmqPubSub.ClientServer(port=DefaultPorts.PubSub+port_offset, 
+            self._clisrv = ZmqPubSub.ClientServer(port=DefaultPorts.CliSrv+port_offset, 
                 is_server=False)
-            self._zmq_subscriber = ZmqSubscriber(port_offset=port_offset, name='zmq_sub:'+str(port_offset))
+            self._zmq_streamitem_sub = ZmqSubscriber(port_offset=port_offset, name='zmq_sub:'+str(port_offset), 
+                                                     topic=PublisherTopics.StreamItem)
+            self._zmq_srvmgmt_sub = ZmqSubscriber(port_offset=port_offset, name='zmq_sub:'+str(port_offset),
+                                                     topic=PublisherTopics.ServerMgmt)
+            self._zmq_srvmgmt_sub.add_callback(self._on_srv_mgmt)        
+            
             self.closed = False
         else:
             raise RuntimeError("ZmqWatcherClient is already open and must be closed before open() call")
 
+    def _on_srv_mgmt(self, mgmt_msg:Any):
+        utils.debug_log("Received - SeverMgmtevent", mgmt_msg)
+        if mgmt_msg.event_name == ServerMgmtMsg.EventServerStart:
+            for stream_req, subscribers in self._streams.values():
+                self._send_create_stream(stream_req, subscribers)
+
     def close(self):
         if not self.closed:
             self._clisrv.close()
-            self._zmq_subscriber.close()
+            self._zmq_streamitem_sub.close()
             self.closed = True
             for stream in self._filtered_streams.values():
                 stream.close()
@@ -37,20 +49,39 @@ class ZmqWatcherClient:
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
+    @staticmethod
+    def _filter_stream(stream_name):
+        def filter_Wrapped(val):
+            if val.stream_name==stream_name:
+                return (val, True)
+            else:
+               return (None, False)
+        return filter_Wrapped
+
     def create_stream(self, stream_req:Union[StreamRequest, str], subscribers:List[str]=['zmq']) -> Publisher:
-        utils.debug_log("sending create streamreq...")
         stream_name = stream_req if isinstance(stream_req, str) else stream_req.stream_name
         publisher:FilteredStream = None
+        subscribers = list(subscribers)
         for i in range(len(subscribers)):
+            # for default zmq, we will start listening as well
             if subscribers[i] == 'zmq':
                 subscribers[i] = subscribers[i] + ':' + str(self.port_offset)
-                publisher = self._filtered_streams[stream_name] = FilteredStream(self._zmq_subscriber, stream_name, 
-                                                                                 self._zmq_subscriber.name+':'+stream_name)
+                publisher = self._filtered_streams[stream_name] = FilteredStream(self._zmq_streamitem_sub, 
+                    ZmqWatcherClient._filter_stream(stream_name), 
+                    self._zmq_streamitem_sub.name+':'+stream_name)
+
+        self._send_create_stream(stream_req, subscribers)
+        self._streams[stream_name] = (stream_req, subscribers)
+        return publisher
+
+    def _send_create_stream(self, stream_req:Union[StreamRequest, str], subscribers:List[str]):
+        utils.debug_log("sending create streamreq...")
         clisrv_req = ClientServerRequest(CliSrvReqTypes.create_stream, (stream_req, subscribers))
         self._clisrv.send_obj(clisrv_req)
         utils.debug_log("sent create streamreq")
-        return publisher
 
-    def del_stream(self, event_name:str, stream_name:str) -> None:
-        clisrv_req = ClientServerRequest(CliSrvReqTypes.del_stream, event_name)
+
+    def del_stream(self, stream_name:str) -> None:
+        clisrv_req = ClientServerRequest(CliSrvReqTypes.del_stream, stream_name)
         self._clisrv.send_obj(clisrv_req)
+        self._streams.pop(stream_name, None)

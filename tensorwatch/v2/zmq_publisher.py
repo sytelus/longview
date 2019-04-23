@@ -6,11 +6,11 @@ from . import utils
 
 # on writes send data on ZMQ transport
 class ZmqPublisher(Publisher):
-    def __init__(self, port_offset:int=0, topic=PublisherTopics.StreamItem, block_until_connected=True, name:str=None, console_debug:bool=False):
+    def __init__(self, port_offset:int=0, default_topic=PublisherTopics.StreamItem, block_until_connected=True, name:str=None, console_debug:bool=False):
         super(ZmqPublisher, self).__init__(name=name, console_debug=console_debug)
 
         self._reset()
-        self.topic = topic
+        self.default_topic = default_topic
         self._open(port_offset, block_until_connected)
         utils.debug_log('ZmqPublisher started', verbosity=1)
 
@@ -38,6 +38,7 @@ class ZmqPublisher(Publisher):
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def write(self, val:Any):
+    def write(self, val:Any, topic=None):
         super(ZmqPublisher, self).write(val)
-        self._publication.send_obj(val, self.topic)
+        topic = topic or self.default_topic
+        self._publication.send_obj(val, topic)

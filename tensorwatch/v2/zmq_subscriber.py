@@ -38,6 +38,6 @@ class ZmqSubscriber(Publisher):
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def _on_subscription_item(self, stream_item:StreamItem):
-        utils.debug_log('Received stream_item', verbosity=5)
-        self.write(stream_item)
+    def _on_subscription_item(self, val:Any):
+        utils.debug_log('Received subscription item', verbosity=5)
+        self.write(val)

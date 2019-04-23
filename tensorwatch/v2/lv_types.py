@@ -89,3 +89,9 @@ class DefaultPorts:
 class PublisherTopics:
     StreamItem = 'StreamItem'
     ServerMgmt = 'ServerMgmt'
+
+class ServerMgmtMsg:
+    EventServerStart = 'ServerStart'
+    def __init__(self, event_name:str, event_args:Any=None):
+        self.event_name = event_name
+        self.event_args = event_args

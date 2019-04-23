@@ -124,8 +124,13 @@ class ZmqPubSub:
             if self._socket:
                 ZmqPubSub._io_loop_call(False, self._socket.close)
 
+        # we need this wrapper method as self._socket might not be there yet
+        def _send_multipart(self, parts):
+            #utils.debug_log('_send_multipart', parts, verbosity=6)
+            return self._socket.send_multipart(parts)
+
         def send_obj(self, obj, topic=""):
-            ZmqPubSub._io_loop_call(False, self._socket.send_multipart, 
+            ZmqPubSub._io_loop_call(False, self._send_multipart, 
                 [topic.encode(), dill.dumps(obj)])
 
         def _on_mon(self, msg):
@@ -234,7 +239,9 @@ class ZmqPubSub:
             if is_server:
                 host = host or "127.0.0.1"
                 self._socket = context.socket(zmq.REP)
+                utils.debug_log('Binding socket', (host, port), verbosity=5)
                 self._socket.bind("tcp://%s:%d" % (host, port))
+                utils.debug_log('Bound socket', (host, port), verbosity=5)
             else:
                 host = host or "localhost"
                 self._socket = context.socket(zmq.REQ)

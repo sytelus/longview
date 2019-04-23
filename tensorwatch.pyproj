@@ -40,6 +40,7 @@
     <Compile Include="tensorwatch\v2\publisher_factory.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tensorwatch\v2\repeated_timer.py" />
     <Compile Include="tensorwatch\v2\utils.py" />
     <Compile Include="tensorwatch\v2\vis_base.py" />
     <Compile Include="tensorwatch\v2\watcher.py">
