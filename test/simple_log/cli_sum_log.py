@@ -13,17 +13,16 @@ import time
 def show_mpl():
     cli = tw.ZmqWatcherClient()
     p = tw.mpl.LinePlot(title='Demo')
-    s1 = cli.create_stream('', 'map(lambda v:v.sum, l)')
-    p.add(s1, xtitle='Index', ytitle='sqrt(ev_i)')
-
-    while(True):
-        plt.draw()
-        plt.pause(0.01)
-        time.sleep(1)
+    s1 = cli.create_stream('lambda v:v.sum')
+    p.add_subscription(s1, xtitle='Index', ytitle='sqrt(ev_i)')
+    p.show()
+    
+    tw.plt_loop()
 
 def show_text():
     text = tw.create_vis()
     text.show()
     input('Waiting')
 
-show_text()
+#show_text()
+show_mpl()

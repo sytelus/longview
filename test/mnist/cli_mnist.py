@@ -25,7 +25,7 @@ def show_find_lr():
         expr='map(lambda d:(d.tt.scheduler.get_lr()[0], d.metrics.batch_loss), l)'))
     plot.add_subscription(train_batch_loss, xtitle='Epoch', ytitle='Loss')
     
-    utils.wait_ley()
+    utils.wait_key()
 
 def plot_grads():
     train_cli = tw.ZmqWatcherClient()

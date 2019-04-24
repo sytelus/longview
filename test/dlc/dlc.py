@@ -15,7 +15,7 @@ def dlc_show_rand_outputs():
     img_plot = tw.mpl.ImagePlot()
     img_plot.show(imgs, img_width=39, img_height=69, viz_img_scale=10)
 
-    utils.wait_ley()
+    utils.wait_key()
 
 def img2img_rnd():
     cli_train = tw.ZmqWatcherClient()
@@ -26,7 +26,7 @@ def img2img_rnd():
     img_plot = tw.mpl.ImagePlot()
     img_plot.show(imgs, img_width=100, img_height=100, viz_img_scale=3, cols=1)
 
-    utils.wait_ley()
+    utils.wait_key()
 
 dlc_show_rand_outputs()
 img2img_rnd() 

@@ -17,4 +17,5 @@
 * PCA
 * Remove error if MNIST notebook is on and we run fruits
 * Remove 2nd image from fruits
+* clear exisitng streams when starting client
 
