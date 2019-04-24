@@ -1,4 +1,3 @@
-from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from .lv_types import *
 from . import utils
 import threading
@@ -10,14 +9,21 @@ from IPython import get_ipython, display
 from .vis_base import VisBase
 
 class TextVis(VisBase):
-    def __init__(self, cell=None, title:str=None, show_legend:bool=None, **plot_args):
-        super(TextVis, self).__init__(widgets.HTML(), cell, title, show_legend, **plot_args)
+    def __init__(self, cell=None, title:str=None, show_legend:bool=None, 
+                 publisher_name:str=None, console_debug:bool=False, **plot_args):
+        super(TextVis, self).__init__(widgets.HTML(), cell, title, show_legend, 
+            publisher_name=publisher_name, console_debug=console_debug, **plot_args)
         self.df = pd.DataFrame([])
 
     def _get_column_prefix(self, stream_plot, i):
         return '[S.{}]:{}'.format(stream_plot.index, i)
 
-    def append(self, stream_plot, vals):
+    def _get_title(self, stream_plot):
+        title = stream_plot.title or 'Stream ' + str(len(self._stream_plots))
+        return title
+
+    # this will be called from _show_stream_items
+    def _append(self, stream_plot, vals):
         if vals is None:
             self.df = self.df.append(pd.Series({self._get_column_prefix(stream_plot, 0) : None}), 
                                                    sort=False, ignore_index=True)
@@ -34,8 +40,13 @@ class TextVis(VisBase):
             else:
                 self.df = self.df.append(pd.Series(val.__dict__), sort=False, ignore_index=True)
 
-    def _post_stream_event(self):
-        self._update_stream_plots(None)
+    def _post_add_subscription(self, stream_plot, **stream_plot_args):
+        only_summary = stream_plot_args.get('only_summary', False)
+        stream_plot.text = self._get_title(stream_plot)
+        stream_plot.only_summary = only_summary
+
+    def clear_plot(self, stream_plot, clear_history):
+        self.df = self.df.iloc[0:0]
 
     def _show_stream_items(self, stream_plot, stream_items):
         for stream_item in stream_items:
@@ -44,7 +55,7 @@ class TextVis(VisBase):
                                                         sort=False, ignore_index=True)
             else:
                 vals = self._extract_vals((stream_item,))
-                self.append(stream_plot, vals)
+                self._append(stream_plot, vals)
         return True
 
     def _post_update_stream_plot(self, stream_plot):
@@ -63,19 +74,6 @@ class TextVis(VisBase):
                 print(last_recs[0])
             else:
                 print(last_recs)
-
-    def _get_title(self, stream_plot):
-        title = stream_plot.title or 'Stream ' + str(len(self._stream_plots))
-        return title
-
-    def _post_add(self, stream_plot, **stream_plot_args):
-        only_summary = stream_plot_args.get('only_summary', False)
-        stream_plot.text = self._get_title(stream_plot)
-        stream_plot.only_summary = only_summary
-
-    def clear_plot(self, stream_plot, clear_history):
-        self.df = self.df.iloc[0:0]
-
 
     def _show_widget_native(self, blocking:bool):
         return None # we will be using console

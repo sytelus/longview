@@ -58,20 +58,29 @@ class ZmqWatcherClient:
                return (None, False)
         return filter_Wrapped
 
-    def create_stream(self, stream_req:Union[StreamRequest, str], subscribers:List[str]=['zmq']) -> Publisher:
+    def create_stream(self, stream_req:Union[StreamRequest, str], subscribers:Iterable[Publisher]=None,
+                      srv_subscribers:List[str]=['zmq']) -> Publisher:
         stream_name = stream_req if isinstance(stream_req, str) else stream_req.stream_name
         publisher:FilteredStream = None
-        subscribers = list(subscribers)
-        for i in range(len(subscribers)):
-            # for default zmq, we will start listening as well
-            if subscribers[i] == 'zmq':
-                subscribers[i] = subscribers[i] + ':' + str(self.port_offset)
+
+        # if server side subscribers include zmq then we would listen to client side as well
+        srv_subscribers = list(srv_subscribers)
+        for i in range(len(srv_subscribers)):
+            if srv_subscribers[i] == 'zmq':
+                srv_subscribers[i] = srv_subscribers[i] + ':' + str(self.port_offset)
                 publisher = self._filtered_streams[stream_name] = FilteredStream(self._zmq_streamitem_sub, 
                     ZmqWatcherClient._filter_stream(stream_name), 
                     self._zmq_streamitem_sub.name+':'+stream_name)
 
-        self._send_create_stream(stream_req, subscribers)
-        self._streams[stream_name] = (stream_req, subscribers)
+        if subscribers is not none or len(subscribers):
+            if publisher is not None:
+                for subscriber in subscribers:
+                    subscriber.add_subscription(publisher)
+            else:
+                raise ValueError('srv_subscribers must contain zmq if client side subscribers are needed')
+
+        self._send_create_stream(stream_req, srv_subscribers)
+        self._streams[stream_name] = (stream_req, srv_subscribers)
         return publisher
 
     def _send_create_stream(self, stream_req:Union[StreamRequest, str], subscribers:List[str]):

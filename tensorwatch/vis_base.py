@@ -11,8 +11,8 @@ from IPython import get_ipython, display
 import ipywidgets as widgets
 
 class VisBase(Publisher, metaclass=ABCMeta):
-    def __init__(self, widget, cell, title:str, show_legend:bool, name:str=None, console_debug:bool=False, **plot_args):
-        super(VisBase, self).__init__(name=name, console_debug=console_debug)
+    def __init__(self, widget, cell, title:str, show_legend:bool, publisher_name:str=None, console_debug:bool=False, **plot_args):
+        super(VisBase, self).__init__(name=publisher_name, console_debug=console_debug)
 
         self.lock = threading.Lock()
         self._use_hbox = True
@@ -44,7 +44,7 @@ class VisBase(Publisher, metaclass=ABCMeta):
             stream_plot._pending_items = queue.Queue()
             self._stream_plots[publisher.name] = stream_plot
 
-            self._post_add(stream_plot, **stream_plot_args)
+            self._post_add_subscription(stream_plot, **stream_plot_args)
 
             write_fn = functools.partial(VisBase.write_stream_plot, self)
             stream_plot.write_fn = MethodType(write_fn, stream_plot) # weakref doesn't allow unfound methods
@@ -83,7 +83,8 @@ class VisBase(Publisher, metaclass=ABCMeta):
             stream_plot._pending_items.put(stream_item)
 
         # if we accumulated enough of pending items then let's process them
-        vis._post_stream_item()
+        if vis._can_update_stream_plots():
+            self._update_stream_plots()
 
     def _extract_results(self, stream_plot):
         stream_items, clear_current, clear_history = [], False, False
@@ -121,21 +122,6 @@ class VisBase(Publisher, metaclass=ABCMeta):
 
         return stream_items, clear_current, clear_history
 
-    def _update_stream_plots(self, frame):
-        with self.lock:
-            self.q_last_processed = time.time()
-            for stream_plot in self._stream_plots.values():
-                stream_items, clear_current, clear_history = self._extract_results(stream_plot)
-
-                if clear_current:
-                    self.clear_plot(stream_plot, clear_history)
-
-                # if we have something to render
-                dirty = self._show_stream_items(stream_plot, stream_items)
-                if dirty:
-                    self._post_update_stream_plot(stream_plot)
-                    stream_plot.last_update = time.time()
-
     def _extract_vals(self, stream_items):
         vals = []
         for stream_item in stream_items:
@@ -157,17 +143,35 @@ class VisBase(Publisher, metaclass=ABCMeta):
         """(for derived class) Plot the data in given axes"""
         pass
     @abstractmethod
-    def _post_add(self, stream_plot, **stream_plot_args):
+    def _post_add_subscription(self, stream_plot, **stream_plot_args):
         pass
+
+    # typically we want to batch up items for performance
+    def _can_update_stream_plots(self):
+        return True
+
+    @abstractmethod
+    def _post_update_stream_plot(self, stream_plot):
+        pass
+
+    def _update_stream_plots(self):
+        with self.lock:
+            self.q_last_processed = time.time()
+            for stream_plot in self._stream_plots.values():
+                stream_items, clear_current, clear_history = self._extract_results(stream_plot)
+
+                if clear_current:
+                    self.clear_plot(stream_plot, clear_history)
+
+                # if we have something to render
+                dirty = self._show_stream_items(stream_plot, stream_items)
+                if dirty:
+                    self._post_update_stream_plot(stream_plot)
+                    stream_plot.last_update = time.time()
+
     @abstractmethod
     def _show_widget_native(self, blocking:bool):
         pass
     @abstractmethod
     def _show_widget_notebook(self):
-        pass
-    @abstractmethod
-    def _post_stream_item(self):
-        pass
-    @abstractmethod
-    def _post_update_stream_plot(self, stream_plot):
         pass

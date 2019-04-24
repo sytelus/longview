@@ -22,8 +22,8 @@ from IPython import get_ipython, display
 import ipywidgets as widgets
 
 class BaseMplPlot(VisBase):
-    def __init__(self, cell=None, title:str=None, show_legend:bool=None, name:str=None, console_debug:bool=False, **plot_args):
-        super(BaseMplPlot, self).__init__(widgets.Output(), cell, title, show_legend, name=name, console_debug=console_debug, **plot_args)
+    def __init__(self, cell=None, title:str=None, show_legend:bool=None, publisher_name:str=None, console_debug:bool=False, **plot_args):
+        super(BaseMplPlot, self).__init__(widgets.Output(), cell, title, show_legend, publisher_name=publisher_name, console_debug=console_debug, **plot_args)
 
         self._fig_init_done = False
         self.show_legend = show_legend
@@ -67,7 +67,7 @@ class BaseMplPlot(VisBase):
 
     def _on_update(self, frame):
         try:
-            self._update_stream_plots(frame)
+            self._update_stream_plots()
         except Exception as ex:
             # when exception occurs here, animation will stop and there
             # will be no further plot updates
@@ -115,7 +115,7 @@ class BaseMplPlot(VisBase):
         #elif not get_ipython():
         #    self.figure.canvas.draw()
 
-    def _post_add(self, stream_plot, **stream_plot_args):
+    def _post_add_subscription(self, stream_plot, **stream_plot_args):
         # make sure figure is initialized
         self.init_fig()        
         self.init_stream_plot(stream_plot, **stream_plot_args) 
@@ -139,8 +139,8 @@ class BaseMplPlot(VisBase):
         #plt.show()
         #return self.figure
 
-    def _post_stream_item(self):
-        pass # we run interval timer which will flush the key
+    def _can_update_stream_plots(self):
+        return False # we run interval timer which will flush the key
 
     @abstractmethod
     def init_stream_plot(self, stream_plot, **stream_plot_args):

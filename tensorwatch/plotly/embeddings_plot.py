@@ -7,11 +7,11 @@ import time
 from .. import utils
 
 class EmbeddingsPlot(LinePlot):
-    def __init__(self, cell=None, title=None, show_legend:bool=False, name:str=None, console_debug:bool=False,
+    def __init__(self, cell=None, title=None, show_legend:bool=False, publisher_name:str=None, console_debug:bool=False,
                   is_3d:bool=True, images=None, images_reshape=None, **plot_args):
         utils.set_default(plot_args, 'height', '8in')
         super(EmbeddingsPlot, self).__init__(cell, title, show_legend, 
-                                             name=name, console_debug=console_debug, is_3d=is_3d, **plot_args)
+                                             publisher_name=publisher_name, console_debug=console_debug, is_3d=is_3d, **plot_args)
         if images is not None:
             plt.ioff()
             self.image_output = Output()

@@ -33,7 +33,7 @@
     <Compile Include="tensorwatch\pytorch_utils.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tensorwatch\array_stream.py">
+    <Compile Include="tensorwatch\array_publisher.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\data_explore\similar_inputs.py">

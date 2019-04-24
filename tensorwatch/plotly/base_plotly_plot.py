@@ -13,9 +13,9 @@ import ipywidgets as widgets
 
 
 class BasePlotlyPlot(VisBase):
-    def __init__(self, cell=None, title=None, show_legend:bool=None, name:str=None, console_debug:bool=False, **plot_args):
+    def __init__(self, cell=None, title=None, show_legend:bool=None, publisher_name:str=None, console_debug:bool=False, **plot_args):
         super(BasePlotlyPlot, self).__init__(go.FigureWidget(), cell, title, show_legend, 
-                                             name=name, console_debug=console_debug, **plot_args)
+                                             publisher_name=publisher_name, console_debug=console_debug, **plot_args)
 
         self.widget.layout.title = title
         self.widget.layout.showlegend = show_legend if show_legend is not None else True
@@ -66,7 +66,10 @@ class BasePlotlyPlot(VisBase):
             props['range'] = list(axis_range)
         return props
 
-    def _post_add(self, stream_plot, **stream_plot_args):
+    def _can_update_stream_plots(self):
+        return time.time() - self.q_last_processed > 0.5 # make configurable
+
+    def _post_add_subscription(self, stream_plot, **stream_plot_args):
         stream_plot.trace_history, stream_plot.cur_history_index = [], None
         self._add_trace_with_history(stream_plot)
         self._setup_layout(stream_plot)
@@ -84,10 +87,6 @@ class BasePlotlyPlot(VisBase):
     def _show_widget_notebook(self):
         #plotly.offline.iplot(self.widget)
         return None
-
-    def _post_stream_item(self):
-        if time.time() - self.q_last_processed > 0.5: # make configurable
-            self._update_stream_plots(None)
 
     def _post_update_stream_plot(self, stream_plot):
         # not needed for plotly as FigureWidget stays upto date
