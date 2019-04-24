@@ -5,7 +5,7 @@
     <ProjectGuid>9a7fe67e-93f0-42b5-b58f-77320fc639e4</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>v2\zmq_watcher_server_test.py</StartupFile>
+    <StartupFile>zmq_watcher_server_test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -61,25 +61,25 @@
     <Compile Include="tsny.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="v2\mpl_line_test.py">
+    <Compile Include="mpl_line_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="v2\plotly_line_test.py">
+    <Compile Include="plotly_line_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="v2\watcher_test.py">
+    <Compile Include="watcher_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="v2\publisher_test.py">
+    <Compile Include="publisher_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="v2\zmq_pubsub_test.py">
+    <Compile Include="zmq_pubsub_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="v2\zmq_watcher_client_test.py">
+    <Compile Include="zmq_watcher_client_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="v2\zmq_watcher_server_test.py">
+    <Compile Include="zmq_watcher_server_test.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="zmq_cli.py">
@@ -102,9 +102,6 @@
       <Project>{cc8abc7f-ede1-4e13-b6b7-0041a5ec66a7}</Project>
       <Private>True</Private>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="v2\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
