@@ -5,20 +5,20 @@ from tensorwatch import utils
 utils.set_debug_verbosity(4)
 
 def mpl_line_plot():
-    cli = tw.WatchClient()
+    cli = tw.ZmqWatcherClient()
     p = tw.mpl.LinePlot('Demo')
     s1 = cli.create_stream('ev_i', 'map(lambda v:math.sqrt(v.val)*2, l)')
     p.add(s1, xtitle='Index', ytitle='sqrt(ev_i)')
     utils.wait_ley()
 
 def mpl_history_plot():
-    cli = tw.WatchClient()
+    cli = tw.ZmqWatcherClient()
     p2 = tw.mpl.LinePlot('History Demo')
     p2s1 = cli.create_stream('ev_j', 'map(lambda v:(v.val, math.sqrt(v.val)*2), l)')
     p2.add(p2s1, xtitle='Index', ytitle='sqrt(ev_j)', clear_after_end=True, history_len=15)
 
 def show_stream():
-    cli = tw.WatchClient()
+    cli = tw.ZmqWatcherClient()
 
     print("Subscribing to event ev_i...")
     s1 = cli.create_stream("ev_i", 'map(lambda v:math.sqrt(v.val), l)')
@@ -35,7 +35,7 @@ def show_stream():
     utils.wait_ley()
 
 def read_stream():
-    cli = tw.WatchClient()
+    cli = tw.ZmqWatcherClient()
 
     with cli.create_stream("ev_i", 'map(lambda v:math.sqrt(v.val), l)') as s1:
         for stream_item in s1:
@@ -44,7 +44,7 @@ def read_stream():
     utils.wait_ley()
 
 def plotly_line_graph():
-    cli = tw.WatchClient()
+    cli = tw.ZmqWatcherClient()
     s1 = cli.create_stream("ev_i", 'map(lambda v:math.sqrt(v.val), l)')
 
     p = tw.plotly.LinePlot()
@@ -54,7 +54,7 @@ def plotly_line_graph():
     utils.wait_ley()
 
 def plotly_history_graph():
-    cli = tw.WatchClient()
+    cli = tw.ZmqWatcherClient()
     p = tw.plotly.LinePlot('Demo')
     s2 = cli.create_stream('ev_j', 'map(lambda v:(v.x, v.val), l)')
     p.add(s2, ytitle='ev_j', history_len=15)

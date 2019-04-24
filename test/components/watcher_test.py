@@ -1,5 +1,5 @@
-from tensorwatch.v2.watcher import Watcher
-from tensorwatch.v2.publisher import Publisher
+from tensorwatch.watcher import Watcher
+from tensorwatch.publisher import Publisher
 
 def main():
     watcher = Watcher()

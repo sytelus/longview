@@ -1,13 +1,14 @@
-from . import mpl
-from . import plotly
 from .zmq_watcher_client import ZmqWatcherClient
 from .zmq_watcher_server import ZmqWatcherServer
-from .text_vis import TextVis
-from .model_graph.hiddenlayer import graph
-from .array_publisher import ArrayPublisher
-from .lv_types import ImagePlotItem
 
-###### Import methods #########
+from .text_vis import TextVis
+from . import plotly
+from . import mpl
+
+from .array_publisher import ArrayPublisher
+from .lv_types import ImagePlotItem, StreamRequest
+
+###### Import methods for tw namespace #########
 from .receptive_field.rf_utils import plot_receptive_field, plot_grads_at
 from .embeddings.tsne_utils import get_tsne_components
 from .model_graph.torchstat_utils import model_stats
@@ -54,18 +55,17 @@ def _ensure_client(cli_id):
 def _get_renderer(type, cell, title, images=None, images_reshape=None, width=None, height=None):
     if type is None:
         return TextVis(cell=cell, title=title)
-
     if type in ['text', 'summary']:
         return TextVis(cell=cell, title=title)
-    elif type in ['line', 'plotly-line', 'scatter', 'plotly-scatter', 
+    if type in ['line', 'plotly-line', 'scatter', 'plotly-scatter', 
                         'line3d', 'scatter3d', 'mesh3d']:
         return plotly.LinePlot(cell=cell, title=title, 
                                 is_3d=type in ['line3d', 'scatter3d', 'mesh3d'])
-    elif type in ['image', 'mpl-image']:
+    if type in ['image', 'mpl-image']:
         return mpl.ImagePlot(cell=cell, title=title, width=width, height=height)
-    elif type in ['mpl-line', 'mpl-scatter']:
+    if type in ['mpl-line', 'mpl-scatter']:
         return mpl.LinePlot(cell=cell, title=title)
-    elif type in ['tsne', 'embeddings', 'tsne2d', 'embeddings2d']:
+    if type in ['tsne', 'embeddings', 'tsne2d', 'embeddings2d']:
         return plotly.EmbeddingsPlot(cell=cell, title=title, is_3d='2d' not in type, 
                                      images=images, images_reshape=images_reshape)
     else:
@@ -115,6 +115,7 @@ def create_vis(expr=None, event_name:str='', stream_name:str=None, throttle=1,
     return vis
 
 def draw_model(model, input_shape=None, orientation='TB'): #orientation = 'LR' for landscpe
+    from .model_graph.hiddenlayer import graph
     g = graph.build_graph(model, input_shape)
     return g
 

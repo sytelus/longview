@@ -31,13 +31,13 @@ class VisBase(Publisher, metaclass=ABCMeta):
         self.layout_dirty = False
         self.q_last_processed = 0
 
-    def add_subscription(self, publisher, title=None, throttle=None, clear_after_end=False, clear_after_each=False, 
+    def add_subscription(self, publisher, title=None, clear_after_end=False, clear_after_each=False, 
             show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_plot_args):
         # in this ovedrride we don't call base class method
         with self.lock:
             self.layout_dirty = True
         
-            stream_plot = StreamPlot(publisher, throttle, title, clear_after_end, 
+            stream_plot = StreamPlot(publisher, title, clear_after_end, 
                 clear_after_each, history_len, dim_history, opacity,
                 len(self._stream_plots), stream_plot_args, 0)
             stream_plot._clear_pending = False
@@ -84,7 +84,7 @@ class VisBase(Publisher, metaclass=ABCMeta):
 
         # if we accumulated enough of pending items then let's process them
         if vis._can_update_stream_plots():
-            self._update_stream_plots()
+            vis._update_stream_plots()
 
     def _extract_results(self, stream_plot):
         stream_items, clear_current, clear_history = [], False, False
@@ -110,15 +110,7 @@ class VisBase(Publisher, metaclass=ABCMeta):
                 if stream_plot.clear_after_each or (stream_item.ended and stream_plot.clear_after_end):
                     stream_plot._clear_pending = True
                         
-                # check throttle
-                #TODO: throttle should be against server timestamp, not time.time()
-                if stream_item.ended or \
-                    stream_plot.throttle is None or \
-                    time.time() - stream_plot.last_update >= stream_plot.throttle:
-
-                    stream_items.append(stream_item)
-                else:
-                    utils.debug_log("Value not plotted due to throttle", verbosity=5)
+                stream_items.append(stream_item)
 
         return stream_items, clear_current, clear_history
 

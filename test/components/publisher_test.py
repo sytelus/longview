@@ -1,4 +1,4 @@
-from tensorwatch.v2.publisher import Publisher
+from tensorwatch.publisher import Publisher
 
 class c1:
     def m1(self,val):

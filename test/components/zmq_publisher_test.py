@@ -1,7 +1,7 @@
-from tensorwatch.v2.watcher import Watcher
-from tensorwatch.v2.publisher import Publisher
-from tensorwatch.v2.zmq_publisher import ZmqPublisher
-from tensorwatch.v2.zmq_subscriber import ZmqSubscriber
+from tensorwatch.watcher import Watcher
+from tensorwatch.publisher import Publisher
+from tensorwatch.zmq_publisher import ZmqPublisher
+from tensorwatch.zmq_subscriber import ZmqSubscriber
 
 def main():
     watcher = Watcher()

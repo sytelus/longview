@@ -1,4 +1,4 @@
-from tensorwatch.v2.zmq_watcher_client import ZmqWatcherClient
+from tensorwatch.zmq_watcher_client import ZmqWatcherClient
 import time
 
 from tensorwatch.v2 import utils

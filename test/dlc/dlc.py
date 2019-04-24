@@ -6,8 +6,8 @@ from tensorwatch import utils
 utils.set_debug_verbosity(4)
 
 def dlc_show_rand_outputs():
-    cli = cli_train = tw.WatchClient()
-    #cli = tw.WatchClient()
+    cli = cli_train = tw.ZmqWatcherClient()
+    #cli = tw.ZmqWatcherClient()
     
     imgs = cli.create_stream('batch', 
         "top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=10, order='rnd')", 
@@ -18,8 +18,8 @@ def dlc_show_rand_outputs():
     utils.wait_ley()
 
 def img2img_rnd():
-    cli_train = tw.WatchClient()
-    cli = tw.WatchClient()
+    cli_train = tw.ZmqWatcherClient()
+    cli = tw.ZmqWatcherClient()
 
     imgs = cli_train.create_stream('batch', 
         "top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=2, order='rnd')", throttle=1)

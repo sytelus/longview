@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union, List, Tuple
+from typing import Any, Dict, Union, List, Tuple, Iterable
 from .zmq_pub_sub import ZmqPubSub
 from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, ClientServerRequest, DefaultPorts, PublisherTopics, ServerMgmtMsg
 from .publisher import Publisher
@@ -72,7 +72,7 @@ class ZmqWatcherClient:
                     ZmqWatcherClient._filter_stream(stream_name), 
                     self._zmq_streamitem_sub.name+':'+stream_name)
 
-        if subscribers is not none or len(subscribers):
+        if subscribers is not None and len(subscribers):
             if publisher is not None:
                 for subscriber in subscribers:
                     subscriber.add_subscription(publisher)
