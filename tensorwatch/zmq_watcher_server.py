@@ -54,7 +54,8 @@ class ZmqWatcherServer(Watcher):
             stream_req, subscriber_specs = clisrv_req.req_data
             subscriber_specs = subscriber_specs if subscriber_specs is not None else []
             subscribers = [self._publisher_factory.create_publisher(subscriber_spec) for subscriber_spec in subscriber_specs]
-            return self.create_stream(stream_req, subscribers)
+            self.create_stream(stream_req, subscribers) # ignore return as we can't send back publisher obj
+            return None
         elif clisrv_req.req_type == CliSrvReqTypes.del_stream:
             stream_name:str = clisrv_req.req_data
             return self.del_stream(stream_name)

@@ -141,6 +141,7 @@ class Watcher:
             if stream:
                 stream.disabled = True
                 stream.evaler.abort()
-                break
+                return True
                 #TODO: to enable delete we need to protect iteration in set_vars
                 #del stream_reqs[stream.req.stream_name]
+        return False
