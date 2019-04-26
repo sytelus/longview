@@ -1,5 +1,5 @@
 import zmq
-import dill
+import pickle
 from zmq.eventloop import ioloop, zmqstream
 import zmq.utils.monitor
 import functools, sys, time, logging, traceback
@@ -131,7 +131,7 @@ class ZmqPubSub:
 
         def send_obj(self, obj, topic=""):
             ZmqPubSub._io_loop_call(False, self._send_multipart, 
-                [topic.encode(), dill.dumps(obj)])
+                [topic.encode(), pickle.dumps(obj)])
 
         def _on_mon(self, msg):
             ev = zmq.utils.monitor.parse_monitor_message(msg)
@@ -161,7 +161,7 @@ class ZmqPubSub:
                 [topic, obj_s] = msg
                 try:
                     if weak_callback and weak_callback():
-                        weak_callback()(dill.loads(obj_s))
+                        weak_callback()(pickle.loads(obj_s))
                 except Exception as ex:
                     print(ex, file=sys.stderr) # TODO: standardize this
                     raise
@@ -192,7 +192,7 @@ class ZmqPubSub:
             [topic, obj_s] = self._socket.recv_multipart()
             if topic != self.topic:
                 raise ValueError("Expected topic: %s, Received topic: %s" % (topic, self.topic)) 
-            return dill.loads(obj_s)
+            return pickle.loads(obj_s)
 
         def receive_obj(self):
             return ZmqPubSub._io_loop_call(True, self._receive_obj)
@@ -225,13 +225,13 @@ class ZmqPubSub:
 
                 [obj_s] = msg
                 try:
-                    ret = callback(self, dill.loads(obj_s))
+                    ret = callback(self, pickle.loads(obj_s))
                     # we must send reply to complete the cycle
-                    self._socket.send_multipart([dill.dumps((ret, None))])
+                    self._socket.send_multipart([pickle.dumps((ret, None))])
                 except Exception as ex:
                     print("ClientServer call raised exception: ", ex, file=sys.stderr)
                     # we must send reply to complete the cycle
-                    self._socket.send_multipart([dill.dumps((None, ex))])
+                    self._socket.send_multipart([pickle.dumps((None, ex))])
                 
                 utils.debug_log("Server sent response", verbosity=6)
                 
@@ -260,11 +260,11 @@ class ZmqPubSub:
 
         def send_obj(self, obj):
             ZmqPubSub._io_loop_call(False, self._socket.send_multipart,
-                [dill.dumps(obj)])
+                [pickle.dumps(obj)])
 
         def receive_obj(self):
             [obj_s] = ZmqPubSub._io_loop_call(True, self._socket.recv_multipart)
-            return dill.loads(obj_s)
+            return pickle.loads(obj_s)
 
         def request(self, req_obj):
             utils.debug_log("Client sending request...", verbosity=6)

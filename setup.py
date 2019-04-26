@@ -20,6 +20,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ),
     install_requires=[
-          'dill', 'matplotlib', 'numpy', 'pyzmq', 'plotly', 'receptivefield', 'torchstat'
+          'matplotlib', 'numpy', 'pyzmq', 'plotly', 'receptivefield', 'torchstat'
     ]
 )

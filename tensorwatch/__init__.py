@@ -1,5 +1,6 @@
 from .zmq_watcher_client import ZmqWatcherClient
 from .zmq_watcher_server import ZmqWatcherServer
+from .watcher import Watcher
 
 from .text_vis import TextVis
 from . import plotly
@@ -18,6 +19,7 @@ from .data_utils import pyt_ds2list, sample_by_class, col2array, search_similar
 
 _default_servers = {}
 _default_clients = {}
+_watcher = None
 
 ########################## server APIs
 def start_watch(srv_id=0):
@@ -25,9 +27,10 @@ def start_watch(srv_id=0):
     if srv_id not in _default_servers:
         server = ZmqWatcherServer(port_offset=srv_id)
         _default_servers[srv_id] = server
+    return _default_servers[srv_id]
 
-def _ensure_server(srv_id):
-    start_watch(srv_id)
+def get_server(srv_id):
+    return start_watch(srv_id)
 
 def observe(event_name:str='', srv_id=0, **vars) -> None:
     global _default_servers
@@ -46,11 +49,18 @@ def stop_watch(srv_id=0):
         _default_servers.pop(srv_id, None)
 
 ########################## client APIs
-def _ensure_client(cli_id):
+def get_client(cli_id):
     global _default_clients
     if cli_id not in _default_clients:
         client = ZmqWatcherClient(port_offset=cli_id)
         _default_clients[cli_id] = client
+    return _default_clients[cli_id]
+
+def get_watcher():
+    global _watcher
+    if _watcher is None:
+        _watcher = Watcher()
+    return _watcher
 
 def _get_renderer(type, cell, title, images=None, images_reshape=None, width=None, height=None):
     if type is None:
@@ -71,36 +81,48 @@ def _get_renderer(type, cell, title, images=None, images_reshape=None, width=Non
     else:
         raise ValueError('Render type parameter has invalid value: "{}"'.format(type))
 
-def get_client(cli_id):
-    return _default_clients
-def get_server(srv_id):
-    return _default_servers[srv_id]
+def create_stream(expr=None, event_name:str='', stream_name:str=None, throttle=1, 
+                  cli_id:int=None, srv_id:int=0, subscribers:Iterable[Stream]=None):
+    if expr is None or isinstance(expr, str):
+        stream_req = StreamRequest(expr, event_name=event_name, stream_name=stream_name, 
+                                   throttle=throttle, client_id='tw:'+str(cli_id))
+
+        if cli_id is not None  and srv_id is not None:
+            raise ValueError('cli_id and srv_id cannot both be not None')
+        target = None
+        if cli_id is not None:
+            target = get_client(cli_id)
+        elif srv_id is not None:
+            target = get_server(srv_id)
+        else:
+            target = get_watcher()
+
+        stream = target.create_stream(stream_req, subscribers=subscribers)
+    elif utils.is_array_like(expr):
+        stream = ArrayStream(expr)
+    elif isinstance(expr, Stream):
+        stream = expr
+
+    return stream
 
 def create_vis(expr=None, event_name:str='', stream_name:str=None, throttle=1, 
             clear_after_end=True, clear_after_each=False,
             cell=None, title=None, vis=None, type=None, only_summary=False, 
             history_len=1, dim_history=True, opacity=None,
             separate_yaxis=True, xtitle=None, ytitle=None, ztitle=None, color=None,
-            xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=False, cli_id=0,
+            xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=False, cli_id=0, srv_id=None,
             rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
             colormap=None, viz_img_scale=None, images=None, images_reshape=None, width=None, 
             height=None):
-
-    _ensure_client(cli_id)
 
     if type:
         draw_line = 'scatter' not in type
         only_summary = 'summary' == type
 
     vis = vis or _get_renderer(type, cell, title, images=images, images_reshape=images_reshape, width=width, height=height)
-    
-    if expr is None or isinstance(expr, str):
-        stream_req = StreamRequest(expr, event_name=event_name, stream_name=stream_name, throttle=throttle, client_id='tw:'+str(cli_id))
-        stream = _default_clients[cli_id].create_stream(stream_req)
-    elif utils.is_array_like(expr):
-        stream = ArrayStream(expr)
-    elif isinstance(expr, Stream):
-        stream = expr
+
+    stream = create_stream(expr=expr, event_name=event_name, stream_name=stream_name, throttle=throttle, 
+                  cli_id=cli_id, srv_id=srv_id)
 
     s = vis.subscribe(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,
                  history_len=history_len, dim_history=dim_history, opacity=opacity,
