@@ -1,7 +1,7 @@
 from tensorwatch.zmq_watcher_server import ZmqWatcherServer
 import time
 
-from tensorwatch.v2 import utils
+from tensorwatch import utils
 utils.set_debug_verbosity(10)
 
 

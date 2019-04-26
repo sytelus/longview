@@ -5,7 +5,7 @@
     <ProjectGuid>9a7fe67e-93f0-42b5-b58f-77320fc639e4</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>simple_log\cli_sum_log.py</StartupFile>
+    <StartupFile>simple_log\srv_ij.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -70,10 +70,10 @@
     <Compile Include="components\watcher_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="components\publisher_test.py">
+    <Compile Include="components\stream_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="components\zmq_publisher_test.py">
+    <Compile Include="components\zmq_stream_pub_test.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="components\zmq_watcher_client_test.py">
@@ -82,7 +82,7 @@
     <Compile Include="components\zmq_watcher_server_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="components\zmq_subsub_test2.py">
+    <Compile Include="components\zmq_stream_sub_test.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="simple_log\srv_ij.py" />

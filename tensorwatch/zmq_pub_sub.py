@@ -166,7 +166,7 @@ class ZmqPubSub:
                     print(ex, file=sys.stderr) # TODO: standardize this
                     raise
 
-            # connect to publisher socket
+            # connect to stream socket
             context = zmq.Context()
             self.topic = topic.encode()
             self._socket = context.socket(zmq.SUB)

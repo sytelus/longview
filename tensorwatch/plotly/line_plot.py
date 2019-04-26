@@ -6,9 +6,9 @@ from ..lv_types import *
 from .. import utils
 
 class LinePlot(BasePlotlyPlot):
-    def __init__(self, cell=None, title=None, show_legend:bool=True, publisher_name:str=None, console_debug:bool=False,
+    def __init__(self, cell=None, title=None, show_legend:bool=True, stream_name:str=None, console_debug:bool=False,
                   is_3d:bool=False, **plot_args):
-        super(LinePlot, self).__init__(cell, title, show_legend, publisher_name=publisher_name, console_debug=console_debug, **plot_args)
+        super(LinePlot, self).__init__(cell, title, show_legend, stream_name=stream_name, console_debug=console_debug, **plot_args)
         self.is_3d = is_3d
 
     def _setup_layout(self, stream_plot):

@@ -5,7 +5,7 @@ from .text_vis import TextVis
 from . import plotly
 from . import mpl
 
-from .array_publisher import ArrayPublisher
+from .array_stream import ArrayStream
 from .lv_types import ImagePlotItem, StreamRequest
 
 ###### Import methods for tw namespace #########
@@ -96,21 +96,21 @@ def create_vis(expr=None, event_name:str='', stream_name:str=None, throttle=1,
     
     if expr is None or isinstance(expr, str):
         stream_req = StreamRequest(expr, event_name=event_name, stream_name=stream_name, throttle=throttle, client_id='tw:'+str(cli_id))
-        publisher = _default_clients[cli_id].create_stream(stream_req)
+        stream = _default_clients[cli_id].create_stream(stream_req)
     elif utils.is_array_like(expr):
-        publisher = ArrayPublisher(expr)
+        stream = ArrayStream(expr)
     elif isinstance(expr, Stream):
-        publisher = expr
+        stream = expr
 
-    s = vis.subscribe(publisher, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,
+    s = vis.subscribe(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,
                  history_len=history_len, dim_history=dim_history, opacity=opacity,
                  separate_yaxis=separate_yaxis, xtitle=xtitle, ytitle=ytitle, ztitle=ztitle, color=color,
                  xrange=xrange, yrange=yrange, zrange=zrange, draw_line=draw_line, draw_marker=draw_marker, 
                 rows=rows, cols=cols, img_width=img_width, img_height=img_height, img_channels=img_channels,
                 colormap=colormap, viz_img_scale=viz_img_scale)
 
-    if isinstance(publisher, ArrayPublisher):
-        publisher.send_all()
+    if isinstance(stream, ArrayStream):
+        stream.send_all()
 
     return vis
 

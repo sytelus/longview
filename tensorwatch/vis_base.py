@@ -5,14 +5,14 @@ from abc import ABCMeta, abstractmethod
 
 from .lv_types import *
 from . import utils
-from .publisher import Publisher
+from .stream import Stream
 
 from IPython import get_ipython, display
 import ipywidgets as widgets
 
-class VisBase(Publisher, metaclass=ABCMeta):
-    def __init__(self, widget, cell, title:str, show_legend:bool, publisher_name:str=None, console_debug:bool=False, **plot_args):
-        super(VisBase, self).__init__(name=publisher_name, console_debug=console_debug)
+class VisBase(Stream, metaclass=ABCMeta):
+    def __init__(self, widget, cell, title:str, show_legend:bool, stream_name:str=None, console_debug:bool=False, **plot_args):
+        super(VisBase, self).__init__(name=stream_name, console_debug=console_debug)
 
         self.lock = threading.Lock()
         self._use_hbox = True
@@ -31,24 +31,24 @@ class VisBase(Publisher, metaclass=ABCMeta):
         self.layout_dirty = False
         self.q_last_processed = 0
 
-    def subscribe(self, publisher, title=None, clear_after_end=False, clear_after_each=False, 
+    def subscribe(self, stream, title=None, clear_after_end=False, clear_after_each=False, 
             show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_plot_args):
         # in this ovedrride we don't call base class method
         with self.lock:
             self.layout_dirty = True
         
-            stream_plot = StreamPlot(publisher, title, clear_after_end, 
+            stream_plot = StreamPlot(stream, title, clear_after_end, 
                 clear_after_each, history_len, dim_history, opacity,
                 len(self._stream_plots), stream_plot_args, 0)
             stream_plot._clear_pending = False
             stream_plot._pending_items = queue.Queue()
-            self._stream_plots[publisher.name] = stream_plot
+            self._stream_plots[stream.name] = stream_plot
 
             self._post_add_subscription(stream_plot, **stream_plot_args)
 
             write_fn = functools.partial(VisBase.write_stream_plot, self)
             stream_plot.write_fn = MethodType(write_fn, stream_plot) # weakref doesn't allow unfound methods
-            publisher.add_callback(stream_plot.write_fn)
+            stream.add_callback(stream_plot.write_fn)
 
             if show or (show is None and not self.is_shown):
                 return self.show()

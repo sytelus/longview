@@ -2,7 +2,7 @@ from typing import Any
 import uuid
 from .zmq_pub_sub import ZmqPubSub
 from .watcher import Watcher
-from .publisher_factory import PublisherFactory
+from .stream_factory import StreamFactory
 from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, DefaultPorts, PublisherTopics, ServerMgmtMsg
 from . import utils
 import threading, time
@@ -11,7 +11,7 @@ class ZmqWatcherServer(Watcher):
     def __init__(self, port_offset:int=0, srv_name:str=None):
         super(ZmqWatcherServer, self).__init__()
         self.srv_name = srv_name or str(uuid.uuid4()) # used to detect server restarts 
-        self._publisher_factory = PublisherFactory()
+        self._stream_factory = StreamFactory()
         self._open(port_offset)
 
     def _open(self, port_offset:int):
@@ -19,7 +19,7 @@ class ZmqWatcherServer(Watcher):
             is_server=True, callback=self._clisrv_callback)
 
         # notify existing listners of our ID
-        self._zmq_publisher = self._publisher_factory.create_publisher('zmq')
+        self._zmq_stream_pub = self._stream_factory.create_stream('zmq')
 
         # ZMQ quirk: we must wait a bit after opening port and before sending message
         # TODO: can we do better?
@@ -28,7 +28,7 @@ class ZmqWatcherServer(Watcher):
 
     def _send_server_start(self):
         time.sleep(2)
-        self._zmq_publisher.write(ServerMgmtMsg(ServerMgmtMsg.EventServerStart, self.srv_name), 
+        self._zmq_stream_pub.write(ServerMgmtMsg(ServerMgmtMsg.EventServerStart, self.srv_name), 
                                   topic=PublisherTopics.ServerMgmt)
 
     def close(self):
@@ -53,8 +53,8 @@ class ZmqWatcherServer(Watcher):
         if clisrv_req.req_type == CliSrvReqTypes.create_stream:
             stream_req, subscriber_specs = clisrv_req.req_data
             subscriber_specs = subscriber_specs if subscriber_specs is not None else []
-            subscribers = [self._publisher_factory.create_publisher(subscriber_spec) for subscriber_spec in subscriber_specs]
-            self.create_stream(stream_req, subscribers) # ignore return as we can't send back publisher obj
+            subscribers = [self._stream_factory.create_stream(subscriber_spec) for subscriber_spec in subscriber_specs]
+            self.create_stream(stream_req, subscribers) # ignore return as we can't send back stream obj
             return None
         elif clisrv_req.req_type == CliSrvReqTypes.del_stream:
             stream_name:str = clisrv_req.req_data

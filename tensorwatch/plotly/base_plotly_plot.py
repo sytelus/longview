@@ -13,9 +13,9 @@ import ipywidgets as widgets
 
 
 class BasePlotlyPlot(VisBase):
-    def __init__(self, cell=None, title=None, show_legend:bool=None, publisher_name:str=None, console_debug:bool=False, **plot_args):
+    def __init__(self, cell=None, title=None, show_legend:bool=None, stream_name:str=None, console_debug:bool=False, **plot_args):
         super(BasePlotlyPlot, self).__init__(go.FigureWidget(), cell, title, show_legend, 
-                                             publisher_name=publisher_name, console_debug=console_debug, **plot_args)
+                                             stream_name=stream_name, console_debug=console_debug, **plot_args)
 
         self.widget.layout.title = title
         self.widget.layout.showlegend = show_legend if show_legend is not None else True

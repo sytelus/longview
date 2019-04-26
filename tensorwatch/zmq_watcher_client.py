@@ -1,8 +1,8 @@
 from typing import Any, Dict, Union, List, Tuple, Iterable
 from .zmq_pub_sub import ZmqPubSub
 from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, ClientServerRequest, DefaultPorts, PublisherTopics, ServerMgmtMsg
-from .publisher import Publisher
-from .zmq_subscriber import ZmqSubscriber
+from .stream import Stream
+from .zmq_stream_sub import ZmqStreamSub
 from .filtered_stream import FilteredStream
 from . import utils
 
@@ -10,17 +10,17 @@ class ZmqWatcherClient:
     def __init__(self, port_offset:int=0):
         self.closed = True
         self.port_offset = port_offset
-        self._filtered_streams:Dict[str,Publisher] = {}
-        self._streams:Tuple[Dict[str,Union[StreamRequest, str]], List[str]] = {}
+        self._filtered_streams:Dict[str,Stream] = {}
+        self._stream_reqs:Tuple[Dict[str,Union[StreamRequest, str]], List[str]] = {}
         self._open(port_offset)
 
     def _open(self, port_offset:int):
         if self.closed:
             self._clisrv = ZmqPubSub.ClientServer(port=DefaultPorts.CliSrv+port_offset, 
                 is_server=False)
-            self._zmq_streamitem_sub = ZmqSubscriber(port_offset=port_offset, name='zmq_sub:'+str(port_offset), 
+            self._zmq_streamitem_sub = ZmqStreamSub(port_offset=port_offset, name='zmq_sub:'+str(port_offset), 
                                                      topic=PublisherTopics.StreamItem)
-            self._zmq_srvmgmt_sub = ZmqSubscriber(port_offset=port_offset, name='zmq_sub:'+str(port_offset),
+            self._zmq_srvmgmt_sub = ZmqStreamSub(port_offset=port_offset, name='zmq_sub:'+str(port_offset),
                                                      topic=PublisherTopics.ServerMgmt)
             self._zmq_srvmgmt_sub.add_callback(self._on_srv_mgmt)        
             
@@ -31,7 +31,7 @@ class ZmqWatcherClient:
     def _on_srv_mgmt(self, mgmt_msg:Any):
         utils.debug_log("Received - SeverMgmtevent", mgmt_msg)
         if mgmt_msg.event_name == ServerMgmtMsg.EventServerStart:
-            for stream_req, subscribers in self._streams.values():
+            for stream_req, subscribers in self._stream_reqs.values():
                 self._send_create_stream(stream_req, subscribers)
 
     def close(self):
@@ -58,30 +58,30 @@ class ZmqWatcherClient:
                return (None, False)
         return filter_Wrapped
 
-    def create_stream(self, stream_req:Union[StreamRequest, str], subscribers:Iterable[Publisher]=None,
-                      srv_subscribers:List[str]=['zmq']) -> Publisher:
+    def create_stream(self, stream_req:Union[StreamRequest, str], subscribers:Iterable[Stream]=None,
+                      srv_subscribers:List[str]=['zmq']) -> Stream:
         stream_name = stream_req if isinstance(stream_req, str) else stream_req.stream_name
-        publisher:FilteredStream = None
+        stream:FilteredStream = None
 
         # if server side subscribers include zmq then we would listen to client side as well
         srv_subscribers = list(srv_subscribers)
         for i in range(len(srv_subscribers)):
             if srv_subscribers[i] == 'zmq':
                 srv_subscribers[i] = srv_subscribers[i] + ':' + str(self.port_offset)
-                publisher = self._filtered_streams[stream_name] = FilteredStream(self._zmq_streamitem_sub, 
+                stream = self._filtered_streams[stream_name] = FilteredStream(self._zmq_streamitem_sub, 
                     ZmqWatcherClient._filter_stream(stream_name), 
                     self._zmq_streamitem_sub.name+':'+stream_name)
 
         if subscribers is not None and len(subscribers):
-            if publisher is not None:
+            if stream is not None:
                 for subscriber in subscribers:
-                    subscriber.subscribe(publisher)
+                    subscriber.subscribe(stream)
             else:
                 raise ValueError('srv_subscribers must contain zmq if client side subscribers are needed')
 
         self._send_create_stream(stream_req, srv_subscribers)
-        self._streams[stream_name] = (stream_req, srv_subscribers)
-        return publisher
+        self._stream_reqs[stream_name] = (stream_req, srv_subscribers)
+        return stream
 
     def _send_create_stream(self, stream_req:Union[StreamRequest, str], subscribers:List[str]):
         utils.debug_log("sending create streamreq...")
@@ -93,4 +93,4 @@ class ZmqWatcherClient:
     def del_stream(self, stream_name:str) -> None:
         clisrv_req = ClientServerRequest(CliSrvReqTypes.del_stream, stream_name)
         self._clisrv.send_obj(clisrv_req)
-        self._streams.pop(stream_name, None)
+        self._stream_reqs.pop(stream_name, None)

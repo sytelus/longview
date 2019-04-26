@@ -1,4 +1,4 @@
-from tensorwatch.publisher import Publisher
+from tensorwatch.stream import Stream
 
 class c1:
     def m1(self,val):
@@ -8,7 +8,7 @@ class c1:
         print('m2', val)
 
 k = c1()
-p1 = Publisher()
+p1 = Stream()
 p1.add_callback(k.m1)
 p1.add_callback(k.m2)
 

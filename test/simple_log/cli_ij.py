@@ -41,7 +41,7 @@ def show_stream():
     utils.wait_key()
 
 # this no longer directly supported
-# TODO: create publisher that allows enumeration from buffered values
+# TODO: create stream that allows enumeration from buffered values
 def read_stream():
     cli = tw.ZmqWatcherClient()
 
@@ -71,7 +71,7 @@ def plotly_history_graph():
 
 
 #mpl_line_plot()
-#mpl_history_plot()
+mpl_history_plot()
 #show_stream()
-plotly_line_graph()
-plotly_history_graph()
+#plotly_line_graph()
+#plotly_history_graph()

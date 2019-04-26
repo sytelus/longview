@@ -1,10 +1,9 @@
-from .publisher import Publisher
+from .stream import Stream
 from .lv_types import StreamItem
 
-class ArrayPublisher(Publisher):
-    def __init__(self, array, stream_name:str=None, 
-                 publisher_name:str=None, console_debug:bool=False):
-        super(ArrayPublisher, self).__init__(name=publisher_name, console_debug=console_debug)
+class ArrayStream(Stream):
+    def __init__(self, array, stream_name:str=None, console_debug:bool=False):
+        super(ArrayStream, self).__init__(name=stream_name, console_debug=console_debug)
 
         self.stream_name = stream_name
         self.array = array

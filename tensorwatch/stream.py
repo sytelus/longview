@@ -2,7 +2,7 @@ import weakref, uuid
 from typing import Any
 from . import utils
 
-class Publisher:
+class Stream:
     def __init__(self, name:str=None, console_debug:bool=False):
         self._callbacks = []
         self.closed = False
@@ -29,12 +29,12 @@ class Publisher:
             if self._callbacks[i] and self._callbacks[i]() == callback:
                 del self._callbacks[i]
 
-    def subscribe(self, pub:'Publisher'): # notify other publisher
-        utils.debug_log('{} added {} as subscription'.format(self.name, pub.name))
-        pub.add_callback(self.write)
+    def subscribe(self, stream:'Stream'): # notify other stream
+        utils.debug_log('{} added {} as subscription'.format(self.name, stream.name))
+        stream.add_callback(self.write)
 
-    def unsubscribe(self, pub:'Publisher'):
-        pub.remove_callback(self.write)
+    def unsubscribe(self, stream:'Stream'):
+        stream.remove_callback(self.write)
 
     def close(self):
         if not self.closed:

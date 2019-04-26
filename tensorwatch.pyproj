@@ -20,8 +20,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="tensorwatch\filtered_stream.py" />
-    <Compile Include="tensorwatch\publisher.py" />
-    <Compile Include="tensorwatch\publisher_factory.py" />
+    <Compile Include="tensorwatch\stream.py" />
+    <Compile Include="tensorwatch\stream_factory.py" />
     <Compile Include="tensorwatch\vis_base.py">
       <SubType>Code</SubType>
     </Compile>
@@ -33,7 +33,7 @@
     <Compile Include="tensorwatch\pytorch_utils.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tensorwatch\array_publisher.py">
+    <Compile Include="tensorwatch\array_stream.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\data_explore\similar_inputs.py">
@@ -108,9 +108,9 @@
     </Compile>
     <Compile Include="tensorwatch\utils.py" />
     <Compile Include="tensorwatch\watcher.py" />
-    <Compile Include="tensorwatch\zmq_publisher.py" />
+    <Compile Include="tensorwatch\zmq_stream_pub.py" />
     <Compile Include="tensorwatch\zmq_pub_sub.py" />
-    <Compile Include="tensorwatch\zmq_subscriber.py" />
+    <Compile Include="tensorwatch\zmq_stream_sub.py" />
     <Compile Include="tensorwatch\zmq_watcher_client.py" />
     <Compile Include="tensorwatch\zmq_watcher_server.py" />
     <Compile Include="tensorwatch\__init__.py" />

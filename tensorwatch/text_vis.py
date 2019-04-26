@@ -10,9 +10,9 @@ from .vis_base import VisBase
 
 class TextVis(VisBase):
     def __init__(self, cell=None, title:str=None, show_legend:bool=None, 
-                 publisher_name:str=None, console_debug:bool=False, **plot_args):
+                 stream_name:str=None, console_debug:bool=False, **plot_args):
         super(TextVis, self).__init__(widgets.HTML(), cell, title, show_legend, 
-            publisher_name=publisher_name, console_debug=console_debug, **plot_args)
+            stream_name=stream_name, console_debug=console_debug, **plot_args)
         self.df = pd.DataFrame([])
 
     def _get_column_prefix(self, stream_plot, i):

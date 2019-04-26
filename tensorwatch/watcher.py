@@ -2,7 +2,7 @@ from typing import Dict, Iterable, List, Any, Union
 from .lv_types import StreamRequest, EventVars, StreamItem
 from . import utils
 from .evaler import Evaler
-from .publisher import Publisher
+from .stream import Stream
 import uuid
 import time
 from . import utils
@@ -10,9 +10,9 @@ from . import utils
 
 class Watcher:
     class StreamInfo:
-        def __init__(self, req:StreamRequest, evaler:Evaler, publisher:Publisher, 
+        def __init__(self, req:StreamRequest, evaler:Evaler, stream:Stream, 
                      index:int, disabled=False, last_sent:float=None) -> None:
-            self.req, self.evaler, self.publisher = req, evaler, publisher
+            self.req, self.evaler, self.stream = req, evaler, stream
             self.index, self.disabled, self.last_sent = index, disabled, last_sent
             self.item_count = 0
 
@@ -43,7 +43,7 @@ class Watcher:
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def create_stream(self, stream_req:Union[StreamRequest, str], subscribers:Iterable[Publisher]=None) -> Publisher:
+    def create_stream(self, stream_req:Union[StreamRequest, str], subscribers:Iterable[Stream]=None) -> Stream:
         if isinstance(stream_req, str):
             stream_req = StreamRequest(expr=stream_req, stream_name=stream_req)
 
@@ -65,17 +65,17 @@ class Watcher:
         if not stream:
             utils.debug_log("Creating stream", stream_req.stream_name)
             stream = streams[stream_req.stream_name] = Watcher.StreamInfo(stream_req, Evaler(expr),
-                                                         Publisher(), self._stream_count)
+                                                         Stream(), self._stream_count)
 
             self._stream_count += 1
 
             if subscribers is not None:
                 for subscriber in subscribers:
-                    subscriber.subscribe(stream.publisher)
+                    subscriber.subscribe(stream.stream)
         else:
             utils.debug_log("Stream already exist, not creating again", stream_req.stream_name)
 
-        return stream.publisher
+        return stream.stream
 
     def set_globals(self, **vars):
         self._global_vars.update(vars)
@@ -107,7 +107,7 @@ class Watcher:
             stream_item = StreamItem(stream.item_count,
                 eval_return.result, stream.req.stream_name, self.source_id, stream.index,
                 exception=eval_return.exception)
-            stream.publisher.write(stream_item)
+            stream.stream.write(stream_item)
             stream.item_count += 1
             utils.debug_log("eval_return sent", event_name, verbosity=5)
         else:
@@ -131,7 +131,7 @@ class Watcher:
         stream_item = StreamItem(stream.item_count, 
             eval_return.result, stream.req.stream_name, self.source_id, stream.index,
             exception=eval_return.exception, ended=True)
-        stream.publisher.write(stream_item)
+        stream.stream.write(stream_item)
         stream.item_count += 1
 
     def del_stream(self, stream_name:str) -> None:

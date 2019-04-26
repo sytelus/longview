@@ -1,15 +1,15 @@
 from tensorwatch.watcher import Watcher
 from tensorwatch.mpl.line_plot import LinePlot
 from tensorwatch.image_utils import plt_loop
-from tensorwatch.publisher import Publisher
+from tensorwatch.stream import Stream
 from tensorwatch.lv_types import StreamItem
 
 
 def main():
     watcher = Watcher()
     line_plot = LinePlot()
-    pub = watcher.create_stream('lambda vars:vars.x', subscribers=[line_plot])
-    line_plot.subscribe(pub)
+    stream = watcher.create_stream('lambda vars:vars.x', subscribers=[line_plot])
+    line_plot.subscribe(stream)
     line_plot.show()
 
     for i in range(5):
