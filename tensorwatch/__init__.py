@@ -102,7 +102,7 @@ def create_vis(expr=None, event_name:str='', stream_name:str=None, throttle=1,
     elif isinstance(expr, Stream):
         publisher = expr
 
-    s = vis.add_subscription(publisher, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,
+    s = vis.subscribe(publisher, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,
                  history_len=history_len, dim_history=dim_history, opacity=opacity,
                  separate_yaxis=separate_yaxis, xtitle=xtitle, ytitle=ytitle, ztitle=ztitle, color=color,
                  xrange=xrange, yrange=yrange, zrange=zrange, draw_line=draw_line, draw_marker=draw_marker, 

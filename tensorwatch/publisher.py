@@ -24,24 +24,17 @@ class Publisher:
     def add_callback(self, callback):
         self._callbacks.append(weakref.WeakMethod(callback))
 
-    def add_subscriber(self, pub:'Publisher'): # notify other publisher
-        utils.debug_log('{} added {} as subscriber'.format(self.name, pub.name))
-        self.add_callback(pub.write)
-
-    def add_subscription(self, pub:'Publisher'): # notify other publisher
-        utils.debug_log('{} added {} as subscription'.format(self.name, pub.name))
-        pub.add_subscriber(self)
-
     def remove_callback(self, callback):
         for i in reversed(range(len(self._callbacks))):
             if self._callbacks[i] and self._callbacks[i]() == callback:
                 del self._callbacks[i]
 
-    def remove_subscriber(self, pub:'Publisher'): # notify other publisher
-        self.remove_callback(pub.write)
+    def subscribe(self, pub:'Publisher'): # notify other publisher
+        utils.debug_log('{} added {} as subscription'.format(self.name, pub.name))
+        pub.add_callback(self.write)
 
-    def remove_subscription(self, pub:'Publisher'): # notify other publisher
-        pub.remove_callback(self)
+    def unsubscribe(self, pub:'Publisher'):
+        pub.remove_callback(self.write)
 
     def close(self):
         if not self.closed:

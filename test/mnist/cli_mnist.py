@@ -12,7 +12,7 @@ def img_in_class():
     imgs = cli_train.create_stream(tw.StreamRequest(event_name='batch',
         expr="top(l, out_xform=pyt_img_class_out_xform, order='rnd')", throttle=1))
     img_plot = tw.mpl.ImagePlot()
-    img_plot.add_subscription(imgs, viz_img_scale=3)
+    img_plot.subscribe(imgs, viz_img_scale=3)
     img_plot.show()
 
     tw.image_utils.plt_loop()
@@ -23,7 +23,7 @@ def show_find_lr():
     
     train_batch_loss = cli_train.create_stream(tw.StreamRequest(event_name='batch', 
         expr='map(lambda d:(d.tt.scheduler.get_lr()[0], d.metrics.batch_loss), l)'))
-    plot.add_subscription(train_batch_loss, xtitle='Epoch', ytitle='Loss')
+    plot.subscribe(train_batch_loss, xtitle='Epoch', ytitle='Loss')
     
     utils.wait_key()
 
@@ -32,7 +32,7 @@ def plot_grads():
     grads = train_cli.create_stream(tw.StreamRequest(event_name='batch', 
         expr='map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1))
     p = tw.plotly.LinePlot('Demo')
-    p.add_subscription(grads, xtitle='Epoch', ytitle='Gradients', history_len=30, new_on_eval=True)
+    p.subscribe(grads, xtitle='Epoch', ytitle='Gradients', history_len=30, new_on_eval=True)
 
 def plot_grads1():
     train_cli = tw.ZmqWatcherClient()
@@ -40,7 +40,7 @@ def plot_grads1():
     grads = train_cli.create_stream(tw.StreamRequest(event_name='batch', 
         expr='map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1))
     grad_plot = tw.mpl.LinePlot()
-    grad_plot.add_subscription(grads, xtitle='Epoch', ytitle='Gradients', clear_after_each=1, history_len=40, dim_history=True)
+    grad_plot.subscribe(grads, xtitle='Epoch', ytitle='Gradients', clear_after_each=1, history_len=40, dim_history=True)
     grad_plot.show()
 
     tw.plt_loop()
@@ -51,7 +51,7 @@ def plot_weight():
     params = train_cli.create_stream(tw.StreamRequest(event_name='batch', 
         expr='map(lambda d:agg_params(d.model, lambda p: p.abs().mean().item()), l)', throttle=1))
     params_plot = tw.mpl.LinePlot()
-    params_plot.add_subscription(params, xtitle='Epoch', ytitle='avg |params|', clear_after_each=1, history_len=40, dim_history=True)
+    params_plot.subscribe(params, xtitle='Epoch', ytitle='avg |params|', clear_after_each=1, history_len=40, dim_history=True)
     params_plot.show()
 
     tw.plt_loop()
@@ -64,11 +64,11 @@ def epoch_stats():
 
     train_loss = train_cli.create_stream(tw.StreamRequest(event_name="epoch", 
         expr='map(lambda v:v.metrics.epoch_loss, l)'))
-    plot.add_subscription(train_loss, xtitle='Epoch', ytitle='Train Loss')
+    plot.subscribe(train_loss, xtitle='Epoch', ytitle='Train Loss')
     
     test_acc = test_cli.create_stream(tw.StreamRequest(event_name="epoch", 
         expr='map(lambda v:v.metrics.epoch_accuracy, l)'))
-    plot.add_subscription(test_acc, xtitle='Epoch', ytitle='Test Accuracy', ylim=(0,1))
+    plot.subscribe(test_acc, xtitle='Epoch', ytitle='Test Accuracy', ylim=(0,1))
 
     plot.show()
     tw.plt_loop()

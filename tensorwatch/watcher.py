@@ -71,7 +71,7 @@ class Watcher:
 
             if subscribers is not None:
                 for subscriber in subscribers:
-                    subscriber.add_subscription(stream.publisher)
+                    subscriber.subscribe(stream.publisher)
         else:
             utils.debug_log("Stream already exist, not creating again", stream_req.stream_name)
 

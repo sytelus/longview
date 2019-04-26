@@ -14,7 +14,7 @@ def show_mpl():
     cli = tw.ZmqWatcherClient()
     p = tw.mpl.LinePlot(title='Demo')
     s1 = cli.create_stream('lambda v:v.sum')
-    p.add_subscription(s1, xtitle='Index', ytitle='sqrt(ev_i)')
+    p.subscribe(s1, xtitle='Index', ytitle='sqrt(ev_i)')
     p.show()
     
     tw.plt_loop()

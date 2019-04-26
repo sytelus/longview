@@ -9,7 +9,7 @@ def main():
     watcher = Watcher()
     line_plot = LinePlot()
     pub = watcher.create_stream('lambda vars:vars.x', subscribers=[line_plot])
-    line_plot.add_subscription(pub)
+    line_plot.subscribe(pub)
     line_plot.show()
 
     for i in range(5):

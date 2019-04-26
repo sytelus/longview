@@ -75,7 +75,7 @@ class ZmqWatcherClient:
         if subscribers is not None and len(subscribers):
             if publisher is not None:
                 for subscriber in subscribers:
-                    subscriber.add_subscription(publisher)
+                    subscriber.subscribe(publisher)
             else:
                 raise ValueError('srv_subscribers must contain zmq if client side subscribers are needed')
 

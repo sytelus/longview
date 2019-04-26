@@ -31,7 +31,7 @@ class VisBase(Publisher, metaclass=ABCMeta):
         self.layout_dirty = False
         self.q_last_processed = 0
 
-    def add_subscription(self, publisher, title=None, clear_after_end=False, clear_after_each=False, 
+    def subscribe(self, publisher, title=None, clear_after_end=False, clear_after_each=False, 
             show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_plot_args):
         # in this ovedrride we don't call base class method
         with self.lock:
