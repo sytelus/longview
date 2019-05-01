@@ -1,3 +1,5 @@
+from typing import Iterable
+
 from .zmq_watcher_client import ZmqWatcherClient
 from .zmq_watcher_server import ZmqWatcherServer
 from .watcher import Watcher
@@ -6,6 +8,7 @@ from .text_vis import TextVis
 from . import plotly
 from . import mpl
 
+from .stream import Stream
 from .array_stream import ArrayStream
 from .lv_types import ImagePlotItem, StreamRequest
 
@@ -33,14 +36,10 @@ def get_server(srv_id):
     return start_watch(srv_id)
 
 def observe(event_name:str='', srv_id=0, **vars) -> None:
-    global _default_servers
-    _ensure_server(srv_id)
-    _default_servers[srv_id].observe(event_name, **vars)
+    get_server(srv_id).observe(event_name, **vars)
 
 def set_globals(srv_id=0, **vars):
-    global _default_servers
-    _ensure_server(srv_id)
-    _default_servers[srv_id].set_globals(**vars)
+    get_server(srv_id).set_globals(**vars)
 
 def stop_watch(srv_id=0):
     global _default_servers
@@ -132,7 +131,7 @@ def create_vis(expr=None, event_name:str='', stream_name:str=None, throttle=1,
                 colormap=colormap, viz_img_scale=viz_img_scale)
 
     if isinstance(stream, ArrayStream):
-        stream.send_all()
+        stream.read_all()
 
     return vis
 

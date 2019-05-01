@@ -71,7 +71,7 @@ def plotly_history_graph():
 
 
 #mpl_line_plot()
-mpl_history_plot()
-#show_stream()
+#mpl_history_plot()
+show_stream()
 #plotly_line_graph()
 #plotly_history_graph()

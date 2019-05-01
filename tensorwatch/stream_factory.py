@@ -1,5 +1,5 @@
 from typing import Dict, Any
-from .zmq_stream_pub import ZmqStreamPub
+from .zmq_stream import ZmqStream
 from .stream import Stream
 
 
@@ -16,8 +16,8 @@ class StreamFactory:
         if stream is not None:
             return stream
 
-        if parts[0] == 'zmq':
-            stream = ZmqStreamPub(int(parts[1]), name=normalized_name, 
+        if parts[0] == 'zmqpub':
+            stream = ZmqStream(for_write=True, port_offset=int(parts[1]), stream_name=normalized_name, 
                                      block_until_connected=False) # should this be configurable? Is it even needed?
         else:
              raise ValueError('Stream name "{}" has unknown type'.format(name))
@@ -41,9 +41,9 @@ class StreamFactory:
                     raise ValueError('File stream name "{}" must have file name'.format(name))
                 return 'file:' + default_spec, ['file', default_spec]
             return name, parts
-        if parts[0] == 'zmq':
+        if parts[0] == 'zmqpub':
             if len(parts) < 2:
-                return 'zmq:0', ['zmq', default_spec or 0]
+                return 'zmqpub:0', ['zmqpub', default_spec or 0]
             return name, parts
         raise ValueError('Stream name "{}" has unknown type'.format(name))
 

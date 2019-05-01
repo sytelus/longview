@@ -5,7 +5,7 @@
     <ProjectGuid>9a7fe67e-93f0-42b5-b58f-77320fc639e4</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>simple_log\srv_ij.py</StartupFile>
+    <StartupFile>simple_log\cli_sum_log.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -73,20 +73,20 @@
     <Compile Include="components\stream_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="components\zmq_stream_pub_test.py">
+    <Compile Include="zmq\zmq_stream_pub_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="components\zmq_watcher_client_test.py">
+    <Compile Include="zmq\zmq_watcher_client_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="components\zmq_watcher_server_test.py">
+    <Compile Include="zmq\zmq_watcher_server_test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="components\zmq_stream_sub_test.py">
+    <Compile Include="zmq\zmq_stream_sub_test.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="simple_log\srv_ij.py" />
-    <Compile Include="components\zmq_srv.py">
+    <Compile Include="zmq\zmq_srv.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="components\thread_test.py">
@@ -107,6 +107,8 @@
     <Folder Include="dlc\" />
     <Folder Include="components\" />
     <Folder Include="mnist\" />
+    <Folder Include="files\" />
+    <Folder Include="zmq\" />
     <Folder Include="post_train\" />
     <Folder Include="pre_train\" />
     <Folder Include="simple_log\" />

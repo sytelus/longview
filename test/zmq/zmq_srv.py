@@ -1,6 +1,6 @@
 import tensorwatch as tw
 import time
-from tensorwatch.zmq_pub_sub import ZmqPubSub
+from tensorwatch.zmq_wrapper import ZmqPubSub
 from tensorwatch import utils
 
 utils.set_debug_verbosity(10)

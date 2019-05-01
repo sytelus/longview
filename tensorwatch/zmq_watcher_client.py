@@ -1,8 +1,8 @@
 from typing import Any, Dict, Union, List, Tuple, Iterable
-from .zmq_pub_sub import ZmqPubSub
+from .zmq_wrapper import ZmqPubSub
 from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, ClientServerRequest, DefaultPorts, PublisherTopics, ServerMgmtMsg
 from .stream import Stream
-from .zmq_stream_sub import ZmqStreamSub
+from .zmq_stream import ZmqStream
 from .filtered_stream import FilteredStream
 from . import utils
 
@@ -18,9 +18,9 @@ class ZmqWatcherClient:
         if self.closed:
             self._clisrv = ZmqPubSub.ClientServer(port=DefaultPorts.CliSrv+port_offset, 
                 is_server=False)
-            self._zmq_streamitem_sub = ZmqStreamSub(port_offset=port_offset, name='zmq_sub:'+str(port_offset), 
+            self._zmq_streamitem_sub = ZmqStream(for_write=False, port_offset=port_offset, stream_name='zmq_sub:'+str(port_offset), 
                                                      topic=PublisherTopics.StreamItem)
-            self._zmq_srvmgmt_sub = ZmqStreamSub(port_offset=port_offset, name='zmq_sub:'+str(port_offset),
+            self._zmq_srvmgmt_sub = ZmqStream(for_write=False, port_offset=port_offset, stream_name='zmq_sub:'+str(port_offset),
                                                      topic=PublisherTopics.ServerMgmt)
             self._zmq_srvmgmt_sub.add_callback(self._on_srv_mgmt)        
             
@@ -59,14 +59,14 @@ class ZmqWatcherClient:
         return filter_Wrapped
 
     def create_stream(self, stream_req:Union[StreamRequest, str], subscribers:Iterable[Stream]=None,
-                      srv_subscribers:List[str]=['zmq']) -> Stream:
+                      srv_subscribers:List[str]=['zmqpub']) -> Stream:
         stream_name = stream_req if isinstance(stream_req, str) else stream_req.stream_name
         stream:FilteredStream = None
 
         # if server side subscribers include zmq then we would listen to client side as well
         srv_subscribers = list(srv_subscribers)
         for i in range(len(srv_subscribers)):
-            if srv_subscribers[i] == 'zmq':
+            if srv_subscribers[i] == 'zmqpub':
                 srv_subscribers[i] = srv_subscribers[i] + ':' + str(self.port_offset)
                 stream = self._filtered_streams[stream_name] = FilteredStream(self._zmq_streamitem_sub, 
                     ZmqWatcherClient._filter_stream(stream_name), 

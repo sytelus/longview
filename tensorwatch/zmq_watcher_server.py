@@ -1,6 +1,6 @@
 from typing import Any
 import uuid
-from .zmq_pub_sub import ZmqPubSub
+from .zmq_wrapper import ZmqPubSub
 from .watcher import Watcher
 from .stream_factory import StreamFactory
 from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, DefaultPorts, PublisherTopics, ServerMgmtMsg
@@ -18,8 +18,8 @@ class ZmqWatcherServer(Watcher):
         self._clisrv = ZmqPubSub.ClientServer(port=DefaultPorts.CliSrv+port_offset, 
             is_server=True, callback=self._clisrv_callback)
 
-        # notify existing listners of our ID
-        self._zmq_stream_pub = self._stream_factory.create_stream('zmq')
+        # notify existing listeners of our ID
+        self._zmq_stream_pub = self._stream_factory.create_stream('zmqpub')
 
         # ZMQ quirk: we must wait a bit after opening port and before sending message
         # TODO: can we do better?

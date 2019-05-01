@@ -1,12 +1,11 @@
 from tensorwatch.watcher import Watcher
 from tensorwatch.stream import Stream
-from tensorwatch.zmq_stream_pub import ZmqStreamPub
-from tensorwatch.zmq_stream_sub import ZmqStreamSub
+from tensorwatch.zmq_stream import ZmqStream
 
 def main():
     watcher = Watcher()
-    zmq_pub = ZmqStreamPub(name = 'ZmqPub', console_debug=True)
-    zmq_sub = ZmqStreamSub(name = 'ZmqSub', console_debug=True)
+    zmq_pub = ZmqStream(for_write=True, stream_name = 'ZmqPub', console_debug=True)
+    zmq_sub = ZmqStream(for_write=False, stream_name = 'ZmqSub', console_debug=True)
 
     stream = watcher.create_stream('lambda vars:vars.x**2', subscribers=[zmq_pub])
 

@@ -8,7 +8,7 @@ class ArrayStream(Stream):
         self.stream_name = stream_name
         self.array = array
 
-    def send_all(self):
+    def read_all(self):
         if self.array is not None:
             stream_item = StreamItem(item_index=0, value=self.array,
                 stream_name=self.stream_name, source_id='', stream_index=0)
