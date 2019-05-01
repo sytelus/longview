@@ -3,17 +3,17 @@ from typing import Any
 from . import utils
 
 class Stream:
-    def __init__(self, name:str=None, console_debug:bool=False):
+    def __init__(self, stream_name:str=None, console_debug:bool=False):
         self._callbacks = []
         self.closed = False
         self.console_debug = console_debug
-        self.name = name or str(uuid.uuid4()) # useful to use as key and avoid circular references
+        self.stream_name = stream_name or str(uuid.uuid4()) # useful to use as key and avoid circular references
 
     def write(self, val:Any):
         if self.closed:
             return
         if self.console_debug:
-            print(self.name, val)
+            print(self.stream_name, val)
         self._make_callbacks(val)
 
     def _make_callbacks(self, val:Any):
@@ -30,7 +30,7 @@ class Stream:
                 del self._callbacks[i]
 
     def subscribe(self, stream:'Stream'): # notify other stream
-        utils.debug_log('{} added {} as subscription'.format(self.name, stream.name))
+        utils.debug_log('{} added {} as subscription'.format(self.stream_name, stream.stream_name))
         stream.add_callback(self.write)
 
     def unsubscribe(self, stream:'Stream'):

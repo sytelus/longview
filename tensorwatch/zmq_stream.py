@@ -8,7 +8,7 @@ from . import utils
 class ZmqStream(Stream):
     def __init__(self, for_write, port_offset:int=0, topic=PublisherTopics.StreamItem, block_until_connected=True, 
                  stream_name:str=None, console_debug:bool=False):
-        super(ZmqStream, self).__init__(name=stream_name, console_debug=console_debug)
+        super(ZmqStream, self).__init__(stream_name=stream_name, console_debug=console_debug)
 
         self.for_write = for_write
         self._zmq = None

@@ -12,7 +12,7 @@ import ipywidgets as widgets
 
 class VisBase(Stream, metaclass=ABCMeta):
     def __init__(self, widget, cell, title:str, show_legend:bool, stream_name:str=None, console_debug:bool=False, **plot_args):
-        super(VisBase, self).__init__(name=stream_name, console_debug=console_debug)
+        super(VisBase, self).__init__(stream_name=stream_name, console_debug=console_debug)
 
         self.lock = threading.Lock()
         self._use_hbox = True
@@ -42,7 +42,7 @@ class VisBase(Stream, metaclass=ABCMeta):
                 len(self._stream_plots), stream_plot_args, 0)
             stream_plot._clear_pending = False
             stream_plot._pending_items = queue.Queue()
-            self._stream_plots[stream.name] = stream_plot
+            self._stream_plots[stream.stream_name] = stream_plot
 
             self._post_add_subscription(stream_plot, **stream_plot_args)
 

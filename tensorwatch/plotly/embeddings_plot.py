@@ -73,6 +73,6 @@ class EmbeddingsPlot(LinePlot):
 
     def subscribe(self, stream):
         super(EmbeddingsPlot, self).subscribe(stream)
-        stream_plot = self._stream_plots[stream.name]
+        stream_plot = self._stream_plots[stream.stream_name]
         if stream_plot.index == 0 and self.images is not None:
             self.widget.data[stream_plot.trace_index].on_hover(self.hover_fn)

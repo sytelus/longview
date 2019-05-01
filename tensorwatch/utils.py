@@ -29,7 +29,7 @@ def MeasureTime(f):
         return result
     return _wrapper
 class MeasureBlockTime:
-    def __init__(self,name="(block)", no_print = False, disable_gc = True, format_str=":.2f"):
+    def __init__(self, name="(block)", no_print = False, disable_gc = True, format_str=":.2f"):
         self.name = name
         self.no_print = no_print
         self.disable_gc = disable_gc
@@ -354,4 +354,10 @@ def frange(start, stop=None, step=None, steps=None):
         start += step  
 
 def wrap_string(s, chars_per_line=12):
-   return "\n".join(textwrap.wrap(s, chars_per_line))
+    return "\n".join(textwrap.wrap(s, chars_per_line))
+
+def is_eof(f):
+    s = f.read(1)
+    if s != b'':    # restore position
+        f.seek(-1, os.SEEK_CUR)
+    return s == b''

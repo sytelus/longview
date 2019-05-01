@@ -130,7 +130,7 @@ def create_vis(expr=None, event_name:str='', stream_name:str=None, throttle=1,
                 rows=rows, cols=cols, img_width=img_width, img_height=img_height, img_channels=img_channels,
                 colormap=colormap, viz_img_scale=viz_img_scale)
 
-    if isinstance(stream, ArrayStream):
+    if utils.has_method(stream, 'read_all'):
         stream.read_all()
 
     return vis

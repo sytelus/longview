@@ -85,7 +85,7 @@ class BaseMplPlot(VisBase):
         super(BaseMplPlot, self).show(blocking)
 
     def _post_update_stream_plot(self, stream_plot):
-        utils.debug_log("Plot updated", stream_plot.stream.name, verbosity=5)
+        utils.debug_log("Plot updated", stream_plot.stream.stream_name, verbosity=5)
 
         if self.layout_dirty:
             # do not do tight_layout() call on every update 

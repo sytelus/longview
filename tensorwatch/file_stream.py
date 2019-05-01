@@ -1,9 +1,12 @@
 from .stream import Stream
 import pickle
+from typing import Any
+from . import utils
+from .lv_types import StreamItem
 
 class FileStream(Stream):
     def __init__(self, for_write:bool, file_name:str, stream_name:str=None, console_debug:bool=False):
-        super(FileStream, self).__init__(name=stream_name, console_debug=console_debug)
+        super(FileStream, self).__init__(stream_name=stream_name or file_name, console_debug=console_debug)
 
         self._file = open(file_name, 'wb' if for_write else 'rb')
         self.file_name = file_name
@@ -29,13 +32,6 @@ class FileStream(Stream):
         if self.for_write:
             raise IOError('Cannot use read_all because FileSteam is opened in for_write=True mode')
         if self._file is not None:
-            vals = []
-            while True:
-                try:
-                    val = pickle.load(self._file)
-                    vals.append(val)
-                except EOFError as ex:
-                    break
-            stream_item = StreamItem(item_index=0, value=vals,
-                stream_name=self.stream_name, source_id='', stream_index=0)
-            self.write(stream_item)
+            while not utils.is_eof(self._file):
+                stream_item = pickle.load(self._file)
+                self.write(stream_item)
