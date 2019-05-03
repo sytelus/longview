@@ -61,24 +61,24 @@ def get_watcher():
         _watcher = Watcher()
     return _watcher
 
-def _get_renderer(type, cell, title, images=None, images_reshape=None, width=None, height=None, **vis_args):
-    if type is None:
+def _get_vis(vis_type, cell, title, images=None, images_reshape=None, width=None, height=None, **vis_args):
+    if vis_type is None:
         return TextVis(cell=cell, title=title, **vis_args)
-    if type in ['text', 'summary']:
+    if vis_type in ['text', 'summary']:
         return TextVis(cell=cell, title=title, **vis_args)
-    if type in ['line', 'plotly-line', 'scatter', 'plotly-scatter', 
+    if vis_type in ['line', 'plotly-line', 'scatter', 'plotly-scatter', 
                         'line3d', 'scatter3d', 'mesh3d']:
         return plotly.LinePlot(cell=cell, title=title, 
-                                is_3d=type in ['line3d', 'scatter3d', 'mesh3d'], **vis_args)
-    if type in ['image', 'mpl-image']:
+                                is_3d=vis_type in ['line3d', 'scatter3d', 'mesh3d'], **vis_args)
+    if vis_type in ['image', 'mpl-image']:
         return mpl.ImagePlot(cell=cell, title=title, width=width, height=height, **vis_args)
-    if type in ['mpl-line', 'mpl-scatter']:
+    if vis_type in ['mpl-line', 'mpl-scatter']:
         return mpl.LinePlot(cell=cell, title=title, **vis_args)
-    if type in ['tsne', 'embeddings', 'tsne2d', 'embeddings2d']:
-        return plotly.EmbeddingsPlot(cell=cell, title=title, is_3d='2d' not in type, 
+    if vis_type in ['tsne', 'embeddings', 'tsne2d', 'embeddings2d']:
+        return plotly.EmbeddingsPlot(cell=cell, title=title, is_3d='2d' not in vis_type, 
                                      images=images, images_reshape=images_reshape, **vis_args)
     else:
-        raise ValueError('Render type parameter has invalid value: "{}"'.format(type))
+        raise ValueError('Render vis_type parameter has invalid value: "{}"'.format(vis_type))
 
 def create_stream(expr=None, event_name:str='', stream_name:str=None, throttle=1, 
                   cli_id:int=None, srv_id:int=0, subscribers:Iterable[Stream]=None):
@@ -104,16 +104,16 @@ def create_stream(expr=None, event_name:str='', stream_name:str=None, throttle=1
 
     return stream
 
-def create_vis(stream, type=None, vis=None, 
+def create_vis(stream, vis_type=None, vis=None, 
             cell=None, title=None, 
             clear_after_end=False, clear_after_each=False, history_len=1, dim_history=True, opacity=None,
             images=None, images_reshape=None, width=None, height=None, vis_args={}, stream_vis_args={}):
 
-    if type:
-        draw_line = 'scatter' not in type
-        only_summary = 'summary' == type
+    if vis_type:
+        draw_line = 'scatter' not in vis_type
+        only_summary = 'summary' == vis_type
 
-    vis = vis or _get_renderer(type, cell, title, images=images, images_reshape=images_reshape, 
+    vis = vis or _get_vis(vis_type, cell, title, images=images, images_reshape=images_reshape, 
                                width=width, height=height, **vis_args)
 
     s = vis.subscribe(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each,
