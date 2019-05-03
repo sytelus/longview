@@ -104,7 +104,7 @@ def create_stream(expr=None, event_name:str='', stream_name:str=None, throttle=1
 
     return stream
 
-def create_vis(stream, vis_type=None, vis=None, 
+def create_vis(stream, vis_type=None, host_vis=None, 
             cell=None, title=None, 
             clear_after_end=False, clear_after_each=False, history_len=1, dim_history=True, opacity=None,
             images=None, images_reshape=None, width=None, height=None, vis_args={}, stream_vis_args={}):
@@ -113,16 +113,16 @@ def create_vis(stream, vis_type=None, vis=None,
         draw_line = 'scatter' not in vis_type
         only_summary = 'summary' == vis_type
 
-    vis = vis or _get_vis(vis_type, cell, title, images=images, images_reshape=images_reshape, 
+    host_vis = host_vis or _get_vis(vis_type, cell, title, images=images, images_reshape=images_reshape, 
                                width=width, height=height, **vis_args)
 
-    s = vis.subscribe(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each,
+    s = host_vis.subscribe(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each,
                  history_len=history_len, dim_history=dim_history, opacity=opacity, **stream_vis_args)
 
     if utils.has_method(stream, 'read_all'):
         stream.read_all()
 
-    return vis
+    return host_vis
 
 def draw_model(model, input_shape=None, orientation='TB'): #orientation = 'LR' for landscpe
     from .model_graph.hiddenlayer import graph
