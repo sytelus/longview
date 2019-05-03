@@ -49,99 +49,102 @@ class Watcher:
 
         # modify expression if needed
         expr = stream_req.expr
-        if not expr:
+        if expr=='' or expr='x':
             expr = 'map(lambda x:x, l)'
         elif expr.strip().startswith('lambda '):
             expr = 'map({}, l)'.format(expr)
         # else no rewrites
 
-        # get requests for this event
-        streams = self._event_streams.get(stream_req.event_name, None)
-        # if first for this event, create dictionary
-        if streams is None:
-            streams = self._event_streams[stream_req.event_name] = {}
+        evaler = Evaler(expr) if expr is not None else None
 
-        stream = streams.get(stream_req.stream_name, None)
-        if not stream:
+
+        # get requests for this event
+        stream_infos = self._event_streams.get(stream_req.event_name, None)
+        # if first for this event, create dictionary
+        if stream_infos is None:
+            stream_infos = self._event_streams[stream_req.event_name] = {}
+
+        stream_info = stream_infos.get(stream_req.stream_name, None)
+        if not stream_info:
             utils.debug_log("Creating stream", stream_req.stream_name)
-            stream = streams[stream_req.stream_name] = Watcher.StreamInfo(stream_req, Evaler(expr),
+            stream_info = stream_infos[stream_req.stream_name] = Watcher.StreamInfo(stream_req, evaler,
                                                          Stream(), self._stream_count)
 
             self._stream_count += 1
 
             if subscribers is not None:
                 for subscriber in subscribers:
-                    subscriber.subscribe(stream.stream)
+                    subscriber.subscribe(stream_info.stream)
         else:
             utils.debug_log("Stream already exist, not creating again", stream_req.stream_name)
 
-        return stream.stream
+        return stream_info.stream
 
     def set_globals(self, **vars):
         self._global_vars.update(vars)
 
     def observe(self, event_name:str='', **vars) -> None:
         # get stream requests for this event
-        streams = self._event_streams.get(event_name, {})
+        stream_infos = self._event_streams.get(event_name, {})
 
         # TODO: remove list() call - currently needed because of error dictionary
         # can't be changed - happens when multiple clients gets started
-        for stream in list(streams.values()):
-            if stream.disabled:
+        for stream_info in list(stream_infos.values()):
+            if stream_info.disabled or stream_info.evaler is None:
                 continue
 
             # apply throttle
-            if stream.req.throttle is None or stream.last_sent is None or \
-                    time.time() - stream.last_sent >= stream.req.throttle:
-                stream.last_sent = time.time()
+            if stream_info.req.throttle is None or stream_info.last_sent is None or \
+                    time.time() - stream_info.last_sent >= stream_info.req.throttle:
+                stream_info.last_sent = time.time()
                 
                 events_vars = EventVars(self._global_vars, **vars)
-                self._eval_event_send(stream, events_vars)
+                self._eval_event_send(stream_info, events_vars)
             else:
                 utils.debug_log("Throttled", event_name, verbosity=5)
 
-    def _eval_event_send(self, stream, event_vars:EventVars):
-        eval_return = stream.evaler.post(event_vars)
+    def _eval_event_send(self, stream_info:Watcher.StreamInfo, event_vars:EventVars):
+        eval_return = stream_info.evaler.post(event_vars)
         if eval_return.is_valid:
-            event_name = stream.req.event_name
-            stream_item = StreamItem(stream.item_count,
-                eval_return.result, stream.req.stream_name, self.source_id, stream.index,
+            event_name = stream_info.req.event_name
+            stream_item = StreamItem(stream_info.item_count,
+                eval_return.result, stream_info.req.stream_name, self.source_id, stream_info.index,
                 exception=eval_return.exception)
-            stream.stream.write(stream_item)
-            stream.item_count += 1
+            stream_info.stream.write(stream_item)
+            stream_info.item_count += 1
             utils.debug_log("eval_return sent", event_name, verbosity=5)
         else:
             utils.debug_log("Invalid eval_return not sent", verbosity=5)
 
     def end_event(self, event_name:str='', disable_streams=False) -> None:
-        streams = self._event_streams.get(event_name, {})
-        for stream in streams.values():
-            if not stream.disabled:
-                self._end_stream_req(stream, disable_streams)
+        stream_infos = self._event_streams.get(event_name, {})
+        for stream_info in stream_infos.values():
+            if not stream_info.disabled:
+                self._end_stream_req(stream_info, disable_streams)
 
-    def _end_stream_req(self, stream, disable_stream:bool):
-        eval_return = stream.evaler.post(ended=True, 
+    def _end_stream_req(self, stream_info:Watcher.StreamInfo, disable_stream:bool):
+        eval_return = stream_info.evaler.post(ended=True, 
             continue_thread=not disable_stream)
         # TODO: check eval_return.is_valid ?
-        event_name = stream.req.event_name
+        event_name = stream_info.req.event_name
         if disable_stream:
-            stream.disabled = True
-            utils.debug_log("{} stream disabled".format(stream.req.stream_name), verbosity=1)
+            stream_info.disabled = True
+            utils.debug_log("{} stream disabled".format(stream_info.req.stream_name), verbosity=1)
 
-        stream_item = StreamItem(stream.item_count, 
-            eval_return.result, stream.req.stream_name, self.source_id, stream.index,
+        stream_item = StreamItem(stream_info.item_count, 
+            eval_return.result, stream_info.req.stream_name, self.source_id, stream_info.index,
             exception=eval_return.exception, ended=True)
-        stream.stream.write(stream_item)
-        stream.item_count += 1
+        stream_info.stream.write(stream_item)
+        stream_info.item_count += 1
 
     def del_stream(self, stream_name:str) -> None:
         utils.debug_log("deleting stream", stream_name)
-        for streams in self._event_streams.values():
-            stream = streams.get(stream_name, None)
-            if stream:
-                stream.disabled = True
-                stream.evaler.abort()
+        for stream_infos in self._event_streams.values():
+            stream_info = stream_infos.get(stream_name, None)
+            if stream_info:
+                stream_info.disabled = True
+                stream_info.evaler.abort()
                 return True
                 #TODO: to enable delete we need to protect iteration in set_vars
-                #del stream_reqs[stream.req.stream_name]
+                #del stream_reqs[stream_info.req.stream_name]
         return False

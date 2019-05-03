@@ -61,22 +61,22 @@ def get_watcher():
         _watcher = Watcher()
     return _watcher
 
-def _get_renderer(type, cell, title, images=None, images_reshape=None, width=None, height=None):
+def _get_renderer(type, cell, title, images=None, images_reshape=None, width=None, height=None, **plot_args):
     if type is None:
-        return TextVis(cell=cell, title=title)
+        return TextVis(cell=cell, title=title, **plot_args)
     if type in ['text', 'summary']:
-        return TextVis(cell=cell, title=title)
+        return TextVis(cell=cell, title=title, **plot_args)
     if type in ['line', 'plotly-line', 'scatter', 'plotly-scatter', 
                         'line3d', 'scatter3d', 'mesh3d']:
         return plotly.LinePlot(cell=cell, title=title, 
-                                is_3d=type in ['line3d', 'scatter3d', 'mesh3d'])
+                                is_3d=type in ['line3d', 'scatter3d', 'mesh3d'], **plot_args)
     if type in ['image', 'mpl-image']:
-        return mpl.ImagePlot(cell=cell, title=title, width=width, height=height)
+        return mpl.ImagePlot(cell=cell, title=title, width=width, height=height, **plot_args)
     if type in ['mpl-line', 'mpl-scatter']:
-        return mpl.LinePlot(cell=cell, title=title)
+        return mpl.LinePlot(cell=cell, title=title, **plot_args)
     if type in ['tsne', 'embeddings', 'tsne2d', 'embeddings2d']:
         return plotly.EmbeddingsPlot(cell=cell, title=title, is_3d='2d' not in type, 
-                                     images=images, images_reshape=images_reshape)
+                                     images=images, images_reshape=images_reshape, **plot_args)
     else:
         raise ValueError('Render type parameter has invalid value: "{}"'.format(type))
 
@@ -104,31 +104,20 @@ def create_stream(expr=None, event_name:str='', stream_name:str=None, throttle=1
 
     return stream
 
-def create_vis(expr=None, event_name:str='', stream_name:str=None, throttle=1, 
-            clear_after_end=True, clear_after_each=False,
-            cell=None, title=None, vis=None, type=None, only_summary=False, 
-            history_len=1, dim_history=True, opacity=None,
-            separate_yaxis=True, xtitle=None, ytitle=None, ztitle=None, color=None,
-            xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=False, cli_id=0, srv_id=None,
-            rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
-            colormap=None, viz_img_scale=None, images=None, images_reshape=None, width=None, 
-            height=None):
+def create_vis(stream, type=None, vis=None, 
+            cell=None, title=None, 
+            clear_after_end=False, clear_after_each=False, history_len=1, dim_history=True, opacity=None,
+            images=None, images_reshape=None, width=None, height=None, plot_args={}, stream_plot_args={}):
 
     if type:
         draw_line = 'scatter' not in type
         only_summary = 'summary' == type
 
-    vis = vis or _get_renderer(type, cell, title, images=images, images_reshape=images_reshape, width=width, height=height)
+    vis = vis or _get_renderer(type, cell, title, images=images, images_reshape=images_reshape, 
+                               width=width, height=height, **plot_args)
 
-    stream = create_stream(expr=expr, event_name=event_name, stream_name=stream_name, throttle=throttle, 
-                  cli_id=cli_id, srv_id=srv_id)
-
-    s = vis.subscribe(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each, only_summary=only_summary,
-                 history_len=history_len, dim_history=dim_history, opacity=opacity,
-                 separate_yaxis=separate_yaxis, xtitle=xtitle, ytitle=ytitle, ztitle=ztitle, color=color,
-                 xrange=xrange, yrange=yrange, zrange=zrange, draw_line=draw_line, draw_marker=draw_marker, 
-                rows=rows, cols=cols, img_width=img_width, img_height=img_height, img_channels=img_channels,
-                colormap=colormap, viz_img_scale=viz_img_scale)
+    s = vis.subscribe(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each,
+                 history_len=history_len, dim_history=dim_history, opacity=opacity, **stream_plot_args)
 
     if utils.has_method(stream, 'read_all'):
         stream.read_all()
