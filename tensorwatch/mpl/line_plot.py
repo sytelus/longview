@@ -9,76 +9,76 @@ from IPython import get_ipython
 import numpy as np
 
 class LinePlot(BaseMplPlot):
-    def __init__(self, cell=None, title=None, show_legend:bool=True, stream_name:str=None, console_debug:bool=False, is_3d:bool=False, **plot_args):
-        super(LinePlot, self).__init__(cell, title, show_legend, stream_name=stream_name, console_debug=console_debug, **plot_args)
+    def __init__(self, cell=None, title=None, show_legend:bool=True, stream_name:str=None, console_debug:bool=False, is_3d:bool=False, **vis_args):
+        super(LinePlot, self).__init__(cell, title, show_legend, stream_name=stream_name, console_debug=console_debug, **vis_args)
         self.is_3d = is_3d #TODO: not implemented for mpl
 
-    def init_stream_plot(self, stream_plot, 
-            xtitle='', ytitle='', color=None, xrange=None, yrange=None, **stream_plot_args):
-        stream_plot.xylabel_refs = [] # annotation references
+    def init_stream_plot(self, stream_vis, 
+            xtitle='', ytitle='', color=None, xrange=None, yrange=None, **stream_vis_args):
+        stream_vis.xylabel_refs = [] # annotation references
 
         # add main subplot
-        if len(self._stream_plots) == 0:
-            stream_plot.ax = self.get_main_axis()
+        if len(self._stream_vises) == 0:
+            stream_vis.ax = self.get_main_axis()
         else:
-            stream_plot.ax = self.get_main_axis().twinx()
+            stream_vis.ax = self.get_main_axis().twinx()
 
-        color = color or plt.cm.Dark2((len(self._stream_plots)%8)/8) #TODO: improve this
+        color = color or plt.cm.Dark2((len(self._stream_vises)%8)/8) #TODO: improve this
 
         # add default line in subplot
-        stream_plot.line = matplotlib.lines.Line2D([], [], 
-            label=stream_plot.title or ytitle or str(stream_plot.index), color=color) #, linewidth=3
-        if stream_plot.opacity is not None:
-            stream_plot.line.set_alpha(stream_plot.opacity)
-        stream_plot.ax.add_line(stream_plot.line)
+        stream_vis.line = matplotlib.lines.Line2D([], [], 
+            label=stream_vis.title or ytitle or str(stream_vis.index), color=color) #, linewidth=3
+        if stream_vis.opacity is not None:
+            stream_vis.line.set_alpha(stream_vis.opacity)
+        stream_vis.ax.add_line(stream_vis.line)
 
         # if more than 2 y-axis then place additional outside
-        if len(self._stream_plots) > 1:
-            pos = (len(self._stream_plots)) * 30
-            stream_plot.ax.spines['right'].set_position(('outward', pos))
+        if len(self._stream_vises) > 1:
+            pos = (len(self._stream_vises)) * 30
+            stream_vis.ax.spines['right'].set_position(('outward', pos))
 
-        stream_plot.ax.set_xlabel(xtitle)
-        stream_plot.ax.set_ylabel(ytitle)
-        stream_plot.ax.yaxis.label.set_color(color)
-        stream_plot.ax.yaxis.label.set_style('italic')
-        stream_plot.ax.xaxis.label.set_style('italic')
+        stream_vis.ax.set_xlabel(xtitle)
+        stream_vis.ax.set_ylabel(ytitle)
+        stream_vis.ax.yaxis.label.set_color(color)
+        stream_vis.ax.yaxis.label.set_style('italic')
+        stream_vis.ax.xaxis.label.set_style('italic')
         if xrange is not None:
-            stream_plot.ax.set_xlim(*xrange)
+            stream_vis.ax.set_xlim(*xrange)
         if yrange is not None:
-            stream_plot.ax.set_ylim(*yrange)
+            stream_vis.ax.set_ylim(*yrange)
 
-    def clear_plot(self, stream_plot, clear_history):
-        lines = stream_plot.ax.get_lines() 
+    def clear_plot(self, stream_vis, clear_history):
+        lines = stream_vis.ax.get_lines() 
         # if we need to keep history
-        if stream_plot.history_len > 1:
+        if stream_vis.history_len > 1:
             # make sure we have history len - 1 lines
-            lines_keep = 0 if clear_history else stream_plot.history_len-1
+            lines_keep = 0 if clear_history else stream_vis.history_len-1
             while len(lines) > lines_keep:
                 lines.pop(0).remove()
             # dim old lines
-            if stream_plot.dim_history and len(lines) > 0:
+            if stream_vis.dim_history and len(lines) > 0:
                 alphas = np.linspace(0.05, 1, len(lines))
                 for line, opacity in zip(lines, alphas):
                     line.set_alpha(opacity)
                     line.set_linewidth(1)
             # add new line
             line = matplotlib.lines.Line2D([], [], linewidth=3)
-            stream_plot.ax.add_line(line)
+            stream_vis.ax.add_line(line)
         else: #clear current line
             lines[-1].set_data([], [])
 
         # remove annotations
-        for label_info in stream_plot.xylabel_refs:
+        for label_info in stream_vis.xylabel_refs:
             label_info.set_visible(False)
             label_info.remove()
-        stream_plot.xylabel_refs.clear()
+        stream_vis.xylabel_refs.clear()
 
-    def _show_stream_items(self, stream_plot, stream_items):
+    def _show_stream_items(self, stream_vis, stream_items):
         vals = self._extract_vals(stream_items)
         if not len(vals):
             return False
 
-        line = stream_plot.ax.get_lines()[-1]
+        line = stream_vis.ax.get_lines()[-1]
         xdata, ydata = line.get_data()
         zdata, anndata, txtdata, clrdata = [], [], [], []
 
@@ -133,11 +133,11 @@ class LinePlot(BaseMplPlot):
 
         line.set_data(xdata, ydata)
         for ann in anndata:
-            stream_plot.xylabel_refs.append(stream_plot.ax.text( \
+            stream_vis.xylabel_refs.append(stream_vis.ax.text( \
                 ann['x'], ann['y'], ann['text']))
 
-        stream_plot.ax.relim()
-        stream_plot.ax.autoscale_view()
+        stream_vis.ax.relim()
+        stream_vis.ax.autoscale_view()
 
         return True
 

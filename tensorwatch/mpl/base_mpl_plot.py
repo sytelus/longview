@@ -22,8 +22,8 @@ from IPython import get_ipython, display
 import ipywidgets as widgets
 
 class BaseMplPlot(VisBase):
-    def __init__(self, cell=None, title:str=None, show_legend:bool=None, stream_name:str=None, console_debug:bool=False, **plot_args):
-        super(BaseMplPlot, self).__init__(widgets.Output(), cell, title, show_legend, stream_name=stream_name, console_debug=console_debug, **plot_args)
+    def __init__(self, cell=None, title:str=None, show_legend:bool=None, stream_name:str=None, console_debug:bool=False, **vis_args):
+        super(BaseMplPlot, self).__init__(widgets.Output(), cell, title, show_legend, stream_name=stream_name, console_debug=console_debug, **vis_args)
 
         self._fig_init_done = False
         self.show_legend = show_legend
@@ -84,8 +84,8 @@ class BaseMplPlot(VisBase):
             self.animation = FuncAnimation(self.figure, self._on_update, interval=self.anim_interval*1000.0)
         super(BaseMplPlot, self).show(blocking)
 
-    def _post_update_stream_plot(self, stream_plot):
-        utils.debug_log("Plot updated", stream_plot.stream.stream_name, verbosity=5)
+    def _post_update_stream_plot(self, stream_vis):
+        utils.debug_log("Plot updated", stream_vis.stream.stream_name, verbosity=5)
 
         if self.layout_dirty:
             # do not do tight_layout() call on every update 
@@ -115,10 +115,10 @@ class BaseMplPlot(VisBase):
         #elif not get_ipython():
         #    self.figure.canvas.draw()
 
-    def _post_add_subscription(self, stream_plot, **stream_plot_args):
+    def _post_add_subscription(self, stream_vis, **stream_vis_args):
         # make sure figure is initialized
         self.init_fig()        
-        self.init_stream_plot(stream_plot, **stream_plot_args) 
+        self.init_stream_plot(stream_vis, **stream_vis_args) 
 
         # redo the legend
         #self.figure.legend(loc='center right', bbox_to_anchor=(1.5, 0.5))
@@ -143,6 +143,6 @@ class BaseMplPlot(VisBase):
         return False # we run interval timer which will flush the key
 
     @abstractmethod
-    def init_stream_plot(self, stream_plot, **stream_plot_args):
+    def init_stream_plot(self, stream_vis, **stream_vis_args):
         """(for derived class) Create new plot info for this stream"""
         pass

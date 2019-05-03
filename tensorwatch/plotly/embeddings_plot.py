@@ -8,10 +8,10 @@ from .. import utils
 
 class EmbeddingsPlot(LinePlot):
     def __init__(self, cell=None, title=None, show_legend:bool=False, stream_name:str=None, console_debug:bool=False,
-                  is_3d:bool=True, images=None, images_reshape=None, **plot_args):
-        utils.set_default(plot_args, 'height', '8in')
+                  is_3d:bool=True, images=None, images_reshape=None, **vis_args):
+        utils.set_default(vis_args, 'height', '8in')
         super(EmbeddingsPlot, self).__init__(cell, title, show_legend, 
-                                             stream_name=stream_name, console_debug=console_debug, is_3d=is_3d, **plot_args)
+                                             stream_name=stream_name, console_debug=console_debug, is_3d=is_3d, **vis_args)
         if images is not None:
             plt.ioff()
             self.image_output = Output()
@@ -55,24 +55,24 @@ class EmbeddingsPlot(LinePlot):
 
         return None
 
-    def _create_trace(self, stream_plot):
-        stream_plot.stream_plot_args.clear() #TODO remove this
-        utils.set_default(stream_plot.stream_plot_args, 'draw_line', False)
-        utils.set_default(stream_plot.stream_plot_args, 'draw_marker', True)
-        utils.set_default(stream_plot.stream_plot_args, 'draw_marker_text', True)
-        utils.set_default(stream_plot.stream_plot_args, 'hoverinfo', 'text')
-        utils.set_default(stream_plot.stream_plot_args, 'marker', {})
+    def _create_trace(self, stream_vis):
+        stream_vis.stream_vis_args.clear() #TODO remove this
+        utils.set_default(stream_vis.stream_vis_args, 'draw_line', False)
+        utils.set_default(stream_vis.stream_vis_args, 'draw_marker', True)
+        utils.set_default(stream_vis.stream_vis_args, 'draw_marker_text', True)
+        utils.set_default(stream_vis.stream_vis_args, 'hoverinfo', 'text')
+        utils.set_default(stream_vis.stream_vis_args, 'marker', {})
 
-        marker = stream_plot.stream_plot_args['marker']
+        marker = stream_vis.stream_vis_args['marker']
         utils.set_default(marker, 'size', 6)
         utils.set_default(marker, 'colorscale', 'Jet')
         utils.set_default(marker, 'showscale', False)
         utils.set_default(marker, 'opacity', 0.8)
 
-        return super(EmbeddingsPlot, self)._create_trace(stream_plot)
+        return super(EmbeddingsPlot, self)._create_trace(stream_vis)
 
     def subscribe(self, stream):
         super(EmbeddingsPlot, self).subscribe(stream)
-        stream_plot = self._stream_plots[stream.stream_name]
-        if stream_plot.index == 0 and self.images is not None:
-            self.widget.data[stream_plot.trace_index].on_hover(self.hover_fn)
+        stream_vis = self._stream_vises[stream.stream_name]
+        if stream_vis.index == 0 and self.images is not None:
+            self.widget.data[stream_vis.trace_index].on_hover(self.hover_fn)

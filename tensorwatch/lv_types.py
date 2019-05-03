@@ -44,12 +44,12 @@ EventEvalFunc = Callable[[EventsVars], StreamItem]
 
 class StreamRequest:
     def __init__(self, expr:str, event_name:str='', stream_name:str=None, 
-            throttle:float=None, client_id:str=None):
+            throttle:float=None, client_name:str=None):
         self.event_name = event_name
         self.expr = expr
         self.stream_name = stream_name or str(uuid.uuid4())
         # used to detect if client no longer exist in which case don't publish for them
-        self.client_id = client_id 
+        self.client_name = client_name 
 
         # max throughput n Lenovo P50 laptop for MNIST
         # text console -> 0.1s
@@ -68,12 +68,12 @@ class CliSrvReqTypes:
 class StreamPlot:
     def __init__(self, stream, title, clear_after_end, 
                 clear_after_each, history_len, dim_history, opacity,
-                index, stream_plot_args, last_update):
+                index, stream_vis_args, last_update):
         self.stream = stream
         self.title, self.opacity = title, opacity
         self.clear_after_end, self.clear_after_each = clear_after_end, clear_after_each
         self.history_len, self.dim_history = history_len, dim_history
-        self.index, self.stream_plot_args, self.last_update = index, stream_plot_args, last_update
+        self.index, self.stream_vis_args, self.last_update = index, stream_vis_args, last_update
 
 class ImagePlotItem:
     def __init__(self, images=None, title=None, alpha=None, cmap=None):

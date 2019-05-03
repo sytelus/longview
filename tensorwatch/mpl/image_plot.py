@@ -9,27 +9,27 @@ import ipywidgets as widgets
 from IPython import get_ipython
 
 class ImagePlot(BaseMplPlot):
-    def init_stream_plot(self, stream_plot, 
+    def init_stream_plot(self, stream_vis, 
             rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
-            colormap=None, viz_img_scale=None, **stream_plot_args):
-        stream_plot.rows, stream_plot.cols = rows, cols
-        stream_plot.img_channels, stream_plot.colormap = img_channels, colormap
-        stream_plot.img_width, stream_plot.img_height = img_width, img_height
-        stream_plot.viz_img_scale = viz_img_scale
+            colormap=None, viz_img_scale=None, **stream_vis_args):
+        stream_vis.rows, stream_vis.cols = rows, cols
+        stream_vis.img_channels, stream_vis.colormap = img_channels, colormap
+        stream_vis.img_width, stream_vis.img_height = img_width, img_height
+        stream_vis.viz_img_scale = viz_img_scale
         # subplots holding each image
-        stream_plot.axs = [[None for _ in range(cols)] for _ in range(rows)] 
+        stream_vis.axs = [[None for _ in range(cols)] for _ in range(rows)] 
         # axis image
-        stream_plot.ax_imgs = [[None for _ in range(cols)] for _ in range(rows)] 
+        stream_vis.ax_imgs = [[None for _ in range(cols)] for _ in range(rows)] 
 
-    def clear_plot(self, stream_plot, clear_history):
-        for row in range(stream_plot.rows):
-            for col in range(stream_plot.cols):
-                img = stream_plot.ax_imgs[row][col]
+    def clear_plot(self, stream_vis, clear_history):
+        for row in range(stream_vis.rows):
+            for col in range(stream_vis.cols):
+                img = stream_vis.ax_imgs[row][col]
                 if img:
                     x, y = img.get_size()
                     img.set_data(np.zeros((x, y)))
 
-    def _show_stream_items(self, stream_plot, stream_items):
+    def _show_stream_items(self, stream_vis, stream_items):
         # as we repaint each image plot, select last if multiple events were pending
         stream_item = None
         for er in reversed(stream_items):
@@ -44,27 +44,27 @@ class ImagePlot(BaseMplPlot):
         # stream_item.value is expected to be ImagePlotItems
         for image_list in stream_item.value:
             # convert to imshow compatible, stitch images
-            images = [image_utils.to_imshow_array(img, stream_plot.img_width, stream_plot.img_height) \
+            images = [image_utils.to_imshow_array(img, stream_vis.img_width, stream_vis.img_height) \
                 for img in image_list.images if img is not None]
             img_viz = image_utils.stitch_horizontal(images, width_dim=1)
 
             # resize if requested
-            if stream_plot.viz_img_scale is not None:
+            if stream_vis.viz_img_scale is not None:
                 img_viz = skimage.transform.rescale(img_viz, 
-                    (stream_plot.viz_img_scale, stream_plot.viz_img_scale), mode='reflect', preserve_range=True)
+                    (stream_vis.viz_img_scale, stream_vis.viz_img_scale), mode='reflect', preserve_range=True)
 
             # create subplot if it doesn't exist
-            ax = stream_plot.axs[row][col]
+            ax = stream_vis.axs[row][col]
             if ax is None:
-                ax = stream_plot.axs[row][col] = \
-                    self.figure.add_subplot(stream_plot.rows, stream_plot.cols, i+1)
+                ax = stream_vis.axs[row][col] = \
+                    self.figure.add_subplot(stream_vis.rows, stream_vis.cols, i+1)
                 ax.set_xticks([])
                 ax.set_yticks([])  
 
-            cmap = image_list.cmap or ('Greys' if stream_plot.colormap is None and \
-                len(img_viz.shape) == 2 else stream_plot.colormap)
+            cmap = image_list.cmap or ('Greys' if stream_vis.colormap is None and \
+                len(img_viz.shape) == 2 else stream_vis.colormap)
 
-            stream_plot.ax_imgs[row][col] = ax.imshow(img_viz, interpolation="none", cmap=cmap, alpha=image_list.alpha)
+            stream_vis.ax_imgs[row][col] = ax.imshow(img_viz, interpolation="none", cmap=cmap, alpha=image_list.alpha)
             dirty = True
 
             # set title
@@ -78,10 +78,10 @@ class ImagePlot(BaseMplPlot):
 
             #ax.autoscale_view() # not needed
             col = col + 1
-            if col >= stream_plot.cols:
+            if col >= stream_vis.cols:
                 col = 0
                 row = row + 1
-                if row >= stream_plot.rows:
+                if row >= stream_vis.rows:
                     break
             i += 1
 

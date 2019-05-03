@@ -10,57 +10,57 @@ from .vis_base import VisBase
 
 class TextVis(VisBase):
     def __init__(self, cell=None, title:str=None, show_legend:bool=None, 
-                 stream_name:str=None, console_debug:bool=False, **plot_args):
+                 stream_name:str=None, console_debug:bool=False, **vis_args):
         super(TextVis, self).__init__(widgets.HTML(), cell, title, show_legend, 
-            stream_name=stream_name, console_debug=console_debug, **plot_args)
+            stream_name=stream_name, console_debug=console_debug, **vis_args)
         self.df = pd.DataFrame([])
 
-    def _get_column_prefix(self, stream_plot, i):
-        return '[S.{}]:{}'.format(stream_plot.index, i)
+    def _get_column_prefix(self, stream_vis, i):
+        return '[S.{}]:{}'.format(stream_vis.index, i)
 
-    def _get_title(self, stream_plot):
-        title = stream_plot.title or 'Stream ' + str(len(self._stream_plots))
+    def _get_title(self, stream_vis):
+        title = stream_vis.title or 'Stream ' + str(len(self._stream_vises))
         return title
 
     # this will be called from _show_stream_items
-    def _append(self, stream_plot, vals):
+    def _append(self, stream_vis, vals):
         if vals is None:
-            self.df = self.df.append(pd.Series({self._get_column_prefix(stream_plot, 0) : None}), 
+            self.df = self.df.append(pd.Series({self._get_column_prefix(stream_vis, 0) : None}), 
                                                    sort=False, ignore_index=True)
             return
         for val in vals:
             if val is None or utils.is_scalar(val):
-                self.df = self.df.append(pd.Series({self._get_column_prefix(stream_plot, 0) : val}), 
+                self.df = self.df.append(pd.Series({self._get_column_prefix(stream_vis, 0) : val}), 
                                           sort=False, ignore_index=True)
             elif utils.is_array_like(val):
                 val_dict = {}
                 for i,val_i in enumerate(val):
-                    val_dict[self._get_column_prefix(stream_plot, i)] = val_i
+                    val_dict[self._get_column_prefix(stream_vis, i)] = val_i
                 self.df = self.df.append(pd.Series(val_dict), sort=False, ignore_index=True)
             else:
                 self.df = self.df.append(pd.Series(val.__dict__), sort=False, ignore_index=True)
 
-    def _post_add_subscription(self, stream_plot, **stream_plot_args):
-        only_summary = stream_plot_args.get('only_summary', False)
-        stream_plot.text = self._get_title(stream_plot)
-        stream_plot.only_summary = only_summary
+    def _post_add_subscription(self, stream_vis, **stream_vis_args):
+        only_summary = stream_vis_args.get('only_summary', False)
+        stream_vis.text = self._get_title(stream_vis)
+        stream_vis.only_summary = only_summary
 
-    def clear_plot(self, stream_plot, clear_history):
+    def clear_plot(self, stream_vis, clear_history):
         self.df = self.df.iloc[0:0]
 
-    def _show_stream_items(self, stream_plot, stream_items):
+    def _show_stream_items(self, stream_vis, stream_items):
         for stream_item in stream_items:
             if stream_item.ended:
                 self.df = self.df.append(pd.Series({'Ended':True}), 
                                                         sort=False, ignore_index=True)
             else:
                 vals = self._extract_vals((stream_item,))
-                self._append(stream_plot, vals)
+                self._append(stream_vis, vals)
         return True
 
-    def _post_update_stream_plot(self, stream_plot):
+    def _post_update_stream_plot(self, stream_vis):
         if get_ipython():
-            if not stream_plot.only_summary:
+            if not stream_vis.only_summary:
                 self.widget.value = self.df.to_html(classes=['output_html', 'rendered_html'])
             else:
                 self.widget.value = self.df.describe().to_html(classes=['output_html', 'rendered_html'])

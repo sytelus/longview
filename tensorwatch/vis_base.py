@@ -11,20 +11,20 @@ from IPython import get_ipython, display
 import ipywidgets as widgets
 
 class VisBase(Stream, metaclass=ABCMeta):
-    def __init__(self, widget, cell, title:str, show_legend:bool, stream_name:str=None, console_debug:bool=False, **plot_args):
+    def __init__(self, widget, cell, title:str, show_legend:bool, stream_name:str=None, console_debug:bool=False, **vis_args):
         super(VisBase, self).__init__(stream_name=stream_name, console_debug=console_debug)
 
         self.lock = threading.Lock()
         self._use_hbox = True
-        utils.set_default(plot_args, 'width', '100%')
+        utils.set_default(vis_args, 'width', '100%')
 
         self.widget = widget
 
         self.cell = cell or widgets.HBox(layout=widgets.Layout(\
-            width=plot_args['width'])) if self._use_hbox else None
+            width=vis_args['width'])) if self._use_hbox else None
         if self._use_hbox:
             self.cell.children += (self.widget,)
-        self._stream_plots = {}
+        self._stream_vises = {}
         self.is_shown = cell is not None
         self.title = title
         self.last_ex = None
@@ -32,23 +32,23 @@ class VisBase(Stream, metaclass=ABCMeta):
         self.q_last_processed = 0
 
     def subscribe(self, stream, title=None, clear_after_end=False, clear_after_each=False, 
-            show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_plot_args):
+            show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_vis_args):
         # in this ovedrride we don't call base class method
         with self.lock:
             self.layout_dirty = True
         
-            stream_plot = StreamPlot(stream, title, clear_after_end, 
+            stream_vis = StreamPlot(stream, title, clear_after_end, 
                 clear_after_each, history_len, dim_history, opacity,
-                len(self._stream_plots), stream_plot_args, 0)
-            stream_plot._clear_pending = False
-            stream_plot._pending_items = queue.Queue()
-            self._stream_plots[stream.stream_name] = stream_plot
+                len(self._stream_vises), stream_vis_args, 0)
+            stream_vis._clear_pending = False
+            stream_vis._pending_items = queue.Queue()
+            self._stream_vises[stream.stream_name] = stream_vis
 
-            self._post_add_subscription(stream_plot, **stream_plot_args)
+            self._post_add_subscription(stream_vis, **stream_vis_args)
 
             write_fn = functools.partial(VisBase.write_stream_plot, self)
-            stream_plot.write_fn = MethodType(write_fn, stream_plot) # weakref doesn't allow unfound methods
-            stream.add_callback(stream_plot.write_fn)
+            stream_vis.write_fn = MethodType(write_fn, stream_vis) # weakref doesn't allow unfound methods
+            stream.add_callback(stream_vis.write_fn)
 
             if show or (show is None and not self.is_shown):
                 return self.show()
@@ -68,28 +68,28 @@ class VisBase(Stream, metaclass=ABCMeta):
         # let the base class know about new item, this will notify any subscribers
         super(VisBase, self).write(val)
 
-        # use first stream_plot as default
-        stream_plot = next(iter(self._stream_plots.values()))
+        # use first stream_vis as default
+        stream_vis = next(iter(self._stream_vises.values()))
 
-        VisBase.write_stream_plot(self, stream_plot, val)
+        VisBase.write_stream_plot(self, stream_vis, val)
 
     @staticmethod
-    def write_stream_plot(vis, stream_plot:StreamPlot, stream_item:StreamItem):
+    def write_stream_plot(vis, stream_vis:StreamPlot, stream_item:StreamItem):
         with vis.lock: # this could be from separate thread!
-            #if stream_plot is None:
-            #    utils.debug_log('stream_plot not specified in VisBase.write')
-            #    stream_plot = next(iter(vis._stream_plots.values())) # use first as default
+            #if stream_vis is None:
+            #    utils.debug_log('stream_vis not specified in VisBase.write')
+            #    stream_vis = next(iter(vis._stream_vises.values())) # use first as default
             utils.debug_log("Stream received: {}".format(stream_item.stream_name), verbosity=5)
-            stream_plot._pending_items.put(stream_item)
+            stream_vis._pending_items.put(stream_item)
 
         # if we accumulated enough of pending items then let's process them
         if vis._can_update_stream_plots():
             vis._update_stream_plots()
 
-    def _extract_results(self, stream_plot):
+    def _extract_results(self, stream_vis):
         stream_items, clear_current, clear_history = [], False, False
-        while not stream_plot._pending_items.empty():
-            stream_item = stream_plot._pending_items.get()
+        while not stream_vis._pending_items.empty():
+            stream_item = stream_vis._pending_items.get()
             if stream_item.stream_reset:
                 utils.debug_log("Stream reset", stream_item.stream_name)
                 stream_items.clear() # no need to process these events
@@ -103,12 +103,12 @@ class VisBase(Stream, metaclass=ABCMeta):
 
                 # state management for _clear_pending
                 # if we need to clear plot before putting in data, do so
-                if stream_plot._clear_pending:
+                if stream_vis._clear_pending:
                     stream_items.clear()
                     clear_current = True
-                    stream_plot._clear_pending = False
-                if stream_plot.clear_after_each or (stream_item.ended and stream_plot.clear_after_end):
-                    stream_plot._clear_pending = True
+                    stream_vis._clear_pending = False
+                if stream_vis.clear_after_each or (stream_item.ended and stream_vis.clear_after_end):
+                    stream_vis._clear_pending = True
                         
                 stream_items.append(stream_item)
 
@@ -127,15 +127,15 @@ class VisBase(Stream, metaclass=ABCMeta):
         return vals
 
     @abstractmethod
-    def clear_plot(self, stream_plot, clear_history):
+    def clear_plot(self, stream_vis, clear_history):
         """(for derived class) Clears the data in specified plot before new data is redrawn"""
         pass
     @abstractmethod
-    def _show_stream_items(self, stream_plot, stream_items):
+    def _show_stream_items(self, stream_vis, stream_items):
         """(for derived class) Plot the data in given axes"""
         pass
     @abstractmethod
-    def _post_add_subscription(self, stream_plot, **stream_plot_args):
+    def _post_add_subscription(self, stream_vis, **stream_vis_args):
         pass
 
     # typically we want to batch up items for performance
@@ -143,23 +143,23 @@ class VisBase(Stream, metaclass=ABCMeta):
         return True
 
     @abstractmethod
-    def _post_update_stream_plot(self, stream_plot):
+    def _post_update_stream_plot(self, stream_vis):
         pass
 
     def _update_stream_plots(self):
         with self.lock:
             self.q_last_processed = time.time()
-            for stream_plot in self._stream_plots.values():
-                stream_items, clear_current, clear_history = self._extract_results(stream_plot)
+            for stream_vis in self._stream_vises.values():
+                stream_items, clear_current, clear_history = self._extract_results(stream_vis)
 
                 if clear_current:
-                    self.clear_plot(stream_plot, clear_history)
+                    self.clear_plot(stream_vis, clear_history)
 
                 # if we have something to render
-                dirty = self._show_stream_items(stream_plot, stream_items)
+                dirty = self._show_stream_items(stream_vis, stream_items)
                 if dirty:
-                    self._post_update_stream_plot(stream_plot)
-                    stream_plot.last_update = time.time()
+                    self._post_update_stream_plot(stream_vis)
+                    stream_vis.last_update = time.time()
 
     @abstractmethod
     def _show_widget_native(self, blocking:bool):
