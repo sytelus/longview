@@ -28,7 +28,7 @@ class Watcher:
     '''
 
     def _reset(self, closed:bool):
-        self._event_streams:Dict[str, Dict[str, Watcher.StreamInfo]] = {}
+        self._stream_infos:Dict[str, Dict[str, Watcher.StreamInfo]] = {}
         self._global_vars:Dict[str, Any] = {}
         self._stream_count = 0
         self.source_id = str(uuid.uuid4())
@@ -59,10 +59,10 @@ class Watcher:
 
 
         # get requests for this event
-        stream_infos = self._event_streams.get(stream_req.event_name, None)
+        stream_infos = self._stream_infos.get(stream_req.event_name, None)
         # if first for this event, create dictionary
         if stream_infos is None:
-            stream_infos = self._event_streams[stream_req.event_name] = {}
+            stream_infos = self._stream_infos[stream_req.event_name] = {}
 
         stream_info = stream_infos.get(stream_req.stream_name, None)
         if not stream_info:
@@ -85,7 +85,7 @@ class Watcher:
 
     def observe(self, event_name:str='', **vars) -> None:
         # get stream requests for this event
-        stream_infos = self._event_streams.get(event_name, {})
+        stream_infos = self._stream_infos.get(event_name, {})
 
         # TODO: remove list() call - currently needed because of error dictionary
         # can't be changed - happens when multiple clients gets started
@@ -117,7 +117,7 @@ class Watcher:
             utils.debug_log("Invalid eval_return not sent", verbosity=5)
 
     def end_event(self, event_name:str='', disable_streams=False) -> None:
-        stream_infos = self._event_streams.get(event_name, {})
+        stream_infos = self._stream_infos.get(event_name, {})
         for stream_info in stream_infos.values():
             if not stream_info.disabled:
                 self._end_stream_req(stream_info, disable_streams)
@@ -139,7 +139,7 @@ class Watcher:
 
     def del_stream(self, stream_name:str) -> None:
         utils.debug_log("deleting stream", stream_name)
-        for stream_infos in self._event_streams.values():
+        for stream_infos in self._stream_infos.values():
             stream_info = stream_infos.get(stream_name, None)
             if stream_info:
                 stream_info.disabled = True
