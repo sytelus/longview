@@ -19,6 +19,9 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="tensorwatch\stream_union.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\file_stream.py">
       <SubType>Code</SubType>
     </Compile>
@@ -37,9 +40,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\array_stream.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tensorwatch\data_explore\similar_inputs.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tensorwatch\data_utils.py">
@@ -126,7 +126,6 @@
     <Folder Include="tensorwatch\model_graph\hiddenlayer\__pycache__\" />
     <Folder Include="tensorwatch\mpl\" />
     <Folder Include="tensorwatch\embeddings\" />
-    <Folder Include="tensorwatch\data_explore\" />
     <Folder Include="tensorwatch\saliency\lime\" />
     <Folder Include="tensorwatch\receptive_field\" />
     <Folder Include="tensorwatch\plotly\" />
@@ -137,11 +136,17 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
+    <Content Include="tensorwatch\model_graph\hiddenlayer\README.md">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="tensorwatch\model_graph\hiddenlayer\__pycache__\ge.cpython-36.pyc" />
     <Content Include="tensorwatch\model_graph\hiddenlayer\__pycache__\graph.cpython-36.pyc" />
     <Content Include="tensorwatch\model_graph\hiddenlayer\__pycache__\pytorch_builder.cpython-36.pyc" />
     <Content Include="tensorwatch\model_graph\hiddenlayer\__pycache__\transforms.cpython-36.pyc" />
     <Content Include="tensorwatch\model_graph\hiddenlayer\__pycache__\__init__.cpython-36.pyc" />
+    <Content Include="tensorwatch\saliency\README.md">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="TODO.md" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

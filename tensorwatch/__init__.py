@@ -80,27 +80,24 @@ def _get_vis(vis_type, cell, title, images=None, images_reshape=None, width=None
     else:
         raise ValueError('Render vis_type parameter has invalid value: "{}"'.format(vis_type))
 
-def create_stream(expr=None, event_name:str='', stream_name:str=None, throttle=1, 
-                  cli_id:int=None, srv_id:int=0, subscribers:Iterable[Stream]=None):
-    if expr is None or isinstance(expr, str):
-        stream_req = StreamRequest(expr, event_name=event_name, stream_name=stream_name, 
-                                   throttle=throttle, client_name='tw:'+str(cli_id))
+def _get_target(cli_id:int, srv_id:int)->Union[Watcher, ZmqWatcherClient]:
+    if cli_id is not None  and srv_id is not None:
+        raise ValueError('cli_id and srv_id cannot both be not None')
+    target = None
+    if cli_id is not None:
+        target = get_client(cli_id)
+    elif srv_id is not None:
+        target = get_server(srv_id)
+    else:
+        target = get_watcher()
+    return target
 
-        if cli_id is not None  and srv_id is not None:
-            raise ValueError('cli_id and srv_id cannot both be not None')
-        target = None
-        if cli_id is not None:
-            target = get_client(cli_id)
-        elif srv_id is not None:
-            target = get_server(srv_id)
-        else:
-            target = get_watcher()
-
-        stream = target.create_stream(stream_req, subscribers=subscribers)
-    elif utils.is_array_like(expr):
-        stream = ArrayStream(expr)
-    elif isinstance(expr, Stream):
-        stream = expr
+def get_stream(stream_types:Sequence[str], for_write:bool, expr=None, event_name:str='', stream_name:str=None, throttle=1, 
+                  cli_id:int=None, srv_id:int=0):
+    target = _get_target(cli_id, srv_id)
+    stream_req = StreamRequest(stream_types=stream_types, for_write=for_write, expr=expr, event_name=event_name, 
+                               stream_name=stream_name, throttle=throttle)
+    stream = target.get_stream(stream_req)
 
     return stream
 

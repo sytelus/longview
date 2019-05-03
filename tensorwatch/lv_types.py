@@ -42,14 +42,37 @@ class StreamItem:
 
 EventEvalFunc = Callable[[EventsVars], StreamItem]
 
+
+class VisParams:
+    def __init__(self, vis_type=None, host_vis=None, 
+            cell=None, title=None, 
+            clear_after_end=False, clear_after_each=False, history_len=1, dim_history=True, opacity=None,
+            images=None, images_reshape=None, width=None, height=None, vis_args={}, stream_vis_args={})->None:
+        self.vis_type=vis_type
+        self.host_vis=host_vis, 
+        self.cell=cell
+        self.title=title
+        self.clear_after_end=clear_after_end
+        self.clear_after_each=clear_after_each
+        self.history_len=history_len
+        self.dim_history=dim_history
+        self.opacity=opacity
+        self.images=images
+        self.images_reshape=images_reshape
+        self.width=width
+        self.height=height
+        self.vis_args={}
+        self.stream_vis_args={}
+
 class StreamRequest:
-    def __init__(self, expr:str, event_name:str='', stream_name:str=None, 
-            throttle:float=None, client_name:str=None):
+    def __init__(self, for_write:bool, stream_types:Sequence[str]=None, expr:str=None, event_name:str='', stream_name:str=None, 
+            throttle:float=None, vis_params:VisParams=None):
         self.event_name = event_name
         self.expr = expr
         self.stream_name = stream_name or str(uuid.uuid4())
-        # used to detect if client no longer exist in which case don't publish for them
-        self.client_name = client_name 
+        self.stream_types = stream_types
+        self.for_write = for_write
+        self.vis_params = vis_params
 
         # max throughput n Lenovo P50 laptop for MNIST
         # text console -> 0.1s
@@ -62,7 +85,7 @@ class ClientServerRequest:
         self.req_data = req_data
 
 class CliSrvReqTypes:
-    create_stream = 'CreateStream'
+    get_stream = 'GetStream'
     del_stream = 'DeleteStream'
 
 class StreamPlot:

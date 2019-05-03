@@ -3,6 +3,7 @@ from .lv_types import StreamRequest, EventVars, StreamItem
 from . import utils
 from .evaler import Evaler
 from .stream import Stream
+from .stream_factory import StreamFactory
 import uuid
 import time
 from . import utils
@@ -20,7 +21,7 @@ class Watcher:
         self._reset(False)
 
     '''Note on event_name and stream_name
-    Each stream should be uniquely identifiable by stream_name. The create_stream returns old
+    Each stream should be uniquely identifiable by stream_name. The get_stream returns old
     stream is stream already exist (we should probably change that). The watcher organizes streams
     under events so for each occurrence of event, we don't have scan entire list of stream. This is
     however just optimization and stream_name still needs to be unique across all events.
@@ -28,6 +29,7 @@ class Watcher:
     '''
 
     def _reset(self, closed:bool):
+        # for each event, store (stream_name, stream_info)
         self._stream_infos:Dict[str, Dict[str, Watcher.StreamInfo]] = {}
         self._global_vars:Dict[str, Any] = {}
         self._stream_count = 0
@@ -43,20 +45,16 @@ class Watcher:
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def create_stream(self, stream_req:Union[StreamRequest, str], subscribers:Iterable[Stream]=None) -> Stream:
-        if isinstance(stream_req, str):
-            stream_req = StreamRequest(expr=stream_req, stream_name=stream_req)
-
+    def get_stream(self, stream_req:StreamRequest) -> Stream:
         # modify expression if needed
         expr = stream_req.expr
-        if expr=='' or expr='x':
+        if expr=='' or expr=='x':
             expr = 'map(lambda x:x, l)'
         elif expr.strip().startswith('lambda '):
             expr = 'map({}, l)'.format(expr)
         # else no rewrites
 
         evaler = Evaler(expr) if expr is not None else None
-
 
         # get requests for this event
         stream_infos = self._stream_infos.get(stream_req.event_name, None)
@@ -67,14 +65,11 @@ class Watcher:
         stream_info = stream_infos.get(stream_req.stream_name, None)
         if not stream_info:
             utils.debug_log("Creating stream", stream_req.stream_name)
+            stream = StreamFactory(stream_types=stream_req.stream_types, for_write=stream_req.for_write, 
+                                   stream_name=stream_req.stream_name)
             stream_info = stream_infos[stream_req.stream_name] = Watcher.StreamInfo(stream_req, evaler,
-                                                         Stream(), self._stream_count)
-
+                                                         stream, self._stream_count)
             self._stream_count += 1
-
-            if subscribers is not None:
-                for subscriber in subscribers:
-                    subscriber.subscribe(stream_info.stream)
         else:
             utils.debug_log("Stream already exist, not creating again", stream_req.stream_name)
 

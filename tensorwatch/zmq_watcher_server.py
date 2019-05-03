@@ -19,7 +19,7 @@ class ZmqWatcherServer(Watcher):
             is_server=True, callback=self._clisrv_callback)
 
         # notify existing listeners of our ID
-        self._zmq_stream_pub = self._stream_factory.create_stream('zmqpub')
+        self._zmq_stream_pub = self._stream_factory.get_stream(stream_types=['tcp'], for_write=True)
 
         # ZMQ quirk: we must wait a bit after opening port and before sending message
         # TODO: can we do better?
@@ -42,20 +42,17 @@ class ZmqWatcherServer(Watcher):
         self._clisrv = None
         utils.debug_log("ZmqWatcherServer reset", verbosity=1)
 
-    def __enter__(self):
-        return self
-    def __exit__(self, exception_type, exception_value, traceback):
-        self.close()
-
     def _clisrv_callback(self, clisrv, clisrv_req):
         utils.debug_log("Received client request", clisrv_req.req_type)
 
-        if clisrv_req.req_type == CliSrvReqTypes.create_stream:
-            stream_req, subscriber_specs = clisrv_req.req_data
-            subscriber_specs = subscriber_specs if subscriber_specs is not None else []
-            subscribers = [self._stream_factory.create_stream(subscriber_spec) for subscriber_spec in subscriber_specs]
-            self.create_stream(stream_req, subscribers) # ignore return as we can't send back stream obj
-            return None
+        if clisrv_req.req_type == CliSrvReqTypes.get_stream:
+            stream_req, srv_subscriber_specs = clisrv_req.req_data
+            stream = self.get_stream(stream_req) 
+            srv_subscriber_specs = srv_subscriber_specs if srv_subscriber_specs is not None else []
+            for srv_subscriber_spec in srv_subscriber_specs:
+                srv_subscriber = self._stream_factory.get_stream(for_write=True, srv_subscriber_spec)
+                srv_subscriber.subscribe(stream)
+            return None # ignore return as we can't send back stream obj
         elif clisrv_req.req_type == CliSrvReqTypes.del_stream:
             stream_name:str = clisrv_req.req_data
             return self.del_stream(stream_name)

@@ -7,7 +7,7 @@ utils.set_debug_verbosity(10)
 
 def main():
     watcher = ZmqWatcherClient()
-    stream = watcher.create_stream('lambda vars:vars.x**2')
+    stream = watcher.get_stream(expr='lambda vars:vars.x**2')
     stream.console_debug = True
     input('pause')
 

@@ -1,49 +1,48 @@
-from typing import Dict, Any
+from typing import Dict, Any, Iterator, Union
 from .zmq_stream import ZmqStream
+from .file_stream import FileStream
 from .stream import Stream
-
+from .stream_union import StreamUnion
 
 class StreamFactory:
     def __init__(self):
         self._streams:Dict[str, Stream] = {}
 
-    def append(self, normalized_name:str, stream:Stream):
-        self._streams[normalized_name] = stream
-
-    def create_stream(self, name:str, default_spec:Any=None):
-        normalized_name, parts = StreamFactory.normalize_name(name, default_spec)
-        stream = self._streams.get(normalized_name, None)
-        if stream is not None:
-            return stream
-
-        if parts[0] == 'zmqpub':
-            stream = ZmqStream(for_write=True, port_offset=int(parts[1]), stream_name=normalized_name, 
-                                     block_until_connected=False) # should this be configurable? Is it even needed?
+    def get_stream(self, stream_types:Sequence[str], for_write:bool=None, stream_name:str=None)->Stream:
+        streams = [self._create_stream_by_string(stream_type, for_write) for stream_type in stream_types]
+        if len(streams) == 1:
+            return _streams[0]
         else:
-             raise ValueError('Stream name "{}" has unknown type'.format(name))
+            # we create new union of child but this is not necessory
+            return StreamUnion(streams, for_write=for_write)
 
-        self.append(normalized_name, stream)
-        return stream
+    def _create_stream_by_string(self, stream_type:str, for_write:bool)->Stream:
+        parts = stream_type.split(':', 1) if stream_type is not None else ['']
+        stream_type = parts[0]
+        stream_args = parts[1] if len(parts) > 1 else None
 
-    @staticmethod
-    def normalize_name(name:str, default_spec:Any)->str:
-        parts = name.split(':', 1)
+        if stream_type == 'tcp':
+            port_offset = int(stream_args or 0)
+            stream_name = '{}:{}'.format(stream_type, port_offset)
+            if stream_name not in self._streams:
+                self._streams[stream_name] = ZmqStream(for_write=for_write, 
+                    port_offset=port_offset, stream_name=stream_name, block_until_connected=False)
+            # else we already have this stream
+            return self._streams[stream_name]
 
-        if len(parts) < 1:
-            raise ValueError('Stream name "{}" must have at least one part'.format(name))
-        if len(parts[0]) <= 1: # no type specified or is drive letter
-            if len(parts) > 1:
-                raise ValueError('Stream name "{}" must not have more than drive or type specifiers'.format(name))
-            return 'file:' + name, ['file', name]
-        if parts[0] == 'file':
-            if len(parts) < 2:
-                if default_spec is None:
-                    raise ValueError('File stream name "{}" must have file name'.format(name))
-                return 'file:' + default_spec, ['file', default_spec]
-            return name, parts
-        if parts[0] == 'zmqpub':
-            if len(parts) < 2:
-                return 'zmqpub:0', ['zmqpub', default_spec or 0]
-            return name, parts
-        raise ValueError('Stream name "{}" has unknown type'.format(name))
+        if stream_type == 'file':
+            if stream_args is None:
+                raise ValueError('File name must be specified for stream type "file"')
+            stream_name = '{}:{}'.format(stream_type, stream_args)
+            if stream_name not in self._streams:
+                self._streams[stream_name] = FileStream(for_write=for_write, 
+                    file_name=stream_args, stream_name=stream_name)
+            # else we already have this stream
+            return self._streams[stream_name]
+
+        if stream_type == '':
+            return Stream()
+
+        raise ValueError('stream_type "{}" has unknown type'.format(stream_type))
+
 

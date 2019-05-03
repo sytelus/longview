@@ -8,7 +8,7 @@ from tensorwatch.lv_types import StreamItem
 def main():
     watcher = Watcher()
     line_plot = LinePlot()
-    stream = watcher.create_stream('lambda vars:vars.x', subscribers=[line_plot])
+    stream = watcher.get_stream(expr='lambda vars:vars.x')
     line_plot.subscribe(stream)
     line_plot.show()
 

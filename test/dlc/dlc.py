@@ -7,9 +7,7 @@ utils.set_debug_verbosity(4)
 
 def dlc_show_rand_outputs():
     cli = cli_train = tw.ZmqWatcherClient()
-    #cli = tw.ZmqWatcherClient()
-    
-    imgs = cli.create_stream('batch', 
+    imgs = cli.get_stream(event_name='batch', 
         "top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=10, order='rnd')", 
         throttle=1)
     img_plot = tw.mpl.ImagePlot()
@@ -21,7 +19,7 @@ def img2img_rnd():
     cli_train = tw.ZmqWatcherClient()
     cli = tw.ZmqWatcherClient()
 
-    imgs = cli_train.create_stream('batch', 
+    imgs = cli_train.get_stream(event_name='batch', 
         "top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=2, order='rnd')", throttle=1)
     img_plot = tw.mpl.ImagePlot()
     img_plot.show(imgs, img_width=100, img_height=100, viz_img_scale=3, cols=1)
