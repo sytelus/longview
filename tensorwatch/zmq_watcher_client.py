@@ -11,13 +11,12 @@ class ZmqWatcherClient(Watcher):
         super(ZmqWatcherClient, self).__init__()
 
         self.port_offset = port_offset
-        self._filtered_streams:Dict[str,Stream] = {}
-        self._stream_reqs:Dict[str,StreamRequest] = {}
+        self._zmq_srvmgmt_sub = self._zmq_streamitem_sub = self._clisrv = None
+
         self._open(port_offset)
 
     def _reset(self, closed:bool):
         super(ZmqWatcherClient, self)._reset(closed)
-        self.port_offset = port_offset
         self._stream_reqs:Dict[str,StreamRequest] = {}
         utils.debug_log("ZmqWatcherClient reset", verbosity=1)
 
@@ -29,7 +28,6 @@ class ZmqWatcherClient(Watcher):
         self._zmq_srvmgmt_sub = ZmqStream(for_write=False, port_offset=port_offset, stream_name='zmq_sub:'+str(port_offset),
                                                     topic=PublisherTopics.ServerMgmt)
         self._zmq_srvmgmt_sub.add_callback(self._on_srv_mgmt)        
-
 
     def _on_srv_mgmt(self, mgmt_msg:Any):
         utils.debug_log("Received - SeverMgmtevent", mgmt_msg)
