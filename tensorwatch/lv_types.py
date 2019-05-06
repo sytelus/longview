@@ -64,14 +64,20 @@ class VisParams:
         self.vis_args={}
         self.stream_vis_args={}
 
-class StreamRequest:
-    def __init__(self, for_write:bool, stream_types:Sequence[str]=None, expr:str=None, event_name:str='', stream_name:str=None, 
-            throttle:float=None, vis_params:VisParams=None):
+class StreamOpenRequest:
+    def __init__(self, stream_name:str, devices:Sequence[str]=None, event_name:str='')
+        self.stream_name = stream_name or str(uuid.uuid4())
+        self.devices = devices
+        self.event_name = event_name
+
+
+class StreamCreateRequest:
+    def __init__(self, stream_name:str, devices:Sequence[str]=None, event_name:str='',
+                 expr:str=None, throttle:float=None, vis_params:VisParams=None):
         self.event_name = event_name
         self.expr = expr
         self.stream_name = stream_name or str(uuid.uuid4())
-        self.stream_types = stream_types
-        self.for_write = for_write
+        self.devices = devices
         self.vis_params = vis_params
 
         # max throughput n Lenovo P50 laptop for MNIST

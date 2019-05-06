@@ -4,6 +4,7 @@ from . import utils
 from .evaler import Evaler
 from .stream import Stream
 from .stream_factory import StreamFactory
+from .filtered_stream import FilteredStream
 import uuid
 import time
 from . import utils
@@ -12,13 +13,13 @@ from . import utils
 class Watcher:
     class StreamInfo:
         def __init__(self, req:StreamRequest, evaler:Evaler, stream:Stream, 
-                     index:int, disabled=False, last_sent:float=None) -> None:
+                     index:int, disabled=False, last_sent:float=None)->None:
             self.req, self.evaler, self.stream = req, evaler, stream
             self.index, self.disabled, self.last_sent = index, disabled, last_sent
             self.item_count = 0
 
     def __init__(self) -> None:
-        self._reset(False)
+        self._reset()
 
     '''Note on event_name and stream_name
     Each stream should be uniquely identifiable by stream_name. The get_stream returns old
@@ -28,24 +29,55 @@ class Watcher:
     The stream name will be stamped on each stream_item.
     '''
 
-    def _reset(self, closed:bool):
+    def _reset(self):
         # for each event, store (stream_name, stream_info)
         self._stream_infos:Dict[str, Dict[str, Watcher.StreamInfo]] = {}
         self._global_vars:Dict[str, Any] = {}
         self._stream_count = 0
+        self._stream_factory = StreamFactory()
         self.source_id = str(uuid.uuid4())
-        self.closed = closed
+        self.closed = False
 
     def close(self):
         if not self.closed:
-            self._reset(True)
+            for stream_infos in self._stream_infos.values(): # per event
+                for stream_info in stream_infos.values():
+                    stream_info.stream.close()
+            self._stream_factory.close()
+            self._reset()
+            self.closed = True
 
     def __enter__(self):
         return self
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def get_stream(self, stream_req:StreamRequest) -> Stream:
+    def open_stream(self, stream_req:OpenStreamRequest)->Stream:
+        devices:Sequence[str] = None
+        if stream_req.devices is not None:
+            devices = self._stream_factory.get_streams(stream_types=stream_req.devices, 
+                                                       for_write=False)
+
+        if devices is None:
+            # if not devices then see if we have cached stream
+            stream_infos = self._stream_infos.get(stream_req.event_name, None)
+            # if first for this event, create dictionary
+            if stream_infos is None:
+                raise ValueError('Requested stream was not found: ' + arg_str(stream_req))
+            stream_info = stream_infos.get(stream_req.stream_name, None)
+            if stream_info is None:
+                # TODO: what if devices were specified AND stream exist in cache?
+                raise ValueError('Requested stream was not found: ' + arg_str(stream_req))
+            return stream_info.stream
+        
+        stream = Stream(stream_name=stream_req.stream_name)
+        for device in devices:
+            device_stream = FilteredStream(device, 
+                lambda steam_item: (steam_item, steam_item.stream_name == stream_name))
+            stream.subscribe(device_stream)
+        return stream
+
+    def create_stream(self, stream_req:CreateStreamRequest)->Stream:
         # modify expression if needed
         expr = stream_req.expr
         if expr=='' or expr=='x':
@@ -65,12 +97,18 @@ class Watcher:
         stream_info = stream_infos.get(stream_req.stream_name, None)
         if not stream_info:
             utils.debug_log("Creating stream", stream_req.stream_name)
-            stream = StreamFactory(stream_types=stream_req.stream_types, for_write=stream_req.for_write, 
-                                   stream_name=stream_req.stream_name)
-            stream_info = stream_infos[stream_req.stream_name] = Watcher.StreamInfo(stream_req, evaler,
-                                                         stream, self._stream_count)
+            stream = Stream(stream_name=stream_req.stream_name)
+            devices:Sequence[str] = None
+            if stream_req.devices is not None:
+                devices = self._stream_factory.get_streams(stream_types=stream_req.devices, 
+                                                           for_write=True)
+                for device in devices:
+                    device.subscribe(stream)
+            stream_info = stream_infos[stream_req.stream_name] = Watcher.StreamInfo(
+                stream_req, evaler, stream, self._stream_count)
             self._stream_count += 1
         else:
+            # TODO: throw error?
             utils.debug_log("Stream already exist, not creating again", stream_req.stream_name)
 
         return stream_info.stream
@@ -134,7 +172,7 @@ class Watcher:
 
     def del_stream(self, stream_name:str) -> None:
         utils.debug_log("deleting stream", stream_name)
-        for stream_infos in self._stream_infos.values():
+        for stream_infos in self._stream_infos.values(): # per event
             stream_info = stream_infos.get(stream_name, None)
             if stream_info:
                 stream_info.disabled = True

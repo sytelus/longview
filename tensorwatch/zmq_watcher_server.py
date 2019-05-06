@@ -37,7 +37,7 @@ class ZmqWatcherServer(Watcher):
             utils.debug_log("ZmqWatcherServer is closed", verbosity=1)
         super(ZmqWatcherServer, self).close()
 
-    def _reset(self, closed:bool):
+    def _reset(self):
         super(ZmqWatcherServer, self)._reset(closed)
         self._clisrv = None
         utils.debug_log("ZmqWatcherServer reset", verbosity=1)

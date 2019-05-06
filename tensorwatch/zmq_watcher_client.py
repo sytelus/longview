@@ -15,7 +15,7 @@ class ZmqWatcherClient(Watcher):
 
         self._open(port_offset)
 
-    def _reset(self, closed:bool):
+    def _reset(self):
         super(ZmqWatcherClient, self)._reset(closed)
         self._stream_reqs:Dict[str,StreamRequest] = {}
         utils.debug_log("ZmqWatcherClient reset", verbosity=1)
