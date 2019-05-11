@@ -1,5 +1,3 @@
-# below imports may be used by eval()
-from itertools import *
 import numpy as np
 import torch
 import math
@@ -31,34 +29,34 @@ def agg_params(model, p2v, weight_or_bias=True):
                 yield i, p2v(p), n
 
 # use this for image to class problems
-def pyt_img_class_out_xform(item): # (input, target, in_weight, out_weight, output, loss)
-    input = item[0].data.cpu().numpy()
+def pyt_img_class_out_xform(item): # (input_val, target, in_weight, out_weight, output_val, loss)
+    input_val = item[0].data.cpu().numpy()
     # turn log-probabilities in to (max log-probability, class ID)
-    output = torch.max(item[4],0)
+    output_val = torch.max(item[4],0)
     # return image, text
-    return ImagePlotItem((input,), title="T:{},Pb:{:.2f},pd:{:.2f},L:{:.2f}".\
-        format(item[1], math.exp(output[0]), output[1], item[5]))
+    return ImagePlotItem((input_val,), title="T:{},Pb:{:.2f},pd:{:.2f},L:{:.2f}".\
+        format(item[1], math.exp(output_val[0]), output_val[1], item[5]))
 
 # use this for image to image translation problems
-def pyt_img_img_out_xform(item): # (input, target, in_weight, out_weight, output, loss)
-    input = item[0].data.cpu().numpy()
-    output = item[4].data.cpu().numpy()
+def pyt_img_img_out_xform(item): # (input_val, target, in_weight, out_weight, output_val, loss)
+    input_val = item[0].data.cpu().numpy()
+    output_val = item[4].data.cpu().numpy()
     target = item[1].data.cpu().numpy()
     tar_weight = item[3].data.cpu().numpy() if item[3] is not None else None
 
     # return in-image, text, out-image, target-image
-    return ImagePlotItem((input, target, output, tar_weight),
+    return ImagePlotItem((input_val, target, output_val, tar_weight),
                       title="L:{:.2f}, S:{:.2f}, {:.2f}-{:.2f}, {:.2f}-{:.2f}".\
-                          format(item[5], input.std(), input.min(), input.max(), output.min(), output.max()))
+                          format(item[5], input_val.std(), input_val.min(), input_val.max(), output_val.min(), output_val.max()))
 
 def cols2rows(batch):
-    in_weight = utils.fill_like(batch.in_weight, batch.input)
-    tar_weight = utils.fill_like(batch.tar_weight, batch.input)
+    in_weight = utils.fill_like(batch.in_weight, batch.input_val)
+    tar_weight = utils.fill_like(batch.tar_weight, batch.input_val)
     losses = [l.mean() for l in batch.loss_all]
     targets = [t.item() if len(t.shape)==0 else t for t in batch.target]
 
-    return list(zip(batch.input, targets, in_weight, tar_weight,
-               batch.output, losses))
+    return list(zip(batch.input_val, targets, in_weight, tar_weight,
+               batch.output_val, losses))
 
 def top(l, topk=1, order='dsc', group_key=None, out_xform=lambda x:x):
     min_result = OrderedDict()

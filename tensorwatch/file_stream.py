@@ -2,7 +2,6 @@ from .stream import Stream
 import pickle
 from typing import Any
 from . import utils
-from .lv_types import StreamItem
 
 class FileStream(Stream):
     def __init__(self, for_write:bool, file_name:str, stream_name:str=None, console_debug:bool=False):
@@ -14,13 +13,13 @@ class FileStream(Stream):
         utils.debug_log('FileStream started', self.file_name, verbosity=1)
 
     def close(self):
-        if not self.file.closed:
+        if not self._file.closed:
             self._file.close()
             self._file = None
             utils.debug_log('FileStream is closed', self.file_name, verbosity=1)
-        super(ZmqStream, self).close()
+        super(FileStream, self).close()
 
-    def write(self, val:Any, topic=None):
+    def write(self, val:Any):
         super(FileStream, self).write(val)
         if self.for_write:
             pickle.dump(val, self._file)

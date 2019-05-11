@@ -1,15 +1,15 @@
-from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
+from typing import List, Callable, Any, Sequence
 from . import utils
 import uuid
 
 
 class EventVars:
-    def __init__(self, globals, **vars):
-        if globals is not None:
-            for key in globals:
-                setattr(self, key, globals[key])
-        for key in vars:
-            setattr(self, key, vars[key])
+    def __init__(self, globals_val, **vars_val):
+        if globals_val is not None:
+            for key in globals_val:
+                setattr(self, key, globals_val[key])
+        for key in vars_val:
+            setattr(self, key, vars_val[key])
 
     def __str__(self):
         sb = []
@@ -47,7 +47,7 @@ class VisParams:
     def __init__(self, vis_type=None, host_vis=None, 
             cell=None, title=None, 
             clear_after_end=False, clear_after_each=False, history_len=1, dim_history=True, opacity=None,
-            images=None, images_reshape=None, width=None, height=None, vis_args={}, stream_vis_args={})->None:
+            images=None, images_reshape=None, width=None, height=None, vis_args=None, stream_vis_args=None)->None:
         self.vis_type=vis_type
         self.host_vis=host_vis, 
         self.cell=cell
@@ -61,8 +61,8 @@ class VisParams:
         self.images_reshape=images_reshape
         self.width=width
         self.height=height
-        self.vis_args={}
-        self.stream_vis_args={}
+        self.vis_args=vis_args or {}
+        self.stream_vis_args=stream_vis_args or {}
 
 class StreamOpenRequest:
     def __init__(self, stream_name:str, devices:Sequence[str]=None, 

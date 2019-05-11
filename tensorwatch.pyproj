@@ -19,6 +19,7 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="tensorwatch\embeddings\__init__.py" />
     <Compile Include="tensorwatch\stream_union.py">
       <SubType>Code</SubType>
     </Compile>
@@ -136,6 +137,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
+    <Content Include="tensorwatch\.pylintrc">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="tensorwatch\model_graph\hiddenlayer\README.md">
       <SubType>Code</SubType>
     </Content>

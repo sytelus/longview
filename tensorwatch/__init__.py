@@ -1,4 +1,4 @@
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, Union
 
 from .remote_watcher_client import RemoteWatcherClient
 from .remote_watcher_server import RemoteWatcherServer
@@ -11,6 +11,7 @@ from . import mpl
 from .stream import Stream
 from .array_stream import ArrayStream
 from .lv_types import ImagePlotItem, VisParams
+from . import utils
 
 ###### Import methods for tw namespace #########
 from .receptive_field.rf_utils import plot_receptive_field, plot_grads_at
@@ -80,7 +81,7 @@ def _get_vis(vis_type, cell, title, images=None, images_reshape=None, width=None
     else:
         raise ValueError('Render vis_type parameter has invalid value: "{}"'.format(vis_type))
 
-def _get_target(cli_id:int, srv_id:int)->Union[Watcher, RemoteWatcherClient]:
+def _get_target(cli_id:int, srv_id:int)->Union[Watcher, RemoteWatcherServer, RemoteWatcherClient]:
     if cli_id is not None  and srv_id is not None:
         raise ValueError('cli_id and srv_id cannot both be not None')
     target = None
@@ -95,9 +96,8 @@ def _get_target(cli_id:int, srv_id:int)->Union[Watcher, RemoteWatcherClient]:
 def create_stream(stream_name:str=None, devices:Sequence[str]=None, event_name:str='',
         expr=None, throttle:float=1, vis_params:VisParams=None, cli_id:int=None, srv_id:int=None):
     target = _get_target(cli_id, srv_id)
-    stream_req = StreamRequest(stream_name=stream_name, devices=stream_types,
+    stream = target.create_stream(stream_name=stream_name, devices=devices,
         event_name=event_name, expr=expr, throttle=throttle, vis_params=vis_params)
-    stream = target.create_stream(stream_req)
 
     return stream
 

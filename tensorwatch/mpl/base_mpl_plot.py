@@ -2,21 +2,19 @@
 #if get_ipython():
 #    get_ipython().magic('matplotlib notebook')
 
-import matplotlib
+#import matplotlib
 #if os.name == 'posix' and "DISPLAY" not in os.environ:
 #    matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 import matplotlib.pyplot as plt
-import matplotlib.lines
 from matplotlib.animation import FuncAnimation
-from ipywidgets.widgets.interaction import show_inline_matplotlib_plots
-from ipykernel.pylab.backend_inline import flush_figures
+#from ipywidgets.widgets.interaction import show_inline_matplotlib_plots
+#from ipykernel.pylab.backend_inline import flush_figures
 
 from ..vis_base import VisBase
 
-import os, sys, time, threading, traceback, logging, queue
-from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
-from abc import ABC, abstractmethod
-from ..lv_types import *
+import sys, traceback, logging
+from typing import Set, Tuple, Iterable
+from abc import abstractmethod
 from .. import utils
 from IPython import get_ipython, display
 import ipywidgets as widgets

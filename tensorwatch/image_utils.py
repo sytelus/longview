@@ -4,7 +4,6 @@ from torchvision import transforms
 import numpy as np
 import math
 import time
-from . import utils
 
 def guess_image_dims(img):
     if len(img.shape) == 1:
@@ -31,6 +30,7 @@ def to_imshow_array(img, width=None, height=None):
 
         if len(img.shape) == 1: # linearized pixels typically used for MLPs
             if not(width and height):
+                # pylint: disable=unused-variable
                 channels, height, width = guess_image_dims(img)
             img = img.reshape((-1, height, width))
 
@@ -78,7 +78,7 @@ def show_image(img, size=None, alpha=None, cmap=None,
 def open_image(path, resize=None, resample=Image.ANTIALIAS, convert_mode=None):
     img = Image.open(path)
     if resize is not None:
-        img = img.resize(resize, Image.ANTIALIAS)
+        img = img.resize(resize, resample)
     if convert_mode is not None:
         img = img.convert(convert_mode)
     return img

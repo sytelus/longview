@@ -1,5 +1,4 @@
 from torchvision import transforms
-from . import image_utils
 from . import pytorch_utils
 import json
 
@@ -27,6 +26,7 @@ def predict(model, images, image_transform=None, device=None):
 
 _imagenet_labels = None
 def get_imagenet_labels():
+    # pylint: disable=global-statement
     global _imagenet_labels
     _imagenet_labels = _imagenet_labels or ImagenetLabels()
     return _imagenet_labels
@@ -35,27 +35,27 @@ def probabilities2classes(probs, topk=5):
     labels = get_imagenet_labels()
     top_probs = probs.topk(topk)
     # return (probability, class_id, class_label, class_code)
-    return tuple((p,c, labels.index2label_text[c], labels.index2label_code[c]) \
-        for p, c in zip(probs5[0][0].detach().numpy(), probs5[1][0].detach().numpy()))
+    return tuple((p,c, labels.index2label_text(c), labels.index2label_code(c)) \
+        for p, c in zip(top_probs[0][0].detach().numpy(), top_probs[1][0].detach().numpy()))
 
 class ImagenetLabels:
-    def __init__(json_path='./imagenet_class_index.json'):
+    def __init__(self, json_path='../../data/imagenet_class_index.json'):
         self._idx2label = []
         self._idx2cls = []
         self._cls2label = {}
         self._cls2idx = {}
-        with open("../../data/imagenet_class_index.json", "r") as read_file:
+        with open(json_path, "r") as read_file:
             class_json = json.load(read_file)
             self._idx2label = [class_json[str(k)][1] for k in range(len(class_json))]
             self._idx2cls = [class_json[str(k)][0] for k in range(len(class_json))]
             self._cls2label = {class_json[str(k)][0]: class_json[str(k)][1] for k in range(len(class_json))}
             self._cls2idx = {class_json[str(k)][0]: k for k in range(len(class_json))}  
 
-    def index2label_text(index):
+    def index2label_text(self, index):
         return self._idx2label[index]
-    def index2label_code(index):
+    def index2label_code(self, index):
         return self._idx2cls[index]
-    def label_code2label_text(label_code):
+    def label_code2label_text(self, label_code):
         return self._cls2label[label_code]
-    def label_code2index(label_code):
+    def label_code2index(self, label_code):
         return self._cls2idx[label_code]

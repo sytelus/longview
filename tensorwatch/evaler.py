@@ -1,11 +1,9 @@
-import pickle
-import math
-import queue
 import threading
 import sys
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from .lv_types import EventVars
 
+# pylint: disable=unused-wildcard-import
 from functools import *
 from itertools import *
 from statistics import *

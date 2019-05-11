@@ -1,4 +1,4 @@
-from typing import Dict, Any, Iterator, Union
+from typing import Dict, Any, Iterator, Union, Sequence
 from .zmq_stream import ZmqStream
 from .file_stream import FileStream
 from .stream import Stream
@@ -34,7 +34,7 @@ class StreamFactory:
     def get_combined_stream(self, stream_types:Sequence[str], for_write:bool=None)->Stream:
         streams = [self._create_stream_by_string(stream_type, for_write) for stream_type in stream_types]
         if len(streams) == 1:
-            return _streams[0]
+            return self._streams[0]
         else:
             # we create new union of child but this is not necessory
             return StreamUnion(streams, for_write=for_write)

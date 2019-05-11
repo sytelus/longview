@@ -1,8 +1,7 @@
 from .base_mpl_plot import BaseMplPlot
 import matplotlib
 import matplotlib.pyplot as plt
-from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
-from ..lv_types import *
+from typing import Union
 from .. import utils
 import ipywidgets as widgets
 from IPython import get_ipython
@@ -23,7 +22,8 @@ class LinePlot(BaseMplPlot):
         else:
             stream_vis.ax = self.get_main_axis().twinx()
 
-        color = color or plt.cm.Dark2((len(self._stream_vises)%8)/8) #TODO: improve this
+        #TODO: improve color selection
+        color = color or plt.cm.Dark2((len(self._stream_vises)%8)/8) # pylint: disable=no-member
 
         # add default line in subplot
         stream_vis.line = matplotlib.lines.Line2D([], [], 

@@ -1,5 +1,4 @@
 import random
-from . import utils
 import scipy.spatial.distance
 import heapq
 import numpy as np
@@ -45,14 +44,14 @@ def col2array(dataset, col):
 def search_similar(inputs, compare_to, algorithm='euclidean', topk=5, invert_score=True):
     all_scores = scipy.spatial.distance.cdist(inputs, compare_to, algorithm)
     all_results = []
-    for input, scores in zip(inputs, all_scores):
+    for input_val, scores in zip(inputs, all_scores):
         result = []
         for i, (score, data) in enumerate(zip(scores, compare_to)):
             if invert_score:
                 score = 1/(score + 1.0E-6)
             if len(result) < topk:
-                heapq.heappush(result, (score, (i, input, data)))
+                heapq.heappush(result, (score, (i, input_val, data)))
             else:
-                heapq.heappushpop(result, (score, (i, input, data)))
+                heapq.heappushpop(result, (score, (i, input_val, data)))
         all_results.append(result)
     return all_results

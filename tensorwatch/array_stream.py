@@ -1,5 +1,6 @@
 from .stream import Stream
 from .lv_types import StreamItem
+import uuid
 
 class ArrayStream(Stream):
     def __init__(self, array, stream_name:str=None, console_debug:bool=False):

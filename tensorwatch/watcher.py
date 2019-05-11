@@ -1,5 +1,5 @@
-from typing import Dict, Iterable, List, Any, Union
-from .lv_types import StreamRequest, EventVars, StreamItem
+from typing import Dict, Iterable, List, Any, Union, Sequence
+from .lv_types import EventVars, StreamItem, StreamCreateRequest, VisParams
 from . import utils
 from .evaler import Evaler
 from .stream import Stream
@@ -12,7 +12,7 @@ from . import utils
 
 class Watcher:
     class StreamInfo:
-        def __init__(self, req:StreamRequest, evaler:Evaler, stream:Stream, 
+        def __init__(self, req:StreamCreateRequest, evaler:Evaler, stream:Stream, 
                      index:int, disabled=False, last_sent:float=None)->None:
             r"""Holds togaher stream_req, stream and evaler
             """
@@ -73,11 +73,11 @@ class Watcher:
             # first search by event
             stream_infos = self._stream_infos.get(event_name, None)
             if stream_infos is None:
-                raise ValueError('Requested stream was not found: ' + arg_str(stream_req))
+                raise ValueError('Requested event was not found: ' + event_name)
             # then search by stream name
             stream_info = stream_infos.get(stream_name, None)
             if stream_info is None:
-                raise ValueError('Requested stream was not found: ' + arg_str(stream_req))
+                raise ValueError('Requested stream was not found: ' + stream_name)
             return stream_info.stream
         
         # if we have devices, first create stream and then attach devices to it
@@ -128,6 +128,8 @@ class Watcher:
                                                            for_write=True)
                 for device in devices:
                     device.subscribe(stream)
+            stream_req = StreamCreateRequest(stream_name=stream_name, devices=devices, event_name=event_name,
+                     expr=expr, throttle=throttle, vis_params=vis_params)
             stream_info = stream_infos[stream_name] = Watcher.StreamInfo(
                 stream_req, evaler, stream, self._stream_count)
             self._stream_count += 1

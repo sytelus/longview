@@ -1,6 +1,5 @@
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler
-from .. import utils
 
 def _standardize_data(data, col, whitten, flatten):
     if col is not None:

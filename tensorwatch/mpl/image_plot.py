@@ -2,11 +2,10 @@ from .base_mpl_plot import BaseMplPlot
 from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
 from ..lv_types import *
 from .. import utils, image_utils
-import math, time
 import numpy as np
 import skimage.transform
 import ipywidgets as widgets
-from IPython import get_ipython
+#from IPython import get_ipython
 
 class ImagePlot(BaseMplPlot):
     def init_stream_plot(self, stream_vis, 

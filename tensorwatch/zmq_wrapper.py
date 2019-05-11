@@ -1,4 +1,5 @@
 import zmq
+import errno
 import pickle
 from zmq.eventloop import ioloop, zmqstream
 import zmq.utils.monitor
@@ -189,7 +190,7 @@ class ZmqWrapper:
             #else use receive_obj
 
         def _receive_obj(self):
-            [topic, obj_s] = self._socket.recv_multipart()
+            [topic, obj_s] = self._socket.recv_multipart() # pylint: disable=unbalanced-tuple-unpacking
             if topic != self.topic:
                 raise ValueError("Expected topic: %s, Received topic: %s" % (topic, self.topic)) 
             return pickle.loads(obj_s)
@@ -263,6 +264,7 @@ class ZmqWrapper:
                 [pickle.dumps(obj)])
 
         def receive_obj(self):
+            # pylint: disable=unpacking-non-sequence
             [obj_s] = ZmqWrapper._io_loop_call(True, self._socket.recv_multipart)
             return pickle.loads(obj_s)
 

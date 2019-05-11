@@ -8,7 +8,7 @@ utils.set_debug_verbosity(4)
 def dlc_show_rand_outputs():
     cli = cli_train = tw.RemoteWatcherClient()
     imgs = cli.create_stream(event_name='batch', 
-        "top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=10, order='rnd')", 
+        expr="top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=10, order='rnd')", 
         throttle=1)
     img_plot = tw.mpl.ImagePlot()
     img_plot.show(imgs, img_width=39, img_height=69, viz_img_scale=10)
@@ -20,7 +20,8 @@ def img2img_rnd():
     cli = tw.RemoteWatcherClient()
 
     imgs = cli_train.create_stream(event_name='batch', 
-        "top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=2, order='rnd')", throttle=1)
+        expr="top(l, out_xform=pyt_img_img_out_xform, group_key=lambda x:'', topk=2, order='rnd')", 
+        throttle=1)
     img_plot = tw.mpl.ImagePlot()
     img_plot.show(imgs, img_width=100, img_height=100, viz_img_scale=3, cols=1)
 

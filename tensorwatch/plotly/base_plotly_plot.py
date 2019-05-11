@@ -93,7 +93,7 @@ class BasePlotlyPlot(VisBase):
         pass
 
     @abstractmethod
-    def _setup_layout(self):
+    def _setup_layout(self, stream_vis):
         pass
     @abstractmethod
     def _create_trace(self, stream_vis):

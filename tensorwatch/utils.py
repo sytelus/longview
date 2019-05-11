@@ -90,10 +90,6 @@ def is_scaler_array(x): #detects (x,y) or [x, y]
     else:
         return -1
 
-def is_array_of_2d_array_like(x):
-    return is_array_like(x) and (len(x) == 0 or \
-        (len(x) > 0 and is_2d_scaler_array_like(x[0])))
-
 def get_public_fields(obj):
     return [attr for attr in dir(obj)
                             if not (attr.startswith("_") 
@@ -156,21 +152,7 @@ def to_eularian_angles(q):
     return (pitch, roll, yaw)
 
     
-def to_quaternion(pitch, roll, yaw):
-    t0 = math.cos(yaw * 0.5)
-    t1 = math.sin(yaw * 0.5)
-    t2 = math.cos(roll * 0.5)
-    t3 = math.sin(roll * 0.5)
-    t4 = math.cos(pitch * 0.5)
-    t5 = math.sin(pitch * 0.5)
-
-    q = Quaternionr()
-    q.w_val = t0 * t2 * t4 + t1 * t3 * t5 #w
-    q.x_val = t0 * t3 * t4 - t1 * t2 * t5 #x
-    q.y_val = t0 * t2 * t5 + t1 * t3 * t4 #y
-    q.z_val = t1 * t2 * t4 - t0 * t3 * t5 #z
-    return q
-
+# TODO: sync with AirSim utils.py
     
 def wait_key(message = ''):
     ''' Wait for a key press on the console and return it. '''
@@ -182,6 +164,7 @@ def wait_key(message = ''):
         import msvcrt
         result = msvcrt.getch()
     else:
+        # pylint: disable=import-error
         import termios
         fd = sys.stdin.fileno()
 
