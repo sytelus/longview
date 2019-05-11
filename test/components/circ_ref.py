@@ -1,7 +1,7 @@
 import tensorwatch as tw
 import objgraph, time #pip install objgraph
 
-cli = tw.ZmqWatcherClient()
+cli = tw.RemoteWatcherClient()
 time.sleep(10)
 del cli
 
@@ -11,5 +11,5 @@ gc.collect()
 import time
 time.sleep(2)
 
-objgraph.show_backrefs(objgraph.by_type('ZmqWatcherClient'), refcounts=True, filename='b.png')
+objgraph.show_backrefs(objgraph.by_type('RemoteWatcherClient'), refcounts=True, filename='b.png')
 

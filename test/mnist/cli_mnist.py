@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 utils.set_debug_verbosity(4)
 
 def img_in_class():
-    cli_train = tw.ZmqWatcherClient()
+    cli_train = tw.RemoteWatcherClient()
 
     imgs = cli_train.create_stream(event_name='batch',
         expr="top(l, out_xform=pyt_img_class_out_xform, order='rnd')", throttle=1)
@@ -18,7 +18,7 @@ def img_in_class():
     tw.image_utils.plt_loop()
 
 def show_find_lr():
-    cli_train = tw.ZmqWatcherClient()
+    cli_train = tw.RemoteWatcherClient()
     plot = tw.mpl.LinePlot()
     
     train_batch_loss = cli_train.create_stream(event_name='batch', 
@@ -28,14 +28,14 @@ def show_find_lr():
     utils.wait_key()
 
 def plot_grads():
-    train_cli = tw.ZmqWatcherClient()
+    train_cli = tw.RemoteWatcherClient()
     grads = train_cli.create_stream(event_name='batch', 
         expr='map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
     p = tw.plotly.LinePlot('Demo')
     p.subscribe(grads, xtitle='Epoch', ytitle='Gradients', history_len=30, new_on_eval=True)
 
 def plot_grads1():
-    train_cli = tw.ZmqWatcherClient()
+    train_cli = tw.RemoteWatcherClient()
 
     grads = train_cli.create_stream(event_name='batch', 
         expr='map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
@@ -46,7 +46,7 @@ def plot_grads1():
     tw.plt_loop()
 
 def plot_weight():
-    train_cli = tw.ZmqWatcherClient()
+    train_cli = tw.RemoteWatcherClient()
 
     params = train_cli.create_stream(event_name='batch', 
         expr='map(lambda d:agg_params(d.model, lambda p: p.abs().mean().item()), l)', throttle=1)
@@ -57,8 +57,8 @@ def plot_weight():
     tw.plt_loop()
 
 def epoch_stats():
-    train_cli = tw.ZmqWatcherClient(port_offset=0)
-    test_cli = tw.ZmqWatcherClient(port_offset=1)
+    train_cli = tw.RemoteWatcherClient(port_offset=0)
+    test_cli = tw.RemoteWatcherClient(port_offset=1)
 
     plot = tw.mpl.LinePlot()
 

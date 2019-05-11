@@ -113,8 +113,8 @@
     <Compile Include="tensorwatch\watcher.py" />
     <Compile Include="tensorwatch\zmq_wrapper.py" />
     <Compile Include="tensorwatch\zmq_stream.py" />
-    <Compile Include="tensorwatch\zmq_watcher_client.py" />
-    <Compile Include="tensorwatch\zmq_watcher_server.py" />
+    <Compile Include="tensorwatch\remote_watcher_client.py" />
+    <Compile Include="tensorwatch\remote_watcher_server.py" />
     <Compile Include="tensorwatch\__init__.py" />
     <Compile Include="setup.py" />
   </ItemGroup>

@@ -1,5 +1,5 @@
 from typing import Any
-from .zmq_wrapper import ZmqPubSub
+from .zmq_wrapper import ZmqWrapper
 from .stream import Stream
 from .lv_types import StreamItem, DefaultPorts, PublisherTopics
 from . import utils
@@ -19,10 +19,10 @@ class ZmqStream(Stream):
 
     def _open(self, for_write:bool, port_offset:int, block_until_connected:bool):
         if for_write:
-            self._zmq = ZmqPubSub.Publication(port=DefaultPorts.PubSub+port_offset,
+            self._zmq = ZmqWrapper.Publication(port=DefaultPorts.PubSub+port_offset,
                 block_until_connected=block_until_connected)
         else:
-            self._zmq = ZmqPubSub.Subscription(port=DefaultPorts.PubSub+port_offset, 
+            self._zmq = ZmqWrapper.Subscription(port=DefaultPorts.PubSub+port_offset, 
                 topic=self.topic, callback=self._on_subscription_item)
 
     def close(self):

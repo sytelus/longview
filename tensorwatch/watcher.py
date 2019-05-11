@@ -85,7 +85,7 @@ class Watcher:
         for device in devices:
             # each device may have multiple streams so let's filter it
             device_stream = FilteredStream(device, 
-                lambda steam_item: (steam_item, steam_item.stream_name == stream_name)) \
+                (lambda steam_item: (steam_item, steam_item.stream_name == stream_name))) \
                     if stream_name is not None \
                     else None
             stream.subscribe(device_stream)

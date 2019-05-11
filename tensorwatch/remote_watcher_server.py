@@ -1,6 +1,6 @@
 from typing import Any
 import uuid
-from .zmq_wrapper import ZmqPubSub
+from .zmq_wrapper import ZmqWrapper
 from .watcher import Watcher
 from .stream_factory import StreamFactory
 from .lv_types import StreamItem, CliSrvReqTypes
@@ -8,9 +8,9 @@ from .lv_types import DefaultPorts, PublisherTopics, ServerMgmtMsg
 from . import utils
 import threading, time
 
-class ZmqWatcherServer(Watcher):
+class RemoteWatcherServer(Watcher):
     def __init__(self, port_offset:int=0, srv_name:str=None):
-        super(ZmqWatcherServer, self).__init__()
+        super(RemoteWatcherServer, self).__init__()
 
         # used to detect server restarts 
         self.srv_name = srv_name or str(uuid.uuid4())
@@ -18,7 +18,7 @@ class ZmqWatcherServer(Watcher):
         self._open(port_offset)
 
     def _open(self, port_offset:int):
-        self._clisrv = ZmqPubSub.ClientServer(port=DefaultPorts.CliSrv+port_offset, 
+        self._clisrv = ZmqWrapper.ClientServer(port=DefaultPorts.CliSrv+port_offset, 
             is_server=True, callback=self._clisrv_callback)
 
         # notify existing listeners of our ID
@@ -37,13 +37,13 @@ class ZmqWatcherServer(Watcher):
     def close(self):
         if not self.closed:
             self._clisrv.close()
-            utils.debug_log("ZmqWatcherServer is closed", verbosity=1)
-        super(ZmqWatcherServer, self).close()
+            utils.debug_log("RemoteWatcherServer is closed", verbosity=1)
+        super(RemoteWatcherServer, self).close()
 
     def _reset(self):
         self._clisrv = None
-        utils.debug_log("ZmqWatcherServer reset", verbosity=1)
-        super(ZmqWatcherServer, self)._reset(closed)
+        utils.debug_log("RemoteWatcherServer reset", verbosity=1)
+        super(RemoteWatcherServer, self)._reset(closed)
 
     def _clisrv_callback(self, clisrv, clisrv_req):
         utils.debug_log("Received client request", clisrv_req.req_type)

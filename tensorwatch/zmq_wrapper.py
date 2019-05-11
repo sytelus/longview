@@ -7,7 +7,7 @@ from threading import Thread, Event
 from . import utils
 import weakref
 
-class ZmqPubSub:
+class ZmqWrapper:
 
     _thread:Thread = None
     _ioloop:ioloop.IOLoop = None
@@ -17,23 +17,23 @@ class ZmqPubSub:
     @staticmethod
     def initialize():
         # create thread that will wait on IO Loop
-        if ZmqPubSub._thread is None:
-            ZmqPubSub._thread = Thread(target=ZmqPubSub._run_io_loop, name='ZMQIOLoop', daemon=True)
-            ZmqPubSub._start_event = Event()
-            ZmqPubSub._ioloop_block = Event()
-            ZmqPubSub._ioloop_block.set() # no blocking call in progress right now
-            ZmqPubSub._thread.start()
+        if ZmqWrapper._thread is None:
+            ZmqWrapper._thread = Thread(target=ZmqWrapper._run_io_loop, name='ZMQIOLoop', daemon=True)
+            ZmqWrapper._start_event = Event()
+            ZmqWrapper._ioloop_block = Event()
+            ZmqWrapper._ioloop_block.set() # no blocking call in progress right now
+            ZmqWrapper._thread.start()
             # this is needed to make sure IO Loop has enough time to start
-            ZmqPubSub._start_event.wait() 
+            ZmqWrapper._start_event.wait() 
 
     @staticmethod
     def close():
         # terminate the IO Loop
-        if ZmqPubSub._thread is not None:
-            ZmqPubSub._ioloop_block.set() # free any blocking call
-            ZmqPubSub._ioloop.add_callback(ZmqPubSub._ioloop.stop)
-            ZmqPubSub._thread = None
-            ZmqPubSub._ioloop = None
+        if ZmqWrapper._thread is not None:
+            ZmqWrapper._ioloop_block.set() # free any blocking call
+            ZmqWrapper._ioloop.add_callback(ZmqWrapper._ioloop.stop)
+            ZmqWrapper._thread = None
+            ZmqWrapper._ioloop = None
             print("ZMQ IOLoop is now closed")
 
     @staticmethod
@@ -52,13 +52,13 @@ class ZmqPubSub:
             import asyncio
             asyncio.set_event_loop(asyncio.new_event_loop())
 
-        ZmqPubSub._ioloop = ioloop.IOLoop()
-        ZmqPubSub._ioloop.make_current()
-        while ZmqPubSub._thread is not None:
+        ZmqWrapper._ioloop = ioloop.IOLoop()
+        ZmqWrapper._ioloop.make_current()
+        while ZmqWrapper._thread is not None:
             try:
-                ZmqPubSub._start_event.set()
+                ZmqWrapper._start_event.set()
                 utils.debug_log("starting ioloop...")
-                ZmqPubSub._ioloop.start()
+                ZmqWrapper._ioloop.start()
             except zmq.ZMQError as ex:
                 if ex.errno == errno.EINTR:
                     print("Cannot start IOLoop! ZMQError: {}".format(ex), file=sys.stderr)
@@ -78,7 +78,7 @@ class ZmqPubSub:
         def wrapper(f, r, *kargs, **kwargs):
             try:
                 r.val = f(*kargs, **kwargs)
-                ZmqPubSub._ioloop_block.set()
+                ZmqWrapper._ioloop_block.set()
             except Exception as ex:
                 print(ex)
                 logging.fatal(ex, exc_info=True) 
@@ -88,27 +88,27 @@ class ZmqPubSub:
         # call back to be completed
         # If result is expected then we wait other wise fire and forget
         if has_result:
-            if not ZmqPubSub._ioloop_block.is_set():
+            if not ZmqWrapper._ioloop_block.is_set():
                 # TODO: better way to raise this error?
                 print('Previous blocking call on IOLoop is not yet complete!')
-            ZmqPubSub._ioloop_block.clear()
+            ZmqWrapper._ioloop_block.clear()
             r = Result()
             f_wrapped = functools.partial(wrapper, f, r, *kargs, **kwargs)
-            ZmqPubSub._ioloop.add_callback(f_wrapped)
+            ZmqWrapper._ioloop.add_callback(f_wrapped)
             utils.debug_log("Waiting for call on ioloop", f, verbosity=5)
-            ZmqPubSub._ioloop_block.wait()
+            ZmqWrapper._ioloop_block.wait()
             utils.debug_log("Call on ioloop done", f, verbosity=5)
             return r.val
         else:
             f_wrapped = functools.partial(f, *kargs, **kwargs)
-            ZmqPubSub._ioloop.add_callback(f_wrapped)
+            ZmqWrapper._ioloop.add_callback(f_wrapped)
 
     class Publication:
         def __init__(self, port, host="*", block_until_connected=True):
-            ZmqPubSub.initialize()
+            ZmqWrapper.initialize()
             utils.debug_log('Creating Publication', port, verbosity=1)
             # make sure the call blocks until connection is made
-            ZmqPubSub._io_loop_call(block_until_connected, self._start_srv, port, host)
+            ZmqWrapper._io_loop_call(block_until_connected, self._start_srv, port, host)
 
         def _start_srv(self, port, host):
             context = zmq.Context()
@@ -122,7 +122,7 @@ class ZmqPubSub:
 
         def close(self):
             if self._socket:
-                ZmqPubSub._io_loop_call(False, self._socket.close)
+                ZmqWrapper._io_loop_call(False, self._socket.close)
 
         # we need this wrapper method as self._socket might not be there yet
         def _send_multipart(self, parts):
@@ -130,7 +130,7 @@ class ZmqPubSub:
             return self._socket.send_multipart(parts)
 
         def send_obj(self, obj, topic=""):
-            ZmqPubSub._io_loop_call(False, self._send_multipart, 
+            ZmqWrapper._io_loop_call(False, self._send_multipart, 
                 [topic.encode(), pickle.dumps(obj)])
 
         def _on_mon(self, msg):
@@ -147,14 +147,14 @@ class ZmqPubSub:
         # subscribe to topic, call callback when object is received on topic
         def __init__(self, port, topic="", callback=None, host="localhost"):
             self._socket = None
-            ZmqPubSub.initialize()
+            ZmqWrapper.initialize()
             utils.debug_log('Creating Subscription', port, verbosity=1)
-            ZmqPubSub._io_loop_call(False, self._add_sub,
+            ZmqWrapper._io_loop_call(False, self._add_sub,
                 port, topic=topic, callback=callback, host=host)
 
         def close(self):
             if self._socket:
-                ZmqPubSub._io_loop_call(False, self._socket.close)
+                ZmqWrapper._io_loop_call(False, self._socket.close)
 
         def _add_sub(self, port, topic, callback, host):
             def callback_wrapper(weak_callback, msg):
@@ -195,29 +195,29 @@ class ZmqPubSub:
             return pickle.loads(obj_s)
 
         def receive_obj(self):
-            return ZmqPubSub._io_loop_call(True, self._receive_obj)
+            return ZmqWrapper._io_loop_call(True, self._receive_obj)
 
         def _get_socket_identity(self):
             id = self._socket.getsockopt(zmq.LAST_ENDPOINT)
             return id
 
         def get_socket_identity(self):
-            return ZmqPubSub._io_loop_call(True, self._get_socket_identity)
+            return ZmqWrapper._io_loop_call(True, self._get_socket_identity)
 
 
     class ClientServer:
         def __init__(self, port, is_server, callback=None, host=None):
-            ZmqPubSub.initialize()
+            ZmqWrapper.initialize()
             utils.debug_log('Creating ClientServer', (is_server, port), verbosity=1)
 
             # make sure call blocks until connection is made
             # otherwise variables would not be available
-            ZmqPubSub._io_loop_call(True, self._connect,
+            ZmqWrapper._io_loop_call(True, self._connect,
                 port, is_server, callback, host)
 
         def close(self):
             if self._socket:
-                ZmqPubSub._io_loop_call(False, self._socket.close)
+                ZmqWrapper._io_loop_call(False, self._socket.close)
 
         def _connect(self, port, is_server, callback, host):
             def callback_wrapper(callback, msg):
@@ -259,11 +259,11 @@ class ZmqPubSub:
             #else use receive_obj
 
         def send_obj(self, obj):
-            ZmqPubSub._io_loop_call(False, self._socket.send_multipart,
+            ZmqWrapper._io_loop_call(False, self._socket.send_multipart,
                 [pickle.dumps(obj)])
 
         def receive_obj(self):
-            [obj_s] = ZmqPubSub._io_loop_call(True, self._socket.recv_multipart)
+            [obj_s] = ZmqWrapper._io_loop_call(True, self._socket.recv_multipart)
             return pickle.loads(obj_s)
 
         def request(self, req_obj):

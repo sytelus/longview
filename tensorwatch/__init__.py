@@ -1,7 +1,7 @@
 from typing import Iterable, Sequence
 
-from .zmq_watcher_client import ZmqWatcherClient
-from .zmq_watcher_server import ZmqWatcherServer
+from .remote_watcher_client import RemoteWatcherClient
+from .remote_watcher_server import RemoteWatcherServer
 from .watcher import Watcher
 
 from .text_vis import TextVis
@@ -28,7 +28,7 @@ _watcher = None
 def start_watch(srv_id=0):
     global _default_servers
     if srv_id not in _default_servers:
-        server = ZmqWatcherServer(port_offset=srv_id)
+        server = RemoteWatcherServer(port_offset=srv_id)
         _default_servers[srv_id] = server
     return _default_servers[srv_id]
 
@@ -51,7 +51,7 @@ def stop_watch(srv_id=0):
 def get_client(cli_id):
     global _default_clients
     if cli_id not in _default_clients:
-        client = ZmqWatcherClient(port_offset=cli_id)
+        client = RemoteWatcherClient(port_offset=cli_id)
         _default_clients[cli_id] = client
     return _default_clients[cli_id]
 
@@ -80,7 +80,7 @@ def _get_vis(vis_type, cell, title, images=None, images_reshape=None, width=None
     else:
         raise ValueError('Render vis_type parameter has invalid value: "{}"'.format(vis_type))
 
-def _get_target(cli_id:int, srv_id:int)->Union[Watcher, ZmqWatcherClient]:
+def _get_target(cli_id:int, srv_id:int)->Union[Watcher, RemoteWatcherClient]:
     if cli_id is not None  and srv_id is not None:
         raise ValueError('cli_id and srv_id cannot both be not None')
     target = None

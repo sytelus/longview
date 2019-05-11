@@ -11,7 +11,7 @@ import time
 #r3=tw.create_vis('map(lambda x:math.sqrt(x.sum), l)', renderer=r2)
 
 def show_mpl():
-    cli = tw.ZmqWatcherClient()
+    cli = tw.RemoteWatcherClient()
     p = tw.mpl.LinePlot(title='Demo')
     s1 = cli.create_stream(expr='lambda v:v.sum')
     p.subscribe(s1, xtitle='Index', ytitle='sqrt(ev_i)')
