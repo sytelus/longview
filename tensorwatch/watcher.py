@@ -23,14 +23,6 @@ class Watcher:
     def __init__(self) -> None:
         self._reset()
 
-    r"""Note on event_name and stream_name
-    Each stream should be uniquely identifiable by stream_name. The get_stream returns old
-    stream is stream already exist (we should probably change that). The watcher organizes streams
-    under events so for each occurrence of event, we don't have scan entire list of stream. This is
-    however just optimization and stream_name still needs to be unique across all events.
-    The stream name will be stamped on each stream_item.
-    """
-
     def _reset(self):
         # for each event, store (stream_name, stream_info)
         self._stream_infos:Dict[str, Dict[str, Watcher.StreamInfo]] = {}
@@ -60,7 +52,8 @@ class Watcher:
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def open_stream(self, stream_req:OpenStreamRequest)->Stream:
+    def open_stream(self, stream_name:str=None, devices:Sequence[str]=None, 
+                 event_name:str='')->Stream:
         r"""Opens stream from specified devices or returns one by name if
         it was created before.
         """
@@ -68,38 +61,47 @@ class Watcher:
 
         # create devices is any
         devices:Sequence[str] = None
-        if stream_req.devices is not None:
+        if devices is not None:
             # we open devices in read-only mode
-            devices = self._stream_factory.get_streams(stream_types=stream_req.devices, 
+            devices = self._stream_factory.get_streams(stream_types=devices, 
                                                        for_write=False)
         # if no devices then open stream by name from cache
         if devices is None:
+            if stream_name is None:
+                raise ValueError('Both devices and stream_name cannot be None')
+
             # first search by event
-            stream_infos = self._stream_infos.get(stream_req.event_name, None)
+            stream_infos = self._stream_infos.get(event_name, None)
             if stream_infos is None:
                 raise ValueError('Requested stream was not found: ' + arg_str(stream_req))
             # then search by stream name
-            stream_info = stream_infos.get(stream_req.stream_name, None)
+            stream_info = stream_infos.get(stream_name, None)
             if stream_info is None:
                 raise ValueError('Requested stream was not found: ' + arg_str(stream_req))
             return stream_info.stream
         
         # if we have devices, first create stream and then attach devices to it
-        stream = Stream(stream_name=stream_req.stream_name)
+        stream = Stream(stream_name=stream_name)
         for device in devices:
             # each device may have multiple streams so let's filter it
             device_stream = FilteredStream(device, 
-                lambda steam_item: (steam_item, steam_item.stream_name == stream_name))
+                lambda steam_item: (steam_item, steam_item.stream_name == stream_name)) \
+                    if stream_name is not None \
+                    else None
             stream.subscribe(device_stream)
         return stream
 
-    def create_stream(self, stream_req:CreateStreamRequest)->Stream:
+    def create_stream(self, stream_name:str=None, devices:Sequence[str]=None, event_name:str='',
+        expr=None, throttle:float=None, vis_params:VisParams=None)->Stream:
+
         r"""Create stream with or without expression and attach to devices where 
         it will be written to.
         """
 
+        stream_name = stream_name or str(uuid.uuid4())
+
         # we allow few shortcuts, so modify expression if needed
-        expr = stream_req.expr
+        expr = expr
         if expr=='' or expr=='x':
             expr = 'map(lambda x:x, l)'
         elif expr.strip().startswith('lambda '):
@@ -110,28 +112,28 @@ class Watcher:
         evaler = Evaler(expr) if expr is not None else None
 
         # get stream infos for this event
-        stream_infos = self._stream_infos.get(stream_req.event_name, None)
+        stream_infos = self._stream_infos.get(event_name, None)
         # if first for this event, create dictionary
         if stream_infos is None:
-            stream_infos = self._stream_infos[stream_req.event_name] = {}
+            stream_infos = self._stream_infos[event_name] = {}
 
-        stream_info = stream_infos.get(stream_req.stream_name, None)
+        stream_info = stream_infos.get(stream_name, None)
         if not stream_info:
-            utils.debug_log("Creating stream", stream_req.stream_name)
-            stream = Stream(stream_name=stream_req.stream_name)
+            utils.debug_log("Creating stream", stream_name)
+            stream = Stream(stream_name=stream_name)
             devices:Sequence[str] = None
-            if stream_req.devices is not None:
+            if devices is not None:
                 # attached devices are opened in write-only mode
-                devices = self._stream_factory.get_streams(stream_types=stream_req.devices, 
+                devices = self._stream_factory.get_streams(stream_types=devices, 
                                                            for_write=True)
                 for device in devices:
                     device.subscribe(stream)
-            stream_info = stream_infos[stream_req.stream_name] = Watcher.StreamInfo(
+            stream_info = stream_infos[stream_name] = Watcher.StreamInfo(
                 stream_req, evaler, stream, self._stream_count)
             self._stream_count += 1
         else:
             # TODO: throw error?
-            utils.debug_log("Stream already exist, not creating again", stream_req.stream_name)
+            utils.debug_log("Stream already exist, not creating again", stream_name)
 
         return stream_info.stream
 

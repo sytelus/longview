@@ -3,7 +3,8 @@ import uuid
 from .zmq_wrapper import ZmqPubSub
 from .watcher import Watcher
 from .stream_factory import StreamFactory
-from .lv_types import StreamItem, StreamRequest, CliSrvReqTypes, DefaultPorts, PublisherTopics, ServerMgmtMsg
+from .lv_types import StreamItem, CliSrvReqTypes
+from .lv_types import DefaultPorts, PublisherTopics, ServerMgmtMsg
 from . import utils
 import threading, time
 
@@ -49,8 +50,9 @@ class ZmqWatcherServer(Watcher):
 
         # request = create stream
         if clisrv_req.req_type == CliSrvReqTypes.create_stream:
-            stream_req = clisrv_req.req_data
-            stream = self.create_stream(stream_req) 
+            stream_req:CreateStreamRequest = clisrv_req.req_data
+            stream = self.create_stream(stream_name=stream_name, devices=devices, event_name=event_name,
+                expr=expr, throttle=throttle, vis_params=vis_params)
             return None # ignore return as we can't send back stream obj
         elif clisrv_req.req_type == CliSrvReqTypes.del_stream:
             stream_name:str = clisrv_req.req_data

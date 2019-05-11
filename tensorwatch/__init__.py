@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from .zmq_watcher_client import ZmqWatcherClient
 from .zmq_watcher_server import ZmqWatcherServer
@@ -10,7 +10,7 @@ from . import mpl
 
 from .stream import Stream
 from .array_stream import ArrayStream
-from .lv_types import ImagePlotItem, StreamRequest
+from .lv_types import ImagePlotItem, VisParams
 
 ###### Import methods for tw namespace #########
 from .receptive_field.rf_utils import plot_receptive_field, plot_grads_at
@@ -92,12 +92,12 @@ def _get_target(cli_id:int, srv_id:int)->Union[Watcher, ZmqWatcherClient]:
         target = get_watcher()
     return target
 
-def get_stream(stream_types:Sequence[str], for_write:bool, expr=None, event_name:str='', stream_name:str=None, throttle=1, 
-                  cli_id:int=None, srv_id:int=0):
+def create_stream(stream_name:str=None, devices:Sequence[str]=None, event_name:str='',
+        expr=None, throttle:float=1, vis_params:VisParams=None, cli_id:int=None, srv_id:int=None):
     target = _get_target(cli_id, srv_id)
-    stream_req = StreamRequest(stream_types=stream_types, for_write=for_write, expr=expr, event_name=event_name, 
-                               stream_name=stream_name, throttle=throttle)
-    stream = target.get_stream(stream_req)
+    stream_req = StreamRequest(stream_name=stream_name, devices=stream_types,
+        event_name=event_name, expr=expr, throttle=throttle, vis_params=vis_params)
+    stream = target.create_stream(stream_req)
 
     return stream
 

@@ -7,7 +7,7 @@ utils.set_debug_verbosity(4)
 def mpl_line_plot():
     cli = tw.ZmqWatcherClient()
     p = tw.mpl.LinePlot(title='Demo')
-    s1 = cli.get_stream(tw.StreamRequest(event_name='ev_i', expr='map(lambda v:math.sqrt(v.val)*2, l)'))
+    s1 = cli.create_stream(event_name='ev_i', expr='map(lambda v:math.sqrt(v.val)*2, l)')
     p.subscribe(s1, xtitle='Index', ytitle='sqrt(ev_i)')
     p.show()
     tw.plt_loop()
@@ -15,7 +15,7 @@ def mpl_line_plot():
 def mpl_history_plot():
     cli = tw.ZmqWatcherClient()
     p2 = tw.mpl.LinePlot(title='History Demo')
-    p2s1 = cli.get_stream(tw.StreamRequest(event_name='ev_j', expr='map(lambda v:(v.val, math.sqrt(v.val)*2), l)'))
+    p2s1 = cli.create_stream(event_name='ev_j', expr='map(lambda v:(v.val, math.sqrt(v.val)*2), l)')
     p2.subscribe(p2s1, xtitle='Index', ytitle='sqrt(ev_j)', clear_after_end=True, history_len=15)
     p2.show()
     tw.plt_loop()
@@ -24,13 +24,13 @@ def show_stream():
     cli = tw.ZmqWatcherClient()
 
     print("Subscribing to event ev_i...")
-    s1 = cli.get_stream(tw.StreamRequest(event_name="ev_i", expr='map(lambda v:math.sqrt(v.val), l)'))
+    s1 = cli.create_stream(event_name="ev_i", expr='map(lambda v:math.sqrt(v.val), l)')
     r1 = tw.TextVis(title='L1')
     r1.subscribe(s1)
     r1.show()
 
     print("Subscribing to event ev_j...")
-    s2 = cli.get_stream(tw.StreamRequest(event_name="ev_j", expr='map(lambda v:v.val*v.val, l)'))
+    s2 = cli.create_stream(event_name="ev_j", expr='map(lambda v:v.val*v.val, l)')
     r2 = tw.TextVis(title='L2')
     r2.subscribe(s2)
 
@@ -45,7 +45,7 @@ def show_stream():
 def read_stream():
     cli = tw.ZmqWatcherClient()
 
-    with cli.get_stream(tw.StreamRequest(event_name="ev_i", expr='map(lambda v:math.sqrt(v.val), l)')) as s1:
+    with cli.create_stream(event_name="ev_i", expr='map(lambda v:math.sqrt(v.val), l)') as s1:
         for stream_item in s1:
             print(stream_item.value)
     print('done')
@@ -53,7 +53,7 @@ def read_stream():
 
 def plotly_line_graph():
     cli = tw.ZmqWatcherClient()
-    s1 = cli.get_stream(tw.StreamRequest(event_name="ev_i", expr='map(lambda v:math.sqrt(v.val), l)'))
+    s1 = cli.create_stream(event_name="ev_i", expr='map(lambda v:math.sqrt(v.val), l)')
 
     p = tw.plotly.LinePlot()
     p.subscribe(s1)
@@ -64,7 +64,7 @@ def plotly_line_graph():
 def plotly_history_graph():
     cli = tw.ZmqWatcherClient()
     p = tw.plotly.LinePlot(title='Demo')
-    s2 = cli.get_stream(tw.StreamRequest(event_name='ev_j', expr='map(lambda v:(v.x, v.val), l)'))
+    s2 = cli.create_stream(event_name='ev_j', expr='map(lambda v:(v.x, v.val), l)')
     p.subscribe(s2, ytitle='ev_j', history_len=15)
     p.show()
     utils.wait_key()

@@ -7,15 +7,16 @@ import tensorwatch as tw
 
 def file_write():
     watcher = Watcher()
-    file_obs = FileStream(file_name=r'c:\temp\obs.txt', for_write=True, console_debug=True)
-    stream = watcher.get_stream(expr='lambda vars:(vars.x, vars.x**2)', subscribers=[file_obs])
+    stream = watcher.create_stream(expr='lambda vars:(vars.x, vars.x**2)', 
+        devices=[r'c:\temp\obs.txt'])
 
     for i in range(5):
         watcher.observe(x=i)
 
 def file_read():
-    file_obs = FileStream(file_name=r'c:\temp\obs.txt', for_write=False)
-    vis = tw.create_vis(file_obs, type='mpl-line')
+    watcher = Watcher()
+    stream = watcher.open_stream(devices=[r'c:\temp\obs.txt'])
+    vis = tw.create_vis(stream, type='mpl-line')
     vis.show()
     plt_loop()
 

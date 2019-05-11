@@ -47,7 +47,10 @@ class ZmqWatcherClient(Watcher):
             utils.debug_log("ZmqWatcherClient is closed", verbosity=1)
         super(ZmqWatcherServer, self).close()
 
-    def create_stream_remote(self, stream_req:StreamRequest) -> None:
+    # override to send request to server
+    def create_stream(self, stream_name:str=None, devices:Sequence[str]=None, event_name:str='',
+        expr=None, throttle:float=1, vis_params:VisParams=None)->Stream:
+
         utils.debug_log("sending create streamreq...")
         clisrv_req = ClientServerRequest(CliSrvReqTypes.create_stream, stream_req)
         self._clisrv.send_obj(clisrv_req)
@@ -56,7 +59,15 @@ class ZmqWatcherClient(Watcher):
         # save this for later for resend if server restarts
         self._stream_reqs[stream_name] = stream_req
 
-    def del_stream_remote(self, stream_name:str) -> None:
+        if stream_req.devices is not None:
+            stream = self.open_stream(stream_name=stream_req.stream_name, 
+                devices=stream_req.devices, event_name=stream_req.event_name)
+        else: # we cannot return remote streams that are not backed by a device
+            stream = None
+        return stream
+
+    # override to send request to server
+    def del_stream(self, stream_name:str) -> None:
         clisrv_req = ClientServerRequest(CliSrvReqTypes.del_stream, stream_name)
         self._clisrv.send_obj(clisrv_req)
         self._stream_reqs.pop(stream_name, None)

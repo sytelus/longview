@@ -9,7 +9,11 @@ class FilteredStream(Stream):
         self.filter_expr = filter_expr
 
     def write(self, val:Any):
-        result, is_valid = self.filter_expr(val)
+        result, is_valid = self.filter_expr(val) \
+            if self.filter_expr is not None \
+            else (val, True)
+
         if is_valid:
             return super(FilteredStream, self).write(val)
+        # else ignore this call
             
