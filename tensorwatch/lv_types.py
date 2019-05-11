@@ -26,14 +26,14 @@ EventsVars = List[EventVars]
 
 class StreamItem:
     def __init__(self, item_index:int, value:Any,
-            stream_name:str, source_id:str, stream_index:int,
+            stream_name:str, creator_id:str, stream_index:int,
             ended:bool=False, exception:Exception=None, stream_reset:bool=False):
         self.value = value
         self.exception = exception
         self.stream_name = stream_name
         self.item_index = item_index
         self.ended = ended
-        self.source_id = source_id
+        self.creator_id = creator_id
         self.stream_index = stream_index
         self.stream_reset = stream_reset
 
@@ -65,7 +65,8 @@ class VisParams:
         self.stream_vis_args={}
 
 class StreamOpenRequest:
-    def __init__(self, stream_name:str, devices:Sequence[str]=None, event_name:str='')
+    def __init__(self, stream_name:str, devices:Sequence[str]=None, 
+                 event_name:str='')->None:
         self.stream_name = stream_name or str(uuid.uuid4())
         self.devices = devices
         self.event_name = event_name
@@ -91,7 +92,7 @@ class ClientServerRequest:
         self.req_data = req_data
 
 class CliSrvReqTypes:
-    get_stream = 'GetStream'
+    create_stream = 'CreateStream'
     del_stream = 'DeleteStream'
 
 class StreamPlot:

@@ -5,6 +5,8 @@ from .stream import Stream
 from .stream_union import StreamUnion
 
 class StreamFactory:
+    r"""Allows to create shared stream such as file and ZMQ streams
+    """
 
     def __init__(self)->None:
         self._reset()

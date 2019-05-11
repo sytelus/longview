@@ -16,12 +16,9 @@ class FileStream(Stream):
     def close(self):
         if not self.file.closed:
             self._file.close()
+            self._file = None
             utils.debug_log('FileStream is closed', self.file_name, verbosity=1)
-
-    def __enter__(self):
-        return self
-    def __exit__(self, exception_type, exception_value, traceback):
-        self.close()
+        super(ZmqStream, self).close()
 
     def write(self, val:Any, topic=None):
         super(FileStream, self).write(val)
@@ -30,7 +27,7 @@ class FileStream(Stream):
 
     def read_all(self):
         if self.for_write:
-            raise IOError('Cannot use read_all because FileSteam is opened in for_write=True mode')
+            raise IOError('Cannot use read_all because FileSteam is opened with for_write=True')
         if self._file is not None:
             while not utils.is_eof(self._file):
                 stream_item = pickle.load(self._file)
