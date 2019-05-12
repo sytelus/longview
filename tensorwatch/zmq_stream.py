@@ -1,7 +1,7 @@
 from typing import Any
 from .zmq_wrapper import ZmqWrapper
 from .stream import Stream
-from .lv_types import StreamItem, DefaultPorts, PublisherTopics
+from .lv_types import DefaultPorts, PublisherTopics
 from . import utils
 
 # on writes send data on ZMQ transport

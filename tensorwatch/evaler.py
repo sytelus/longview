@@ -4,6 +4,8 @@ from collections.abc import Iterator
 from .lv_types import EventVars
 
 # pylint: disable=unused-wildcard-import
+# pylint: disable=wildcard-import
+# pylint: disable=unused-import
 from functools import *
 from itertools import *
 from statistics import *
@@ -23,10 +25,10 @@ class Evaler:
         def __init__(self, eval_wait):
             self.eval_wait = eval_wait
             self.post_wait = threading.Event()
+            self.event_vars, self.ended = None, None # define attributes in init
             self.reset()
 
         def reset(self):
-            self.ended = False
             self.event_vars, self.ended = None, False
             self.post_wait.clear()
 
@@ -55,6 +57,7 @@ class Evaler:
         self.reset_wait = threading.Event()
         self.g = Evaler.PostableIterator(self.eval_wait)
         self.expr = expr
+        self.eval_return, self.continue_thread = None, None # define in __init__
         self.reset()
 
         self.th = threading.Thread(target=self._runner, daemon=True, name='evaler')
@@ -70,17 +73,18 @@ class Evaler:
         
     def _runner(self):
         while True:
-            l = self.g.get_vals() # this var will be used by eval
+            # this var will be used by eval 
+            l = self.g.get_vals() # pylint: disable=unused-variable
             try:
-                result = eval(self.expr)
+                result = eval(self.expr) # pylint: disable=eval-used
                 if isinstance(result, Iterator):
-                    for i, result in enumerate(result):
-                        self.eval_return = Evaler.EvalReturn(result, True)
+                    for item in result:
+                        self.eval_return = Evaler.EvalReturn(item, True)
                 else:
                     self.eval_return = Evaler.EvalReturn(result, True)
-            except Exception as e:
-                print(e, file=sys.stderr)
-                self.eval_return = Evaler.EvalReturn(None, True, e)
+            except Exception as ex: # pylint: disable=broad-except
+                print(ex, file=sys.stderr)
+                self.eval_return = Evaler.EvalReturn(None, True, ex)
             self.eval_wait.set()
             self.reset_wait.wait()
             if not self.continue_thread:

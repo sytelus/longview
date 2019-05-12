@@ -13,10 +13,9 @@ from matplotlib.animation import FuncAnimation
 from ..vis_base import VisBase
 
 import sys, traceback, logging
-from typing import Set, Tuple, Iterable
 from abc import abstractmethod
 from .. import utils
-from IPython import get_ipython, display
+from IPython import get_ipython #, display
 import ipywidgets as widgets
 
 class BaseMplPlot(VisBase):
@@ -30,6 +29,7 @@ class BaseMplPlot(VisBase):
         self._ax_main = None
         # matplotlib animation
         self.animation = None
+        self.anim_interval = None
         #print(matplotlib.get_backend())
         #display.display(self.cell)
 
@@ -63,7 +63,7 @@ class BaseMplPlot(VisBase):
                 title.set_weight('bold')
         return self._ax_main
 
-    def _on_update(self, frame):
+    def _on_update(self, frame): # pylint: disable=unused-argument
         try:
             self._update_stream_plots()
         except Exception as ex:

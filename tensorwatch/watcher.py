@@ -1,6 +1,5 @@
-from typing import Dict, Iterable, List, Any, Union, Sequence
+from typing import Dict, Any, Sequence
 from .lv_types import EventVars, StreamItem, StreamCreateRequest, VisParams
-from . import utils
 from .evaler import Evaler
 from .stream import Stream
 from .stream_factory import StreamFactory
@@ -21,6 +20,7 @@ class Watcher:
             self.item_count = 0 # creator of StreamItem needs to set to set item num
 
     def __init__(self) -> None:
+        self.closed = None
         self._reset()
 
     def _reset(self):
@@ -139,10 +139,10 @@ class Watcher:
 
         return stream_info.stream
 
-    def set_globals(self, **vars):
-        self._global_vars.update(vars)
+    def set_globals(self, **global_vars):
+        self._global_vars.update(global_vars)
 
-    def observe(self, event_name:str='', **vars) -> None:
+    def observe(self, event_name:str='', **obs_vars) -> None:
         # get stream requests for this event
         stream_infos = self._stream_infos.get(event_name, {})
 
@@ -157,7 +157,7 @@ class Watcher:
                     time.time() - stream_info.last_sent >= stream_info.req.throttle:
                 stream_info.last_sent = time.time()
                 
-                events_vars = EventVars(self._global_vars, **vars)
+                events_vars = EventVars(self._global_vars, **obs_vars)
                 self._eval_wrie(stream_info, events_vars)
             else:
                 utils.debug_log("Throttled", event_name, verbosity=5)
@@ -185,7 +185,7 @@ class Watcher:
         eval_return = stream_info.evaler.post(ended=True, 
             continue_thread=not disable_stream)
         # TODO: check eval_return.is_valid ?
-        event_name = stream_info.req.event_name
+        # event_name = stream_info.req.event_name
         if disable_stream:
             stream_info.disabled = True
             utils.debug_log("{} stream disabled".format(stream_info.req.stream_name), verbosity=1)

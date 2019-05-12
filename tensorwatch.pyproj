@@ -137,7 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
-    <Content Include="tensorwatch\.pylintrc">
+    <Content Include=".pylintrc">
       <SubType>Code</SubType>
     </Content>
     <Content Include="tensorwatch\model_graph\hiddenlayer\README.md">

@@ -1,5 +1,0 @@
-[MASTER]
-ignore=model_graph,receptive_field,saliency
-
-[TYPECHECK]
-ignored-modules=numpy,torch,matplotlib,pyplot,zmq

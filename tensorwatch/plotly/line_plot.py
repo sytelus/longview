@@ -1,7 +1,6 @@
 import plotly.graph_objs as go
-import ipywidgets as widgets
-from IPython import get_ipython
 from .base_plotly_plot import BasePlotlyPlot
+from ..lv_types import EventVars
 from .. import utils
 
 class LinePlot(BasePlotlyPlot):

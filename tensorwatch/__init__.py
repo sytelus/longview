@@ -36,11 +36,11 @@ def start_watch(srv_id=0):
 def get_server(srv_id):
     return start_watch(srv_id)
 
-def observe(event_name:str='', srv_id=0, **vars) -> None:
-    get_server(srv_id).observe(event_name, **vars)
+def observe(event_name:str='', srv_id=0, **event_vars) -> None:
+    get_server(srv_id).observe(event_name, **event_vars)
 
-def set_globals(srv_id=0, **vars):
-    get_server(srv_id).set_globals(**vars)
+def set_globals(srv_id=0, **global_vars):
+    get_server(srv_id).set_globals(**global_vars)
 
 def stop_watch(srv_id=0):
     global _default_servers
@@ -104,16 +104,16 @@ def create_stream(stream_name:str=None, devices:Sequence[str]=None, event_name:s
 def create_vis(stream, vis_type=None, host_vis=None, 
             cell=None, title=None, 
             clear_after_end=False, clear_after_each=False, history_len=1, dim_history=True, opacity=None,
-            images=None, images_reshape=None, width=None, height=None, vis_args={}, stream_vis_args={}):
+            images=None, images_reshape=None, width=None, height=None, 
+            vis_args=None, stream_vis_args=None):
 
-    if vis_type:
-        draw_line = 'scatter' not in vis_type
-        only_summary = 'summary' == vis_type
+    vis_args = vis_args or {}
+    stream_vis_args = stream_vis_args or {}
 
     host_vis = host_vis or _get_vis(vis_type, cell, title, images=images, images_reshape=images_reshape, 
                                width=width, height=height, **vis_args)
 
-    s = host_vis.subscribe(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each,
+    host_vis.subscribe(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each,
                  history_len=history_len, dim_history=dim_history, opacity=opacity, **stream_vis_args)
 
     if utils.has_method(stream, 'read_all'):
@@ -123,7 +123,7 @@ def create_vis(stream, vis_type=None, host_vis=None,
 
 def draw_model(model, input_shape=None, orientation='TB'): #orientation = 'LR' for landscpe
     from .model_graph.hiddenlayer import graph
-    g = graph.build_graph(model, input_shape)
+    g = graph.build_graph(model, input_shape, orientation=orientation)
     return g
 
 

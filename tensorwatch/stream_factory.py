@@ -1,4 +1,4 @@
-from typing import Dict, Any, Iterator, Union, Sequence
+from typing import Dict, Sequence
 from .zmq_stream import ZmqStream
 from .file_stream import FileStream
 from .stream import Stream
@@ -9,6 +9,8 @@ class StreamFactory:
     """
 
     def __init__(self)->None:
+        self.closed = None
+        self._streams:Dict[str, Stream] = None
         self._reset()
 
     def _reset(self):

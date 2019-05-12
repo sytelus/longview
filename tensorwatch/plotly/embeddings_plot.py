@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from ipywidgets import Layout, Output
+from ipywidgets import Output #, Layout
 from IPython.display import display, clear_output
 import numpy as np
 from .line_plot import LinePlot
@@ -22,7 +22,7 @@ class EmbeddingsPlot(LinePlot):
         self.images, self.images_reshape = images, images_reshape
         self.last_ind, self.last_ind_time = -1, 0
 
-    def hover_fn(self, trace, points, state):
+    def hover_fn(self, trace, points, state): # pylint: disable=unused-argument
         if not points:
             return
         ind = points.point_inds[0]

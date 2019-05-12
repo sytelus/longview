@@ -3,7 +3,7 @@ import errno
 import pickle
 from zmq.eventloop import ioloop, zmqstream
 import zmq.utils.monitor
-import functools, sys, time, logging, traceback
+import functools, sys, logging, traceback
 from threading import Thread, Event
 from . import utils
 import weakref
@@ -106,6 +106,11 @@ class ZmqWrapper:
 
     class Publication:
         def __init__(self, port, host="*", block_until_connected=True):
+            # define vars
+            self._socket = None
+            self._mon_socket = None
+            self._mon_stream = None
+
             ZmqWrapper.initialize()
             utils.debug_log('Creating Publication', port, verbosity=1)
             # make sure the call blocks until connection is made
@@ -148,6 +153,9 @@ class ZmqWrapper:
         # subscribe to topic, call callback when object is received on topic
         def __init__(self, port, topic="", callback=None, host="localhost"):
             self._socket = None
+            self._stream = None
+            self.topic = None
+
             ZmqWrapper.initialize()
             utils.debug_log('Creating Subscription', port, verbosity=1)
             ZmqWrapper._io_loop_call(False, self._add_sub,
@@ -159,7 +167,7 @@ class ZmqWrapper:
 
         def _add_sub(self, port, topic, callback, host):
             def callback_wrapper(weak_callback, msg):
-                [topic, obj_s] = msg
+                [topic, obj_s] = msg # pylint: disable=unused-variable
                 try:
                     if weak_callback and weak_callback():
                         weak_callback()(pickle.loads(obj_s))
@@ -199,8 +207,8 @@ class ZmqWrapper:
             return ZmqWrapper._io_loop_call(True, self._receive_obj)
 
         def _get_socket_identity(self):
-            id = self._socket.getsockopt(zmq.LAST_ENDPOINT)
-            return id
+            ep_id = self._socket.getsockopt(zmq.LAST_ENDPOINT)
+            return ep_id
 
         def get_socket_identity(self):
             return ZmqWrapper._io_loop_call(True, self._get_socket_identity)
@@ -208,6 +216,9 @@ class ZmqWrapper:
 
     class ClientServer:
         def __init__(self, port, is_server, callback=None, host=None):
+            self._socket = None
+            self._stream = None
+
             ZmqWrapper.initialize()
             utils.debug_log('Creating ClientServer', (is_server, port), verbosity=1)
 

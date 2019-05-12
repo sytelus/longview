@@ -1,11 +1,9 @@
 from .base_mpl_plot import BaseMplPlot
 import matplotlib
 import matplotlib.pyplot as plt
-from typing import Union
 from .. import utils
-import ipywidgets as widgets
-from IPython import get_ipython
 import numpy as np
+from ..lv_types import EventVars
 
 class LinePlot(BaseMplPlot):
     def __init__(self, cell=None, title=None, show_legend:bool=True, stream_name:str=None, console_debug:bool=False, is_3d:bool=False, **vis_args):

@@ -1,10 +1,10 @@
-import numpy as np
 import torch
 import math
 import random
 from . import utils
 from .lv_types import ImagePlotItem
 from collections import OrderedDict
+from itertools import groupby, islice
 
 def skip_mod(mod, g):
     for index, item in enumerate(g):

@@ -3,13 +3,9 @@ import plotly.graph_objs as go
 
 from ..vis_base import VisBase
 
-import os, sys, time, threading, traceback, logging, queue
-from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
-from abc import ABC, abstractmethod
-from ..lv_types import *
+import time
+from abc import abstractmethod
 from .. import utils
-from IPython import get_ipython, display
-import ipywidgets as widgets
 
 
 class BasePlotlyPlot(VisBase):

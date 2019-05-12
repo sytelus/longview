@@ -4,7 +4,7 @@ import heapq
 import numpy as np
 import torch
 
-def pyt_tensor2np(pyt_tensor, convert_scaler=True):
+def pyt_tensor2np(pyt_tensor):
     if pyt_tensor is None:
         return None
     if isinstance(pyt_tensor, torch.Tensor):

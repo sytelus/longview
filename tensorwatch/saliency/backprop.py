@@ -26,7 +26,7 @@ class VanillaGradExplainer(object):
         output.backward(grad_out)
         return inp.grad
 
-    def explain(self, inp, ind=None, raw_inp=None):
+    def explain(self, inp, ind=None, raw_inp=None): 
         return self._backprop(inp, ind)
 
 

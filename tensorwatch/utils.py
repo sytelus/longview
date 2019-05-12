@@ -4,7 +4,6 @@ import time
 import sys
 import os
 import inspect
-import types
 import re
 import uuid
 from collections import abc
@@ -34,6 +33,10 @@ class MeasureBlockTime:
         self.no_print = no_print
         self.disable_gc = disable_gc
         self.format_str = format_str
+        self.gcold = None
+        self.start_time = None
+        self.elapsed = None
+
     def __enter__(self):
         if self.disable_gc:
             self.gcold = gc.isenabled()
@@ -97,9 +100,9 @@ def get_public_fields(obj):
                             or inspect.isfunction(attr)
                             or inspect.ismethod(attr))]
 
-def set_default(dict, key, default_val, replace_none=True):
-    if key not in dict or (replace_none and dict[key] is None):
-        dict[key] = default_val
+def set_default(dictionary, key, default_val, replace_none=True):
+    if key not in dictionary or (replace_none and dictionary[key] is None):
+        dictionary[key] = default_val
 
 def to_array_like(val):
     if is_array_like(val):
@@ -165,7 +168,7 @@ def wait_key(message = ''):
         result = msvcrt.getch()
     else:
         # pylint: disable=import-error
-        import termios
+        import termios # pylint: disable=import-error
         fd = sys.stdin.fileno()
 
         oldterm = termios.tcgetattr(fd)
@@ -289,7 +292,7 @@ def write_png(filename, image):
     write_file(filename, png_bytes)
 
 def add_windows_ctrl_c():
-    def handler(a,b=None):
+    def handler(a,b=None): # pylint: disable=unused-argument
         sys.exit(1)
     add_windows_ctrl_c.is_handler_installed = \
         vars(add_windows_ctrl_c).setdefault('is_handler_installed',False)
@@ -304,20 +307,20 @@ def add_windows_ctrl_c():
 _utils_debug_verbosity=0
 _utils_start_time = time.time()
 def set_debug_verbosity(verbosity=0):
-    global _utils_debug_verbosity
+    global _utils_debug_verbosity # pylink: disable=global-statement
     _utils_debug_verbosity = verbosity
 def debug_log(msg, param=None, verbosity=3):
-    global _utils_debug_verbosity
+    global _utils_debug_verbosity # pylink: disable=global-statement
     if _utils_debug_verbosity is not None and _utils_debug_verbosity >= verbosity:
         print("[Debug][{}]: {} : {} : t={:.2f}".format(verbosity, msg, param, time.time()-_utils_start_time))
 
-def get_uuid(hex = False):
-    return  str(uuid.uuid4()) if not hex else uuid.uuid4().hex
+def get_uuid(is_hex = False):
+    return  str(uuid.uuid4()) if not is_hex else uuid.uuid4().hex
 
-def is_uuid4(s, hex=False):
+def is_uuid4(s, is_hex=False):
     try:
         val = uuid.UUID(s, version=4)
-        return val.hex == s if hex else str(val) == s
+        return val.hex == s if is_hex else str(val) == s
     except ValueError:
         return False
 
@@ -332,7 +335,7 @@ def frange(start, stop=None, step=None, steps=None):
         if step is not None:
             raise ValueError("Both step and steps cannot be specified")
         step = (stop-start)/steps
-    for i in range(steps):
+    for _ in range(steps):
         yield start
         start += step  
 

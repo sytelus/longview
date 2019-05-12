@@ -1,10 +1,7 @@
-from .lv_types import *
 from . import utils
-import threading
 import pandas as pd
-import time
 import ipywidgets as widgets
-from IPython import get_ipython, display
+from IPython import get_ipython #, display
 
 from .vis_base import VisBase
 

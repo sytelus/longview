@@ -1,9 +1,9 @@
-import os, sys, time, threading, traceback, logging, queue, functools
-from typing import List, Set, Dict, Tuple, Optional, Callable, Iterable, Union, Any
+import sys, time, threading, queue, functools
+from typing import Any
 from types import MethodType
 from abc import ABCMeta, abstractmethod
 
-from .lv_types import *
+from .lv_types import StreamPlot, StreamItem
 from . import utils
 from .stream import Stream
 
