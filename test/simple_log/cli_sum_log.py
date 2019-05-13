@@ -5,7 +5,7 @@ utils.set_debug_verbosity(4)
 import matplotlib.pyplot as plt
 import time
 
-#r = tw.create_vis(type='mpl-line')
+#r = tw.create_vis(vis_type='mpl-line')
 #r.show()
 #r2=tw.create_vis('map(lambda x:math.sqrt(x.sum), l)', cell=r.cell)
 #r3=tw.create_vis('map(lambda x:math.sqrt(x.sum), l)', renderer=r2)

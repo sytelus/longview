@@ -162,7 +162,7 @@ class Watcher:
             else:
                 utils.debug_log("Throttled", event_name, verbosity=5)
 
-    def _eval_wrie(self, stream_info:Watcher.StreamInfo, event_vars:EventVars):
+    def _eval_wrie(self, stream_info:'Watcher.StreamInfo', event_vars:EventVars):
         eval_return = stream_info.evaler.post(event_vars)
         if eval_return.is_valid:
             event_name = stream_info.req.event_name
@@ -181,7 +181,7 @@ class Watcher:
             if not stream_info.disabled:
                 self._end_stream_req(stream_info, disable_streams)
 
-    def _end_stream_req(self, stream_info:Watcher.StreamInfo, disable_stream:bool):
+    def _end_stream_req(self, stream_info:'Watcher.StreamInfo', disable_stream:bool):
         eval_return = stream_info.evaler.post(ended=True, 
             continue_thread=not disable_stream)
         # TODO: check eval_return.is_valid ?

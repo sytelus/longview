@@ -106,6 +106,7 @@ class StreamPlot:
         self.index, self.stream_vis_args, self.last_update = index, stream_vis_args, last_update
 
 class ImagePlotItem:
+    # images are numpy array of shape [[channels,] height, width]
     def __init__(self, images=None, title=None, alpha=None, cmap=None):
         if not isinstance(images, tuple):
             images = (images,)

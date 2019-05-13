@@ -79,11 +79,11 @@ def batch_stats():
 
     train_loss = tw.create_vis('lambda v:(v.metrics.epochf, v.metrics.batch_loss)', 
                          event_name="batch", title='Batch Statistics', throttle=0.75,
-                         xtitle='Epoch', ytitle='Train Loss', clear_after_end=False, type='mpl-line')
+                         xtitle='Epoch', ytitle='Train Loss', clear_after_end=False, vis_type='mpl-line')
     
     #train_acc = tw.create_vis('lambda v:(v.metrics.epochf, v.metrics.epoch_loss)', event_name="batch",
     #                     xtitle='Epoch', ytitle='Train Accuracy', clear_after_end=False, yrange=(0,1), 
-    #                     vis=train_loss, type='mpl-line')
+    #                     vis=train_loss, vis_type='mpl-line')
 
     train_loss.show()
     tw.image_utils.plt_loop()

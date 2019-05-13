@@ -21,7 +21,13 @@ def guess_image_dims(img):
 def to_imshow_array(img, width=None, height=None):
     # array from Pytorch has shape: [[channels,] height, width]
     # image needed for imshow needs: [height, width, channels]
+
     if img is not None:
+        if isinstance(img, Image.Image):
+            img = np.array(img)
+            if len(img.shape) >= 2:
+                return img # img is already compatible to imshow
+
         # force max 3 dimensions
         if len(img.shape) > 3:
             # TODO allow config
