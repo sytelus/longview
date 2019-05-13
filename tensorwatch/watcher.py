@@ -60,15 +60,15 @@ class Watcher:
         # TODO: what if devices were specified AND stream exist in cache?
 
         # create devices is any
-        devices:Sequence[str] = None
+        device_streams = None
         if devices is not None:
             # we open devices in read-only mode
-            devices = self._stream_factory.get_streams(stream_types=devices, 
+            device_streams = self._stream_factory.get_streams(stream_types=devices, 
                                                        for_write=False)
         # if no devices then open stream by name from cache
-        if devices is None:
+        if device_streams is None:
             if stream_name is None:
-                raise ValueError('Both devices and stream_name cannot be None')
+                raise ValueError('Both device and stream_name cannot be None')
 
             # first search by event
             stream_infos = self._stream_infos.get(event_name, None)
@@ -80,14 +80,14 @@ class Watcher:
                 raise ValueError('Requested stream was not found: ' + stream_name)
             return stream_info.stream
         
-        # if we have devices, first create stream and then attach devices to it
+        # if we have device, first create stream and then attach device to it
         stream = Stream(stream_name=stream_name)
-        for device in devices:
+        for device_stream in device_streams:
             # each device may have multiple streams so let's filter it
-            device_stream = FilteredStream(device, 
-                (lambda steam_item: (steam_item, steam_item.stream_name == stream_name))) \
+            device_stream = FilteredStream(source_stream=device_stream, 
+                filter_expr=((lambda steam_item: (steam_item, steam_item.stream_name == stream_name)) \
                     if stream_name is not None \
-                    else None
+                    else None))
             stream.subscribe(device_stream)
         return stream
 
@@ -121,13 +121,12 @@ class Watcher:
         if not stream_info:
             utils.debug_log("Creating stream", stream_name)
             stream = Stream(stream_name=stream_name)
-            devices:Sequence[str] = None
             if devices is not None:
                 # attached devices are opened in write-only mode
-                devices = self._stream_factory.get_streams(stream_types=devices, 
+                device_streams = self._stream_factory.get_streams(stream_types=devices, 
                                                            for_write=True)
-                for device in devices:
-                    device.subscribe(stream)
+                for device_stream in device_streams:
+                    device_stream.subscribe(stream)
             stream_req = StreamCreateRequest(stream_name=stream_name, devices=devices, event_name=event_name,
                      expr=expr, throttle=throttle, vis_params=vis_params)
             stream_info = stream_infos[stream_name] = Watcher.StreamInfo(

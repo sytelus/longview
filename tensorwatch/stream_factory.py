@@ -41,10 +41,17 @@ class StreamFactory:
             # we create new union of child but this is not necessory
             return StreamUnion(streams, for_write=for_write)
 
-    def _create_stream_by_string(self, stream_type:str, for_write:bool)->Stream:
-        parts = stream_type.split(':', 1) if stream_type is not None else ['']
+    def _create_stream_by_string(self, stream_spec:str, for_write:bool)->Stream:
+        parts = stream_spec.split(':', 1) if stream_spec is not None else ['']
         stream_type = parts[0]
         stream_args = parts[1] if len(parts) > 1 else None
+
+        if stream_args is None: # file name specified without 'file:' prefix
+            stream_args = stream_type
+            stream_type = 'file'
+        if len(stream_type) == 1: # windows drive letter
+            stream_type = 'file'
+            stream_args = stream_spec
 
         if stream_type == 'tcp':
             port_offset = int(stream_args or 0)
