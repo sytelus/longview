@@ -5,10 +5,10 @@ utils.set_debug_verbosity(4)
 import matplotlib.pyplot as plt
 import time
 
-#r = tw.create_vis(vis_type='mpl-line')
+#r = tw.Visualizer(vis_type='mpl-line')
 #r.show()
-#r2=tw.create_vis('map(lambda x:math.sqrt(x.sum), l)', cell=r.cell)
-#r3=tw.create_vis('map(lambda x:math.sqrt(x.sum), l)', renderer=r2)
+#r2=tw.Visualizer('map(lambda x:math.sqrt(x.sum), l)', cell=r.cell)
+#r3=tw.Visualizer('map(lambda x:math.sqrt(x.sum), l)', renderer=r2)
 
 def show_mpl():
     cli = tw.RemoteWatcherClient()
@@ -20,7 +20,7 @@ def show_mpl():
     tw.plt_loop()
 
 def show_text():
-    text = tw.create_vis()
+    text = tw.Visualizer()
     text.show()
     input('Waiting')
 

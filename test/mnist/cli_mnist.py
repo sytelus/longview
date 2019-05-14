@@ -77,11 +77,11 @@ def epoch_stats():
 def batch_stats():
     plot = tw.mpl.LinePlot()
 
-    train_loss = tw.create_vis('lambda v:(v.metrics.epochf, v.metrics.batch_loss)', 
+    train_loss = tw.Visualizer('lambda v:(v.metrics.epochf, v.metrics.batch_loss)', 
                          event_name="batch", title='Batch Statistics', throttle=0.75,
                          xtitle='Epoch', ytitle='Train Loss', clear_after_end=False, vis_type='mpl-line')
     
-    #train_acc = tw.create_vis('lambda v:(v.metrics.epochf, v.metrics.epoch_loss)', event_name="batch",
+    #train_acc = tw.Visualizer('lambda v:(v.metrics.epochf, v.metrics.epoch_loss)', event_name="batch",
     #                     xtitle='Epoch', ytitle='Train Accuracy', clear_after_end=False, yrange=(0,1), 
     #                     vis=train_loss, vis_type='mpl-line')
 
@@ -89,7 +89,7 @@ def batch_stats():
     tw.image_utils.plt_loop()
 
 def text_stats():
-    trl = tw.create_vis('lambda d:(d.x, d.metrics.batch_loss)', event_name='batch', type=None, 
+    trl = tw.Visualizer('lambda d:(d.x, d.metrics.batch_loss)', event_name='batch', type=None, 
                   xtitle='Epoch', ytitle='Train Loss', clear_after_end=False)
     trl.show()
     input('Paused...')

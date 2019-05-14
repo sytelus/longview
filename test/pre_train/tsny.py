@@ -6,5 +6,5 @@ ds = DataUtils.sample_by_class(ds, k=5, shuffle=True, as_np=True, no_test=True)
 
 comps = tw.get_tsne_components(ds)
 print(comps)
-plot = tw.create_vis(comps, images=ds[0], images_reshape=(28,28), vis_type='tsne')
+plot = tw.Visualizer(comps, images=ds[0], images_reshape=(28,28), vis_type='tsne')
 plot.show()

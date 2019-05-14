@@ -11,7 +11,7 @@ from IPython import get_ipython, display
 import ipywidgets as widgets
 
 class VisBase(Stream, metaclass=ABCMeta):
-    def __init__(self, widget, cell, title:str, show_legend:bool, stream_name:str=None, console_debug:bool=False, **vis_args):
+    def __init__(self, widget, cell:widgets.Box, title:str, show_legend:bool, stream_name:str=None, console_debug:bool=False, **vis_args):
         super(VisBase, self).__init__(stream_name=stream_name, console_debug=console_debug)
 
         self.lock = threading.Lock()
@@ -31,7 +31,7 @@ class VisBase(Stream, metaclass=ABCMeta):
         self.layout_dirty = False
         self.q_last_processed = 0
 
-    def subscribe(self, stream, title=None, clear_after_end=False, clear_after_each=False, 
+    def subscribe(self, stream:Stream, title=None, clear_after_end=False, clear_after_each=False, 
             show:bool=False, history_len=1, dim_history=True, opacity=None, **stream_vis_args):
         # in this ovedrride we don't call base class method
         with self.lock:

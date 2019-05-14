@@ -6,7 +6,7 @@ from . import utils
 
 # on writes send data on ZMQ transport
 class ZmqStream(Stream):
-    def __init__(self, for_write, port_offset:int=0, topic=PublisherTopics.StreamItem, block_until_connected=True, 
+    def __init__(self, for_write:bool, port_offset:int=0, topic=PublisherTopics.StreamItem, block_until_connected=True, 
                  stream_name:str=None, console_debug:bool=False):
         super(ZmqStream, self).__init__(stream_name=stream_name, console_debug=console_debug)
 

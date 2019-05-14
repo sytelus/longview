@@ -19,7 +19,7 @@ from IPython import get_ipython #, display
 import ipywidgets as widgets
 
 class BaseMplPlot(VisBase):
-    def __init__(self, cell=None, title:str=None, show_legend:bool=None, stream_name:str=None, console_debug:bool=False, **vis_args):
+    def __init__(self, cell:widgets.Box=None, title:str=None, show_legend:bool=None, stream_name:str=None, console_debug:bool=False, **vis_args):
         super(BaseMplPlot, self).__init__(widgets.Output(), cell, title, show_legend, stream_name=stream_name, console_debug=console_debug, **vis_args)
 
         self._fig_init_done = False

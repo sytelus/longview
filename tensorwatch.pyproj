@@ -29,6 +29,9 @@
     <Compile Include="tensorwatch\filtered_stream.py" />
     <Compile Include="tensorwatch\stream.py" />
     <Compile Include="tensorwatch\stream_factory.py" />
+    <Compile Include="tensorwatch\visualizer.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\vis_base.py">
       <SubType>Code</SubType>
     </Compile>
@@ -112,6 +115,9 @@
     </Compile>
     <Compile Include="tensorwatch\utils.py" />
     <Compile Include="tensorwatch\watcher.py" />
+    <Compile Include="tensorwatch\zmq_mgmt_stream.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tensorwatch\zmq_wrapper.py" />
     <Compile Include="tensorwatch\zmq_stream.py" />
     <Compile Include="tensorwatch\remote_watcher_client.py" />

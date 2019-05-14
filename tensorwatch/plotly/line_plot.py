@@ -2,9 +2,10 @@ import plotly.graph_objs as go
 from .base_plotly_plot import BasePlotlyPlot
 from ..lv_types import EventVars
 from .. import utils
+import ipywidgets as widgets
 
 class LinePlot(BasePlotlyPlot):
-    def __init__(self, cell=None, title=None, show_legend:bool=True, stream_name:str=None, console_debug:bool=False,
+    def __init__(self, cell:widgets.Box=None, title=None, show_legend:bool=True, stream_name:str=None, console_debug:bool=False,
                   is_3d:bool=False, **vis_args):
         super(LinePlot, self).__init__(cell, title, show_legend, stream_name=stream_name, console_debug=console_debug, **vis_args)
         self.is_3d = is_3d

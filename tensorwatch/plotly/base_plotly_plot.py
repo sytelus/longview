@@ -1,5 +1,6 @@
 import plotly 
 import plotly.graph_objs as go
+import ipywidgets as widgets
 
 from ..vis_base import VisBase
 
@@ -9,7 +10,7 @@ from .. import utils
 
 
 class BasePlotlyPlot(VisBase):
-    def __init__(self, cell=None, title=None, show_legend:bool=None, stream_name:str=None, console_debug:bool=False, **vis_args):
+    def __init__(self, cell:widgets.Box=None, title=None, show_legend:bool=None, stream_name:str=None, console_debug:bool=False, **vis_args):
         super(BasePlotlyPlot, self).__init__(go.FigureWidget(), cell, title, show_legend, 
                                              stream_name=stream_name, console_debug=console_debug, **vis_args)
 

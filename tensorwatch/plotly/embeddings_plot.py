@@ -5,9 +5,10 @@ import numpy as np
 from .line_plot import LinePlot
 import time
 from .. import utils
+import ipywidgets as widgets
 
 class EmbeddingsPlot(LinePlot):
-    def __init__(self, cell=None, title=None, show_legend:bool=False, stream_name:str=None, console_debug:bool=False,
+    def __init__(self, cell:widgets.Box=None, title=None, show_legend:bool=False, stream_name:str=None, console_debug:bool=False,
                   is_3d:bool=True, images=None, images_reshape=None, **vis_args):
         utils.set_default(vis_args, 'height', '8in')
         super(EmbeddingsPlot, self).__init__(cell, title, show_legend, 

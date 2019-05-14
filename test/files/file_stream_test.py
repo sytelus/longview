@@ -16,7 +16,7 @@ def file_write():
 def file_read():
     watcher = Watcher()
     stream = watcher.open_stream(devices=[r'c:\temp\obs.txt'])
-    vis = tw.create_vis(stream, vis_type='mpl-line')
+    vis = tw.Visualizer(stream, vis_type='mpl-line')
     vis.show()
     plt_loop()
 

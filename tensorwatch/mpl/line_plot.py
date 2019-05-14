@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 from .. import utils
 import numpy as np
 from ..lv_types import EventVars
+import ipywidgets as widgets
 
 class LinePlot(BaseMplPlot):
-    def __init__(self, cell=None, title=None, show_legend:bool=True, stream_name:str=None, console_debug:bool=False, is_3d:bool=False, **vis_args):
+    def __init__(self, cell:widgets.Box=None, title=None, show_legend:bool=True, stream_name:str=None, console_debug:bool=False, is_3d:bool=False, **vis_args):
         super(LinePlot, self).__init__(cell, title, show_legend, stream_name=stream_name, console_debug=console_debug, **vis_args)
         self.is_3d = is_3d #TODO: not implemented for mpl
 

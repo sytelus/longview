@@ -46,13 +46,6 @@ class StreamFactory:
         stream_type = parts[0]
         stream_args = parts[1] if len(parts) > 1 else None
 
-        if stream_args is None: # file name specified without 'file:' prefix
-            stream_args = stream_type
-            stream_type = 'file'
-        if len(stream_type) == 1: # windows drive letter
-            stream_type = 'file'
-            stream_args = stream_spec
-
         if stream_type == 'tcp':
             port_offset = int(stream_args or 0)
             stream_name = '{}:{}'.format(stream_type, port_offset)
@@ -61,6 +54,14 @@ class StreamFactory:
                     port_offset=port_offset, stream_name=stream_name, block_until_connected=False)
             # else we already have this stream
             return self._streams[stream_name]
+
+
+        if stream_args is None: # file name specified without 'file:' prefix
+            stream_args = stream_type
+            stream_type = 'file'
+        if len(stream_type) == 1: # windows drive letter
+            stream_type = 'file'
+            stream_args = stream_spec
 
         if stream_type == 'file':
             if stream_args is None:
