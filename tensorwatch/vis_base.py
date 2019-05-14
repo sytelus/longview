@@ -67,7 +67,7 @@ class VisBase(Stream, metaclass=ABCMeta):
         super(VisBase, self).write(val)
 
         stream_vis:StreamPlot = None
-        if not from_stream:
+        if from_stream:
             stream_vis = self._stream_vises.get(from_stream.stream_name, None)
 
         if not stream_vis: # select the first one we have

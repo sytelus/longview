@@ -20,7 +20,7 @@ class RemoteWatcherServer(Watcher):
             is_server=True, callback=self._clisrv_callback)
 
         # notify existing listeners of our ID
-        self._zmq_stream_pub = self._stream_factory.get_streams(stream_types=['tcp'], for_write=True)[0]
+        self._zmq_stream_pub = self._stream_factory.get_streams(stream_types=['tcp:'+str(port_offset)], for_write=True)[0]
 
         # ZMQ quirk: we must wait a bit after opening port and before sending message
         # TODO: can we do better?

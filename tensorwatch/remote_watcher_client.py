@@ -1,4 +1,4 @@
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Sequence, List
 from .zmq_wrapper import ZmqWrapper
 from .lv_types import CliSrvReqTypes, ClientServerRequest, DefaultPorts
 from .lv_types import VisParams, PublisherTopics, ServerMgmtMsg, StreamCreateRequest
@@ -36,9 +36,16 @@ class RemoteWatcherClient(Watcher):
             utils.debug_log("RemoteWatcherClient is closed", verbosity=1)
         super(RemoteWatcherClient, self).close()
 
+    def _attach_port(self, devices:Sequence[str])->Sequence[str]:
+        if devices is not None:
+            return [device+':'+str(self.port_offset) if device=='tcp' else device for device in devices]
+        return devices
+
     # override to send request to server, instead of underlying Watcher base class
     def create_stream(self, stream_name:str=None, devices:Sequence[str]=['tcp'], event_name:str='',
         expr=None, throttle:float=1, vis_params:VisParams=None)->Stream:
+
+        devices = self._attach_port(devices)
 
         stream_req = StreamCreateRequest(stream_name=stream_name, devices=devices, event_name=event_name,
             expr=expr, throttle=throttle, vis_params=vis_params)
@@ -55,6 +62,8 @@ class RemoteWatcherClient(Watcher):
     # override to set devices default to tcp
     def open_stream(self, stream_name:str=None, devices:Sequence[str]=['tcp'], 
                  event_name:str='')->Stream:
+
+        devices = self._attach_port(devices)
         return super(RemoteWatcherClient, self).open_stream(stream_name=stream_name, devices=devices, 
                  event_name=event_name)
 

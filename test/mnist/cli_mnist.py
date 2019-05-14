@@ -33,6 +33,8 @@ def plot_grads():
         expr='map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
     p = tw.plotly.LinePlot('Demo')
     p.subscribe(grads, xtitle='Epoch', ytitle='Gradients', history_len=30, new_on_eval=True)
+    utils.wait_key()
+
 
 def plot_grads1():
     train_cli = tw.RemoteWatcherClient()
@@ -63,11 +65,11 @@ def epoch_stats():
     plot = tw.mpl.LinePlot()
 
     train_loss = train_cli.create_stream(event_name="epoch", 
-        expr='map(lambda v:v.metrics.epoch_loss, l)')
+        expr='lambda v:(v.metrics.epoch_index, v.metrics.epoch_loss)')
     plot.subscribe(train_loss, xtitle='Epoch', ytitle='Train Loss')
     
     test_acc = test_cli.create_stream(event_name="epoch", 
-        expr='map(lambda v:v.metrics.epoch_accuracy, l)')
+        expr='lambda v:(v.metrics.epoch_index, v.metrics.epoch_accuracy)')
     plot.subscribe(test_acc, xtitle='Epoch', ytitle='Test Accuracy', ylim=(0,1))
 
     plot.show()
@@ -75,9 +77,12 @@ def epoch_stats():
 
 
 def batch_stats():
-    plot = tw.mpl.LinePlot()
+    train_cli = tw.RemoteWatcherClient()
+    stream = train_cli.create_stream(event_name="batch", 
+        expr='lambda v:(v.metrics.epochf, v.metrics.batch_loss)')
 
-    train_loss = tw.Visualizer('lambda v:(v.metrics.epochf, v.metrics.batch_loss)', 
+    plot = tw.mpl.LinePlot()
+    train_loss = tw.Visualizer(stream,
                          event_name="batch", title='Batch Statistics', throttle=0.75,
                          xtitle='Epoch', ytitle='Train Loss', clear_after_end=False, vis_type='mpl-line')
     
@@ -89,7 +94,11 @@ def batch_stats():
     tw.image_utils.plt_loop()
 
 def text_stats():
-    trl = tw.Visualizer('lambda d:(d.x, d.metrics.batch_loss)', event_name='batch', type=None, 
+    train_cli = tw.RemoteWatcherClient()
+    stream = train_cli.create_stream(event_name="batch", 
+        expr='lambda d:(d.x, d.metrics.batch_loss)')
+
+    trl = tw.Visualizer(stream, vis_type=None, 
                   xtitle='Epoch', ytitle='Train Loss', clear_after_end=False)
     trl.show()
     input('Paused...')
