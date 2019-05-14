@@ -4,41 +4,41 @@ from . import utils
 
 class Stream:
     def __init__(self, stream_name:str=None, console_debug:bool=False):
-        self._callbacks = []
+        self._subscribers = weakref.WeakSet()
+        self._subscribed_to = weakref.WeakSet()
+        self.held_refs = set() # on some rare occasion we might want stream to hold references of other streams
         self.closed = False
         self.console_debug = console_debug
         self.stream_name = stream_name or str(uuid.uuid4()) # useful to use as key and avoid circular references
 
-    def write(self, val:Any):
-        if self.closed:
-            return
-        if self.console_debug:
-            print(self.stream_name, val)
-        self._make_callbacks(val)
-
-    def _make_callbacks(self, val:Any):
-        for callback in self._callbacks:
-            if callback and callback():
-                callback()(val)
-
-    def add_callback(self, callback):
-        self._callbacks.append(weakref.WeakMethod(callback))
-
-    def remove_callback(self, callback):
-        for i in reversed(range(len(self._callbacks))):
-            if self._callbacks[i] and self._callbacks[i]() == callback:
-                del self._callbacks[i]
-
     def subscribe(self, stream:'Stream'): # notify other stream
         utils.debug_log('{} added {} as subscription'.format(self.stream_name, stream.stream_name))
-        stream.add_callback(self.write)
+        stream._subscribers.add(self)
+        self._subscribed_to.add(stream)
 
     def unsubscribe(self, stream:'Stream'):
-        stream.remove_callback(self.write)
+        utils.debug_log('{} removed {} as subscription'.format(self.stream_name, stream.stream_name))
+        stream._subscribers.discard(self)
+        self._subscribed_to.discard(stream)
+        self.held_refs.discard(stream)
+        #stream.held_refs.discard(self) # not needed as only subscriber should hold ref
+
+    def write(self, val:Any, from_stream:'Stream'=None):
+        if self.console_debug:
+            print(self.stream_name, val)
+
+        for subscriber in self._subscribers:
+            subscriber.write(val, from_stream=self)
+
+    def load(self, from_stream:'Stream'=None):
+        for subscribed_to in self._subscribed_to:
+            subscribed_to.load(from_stream=self)
 
     def close(self):
         if not self.closed:
-            self._callbacks = []
+            for subscribed_to in self._subscribed_to:
+                subscribed_to._subscribers.discard(self)
+            self._subscribed_to.clear()
             self.closed = True
 
     def __enter__(self):

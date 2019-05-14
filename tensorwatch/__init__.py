@@ -116,8 +116,7 @@ def create_vis(stream, vis_type=None, host_vis=None,
     host_vis.subscribe(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each,
                  history_len=history_len, dim_history=dim_history, opacity=opacity, **stream_vis_args)
 
-    if utils.has_method(stream, 'read_all'):
-        stream.read_all()
+    stream.load()
 
     return host_vis
 

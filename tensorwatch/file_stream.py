@@ -19,15 +19,17 @@ class FileStream(Stream):
             utils.debug_log('FileStream is closed', self.file_name, verbosity=1)
         super(FileStream, self).close()
 
-    def write(self, val:Any):
-        super(FileStream, self).write(val)
+    def write(self, val:Any, from_stream:'Stream'=None):
         if self.for_write:
             pickle.dump(val, self._file)
+        super(FileStream, self).write(val)
 
-    def read_all(self):
+    def load(self, from_stream:'Stream'=None):
         if self.for_write:
-            raise IOError('Cannot use read_all because FileSteam is opened with for_write=True')
+            raise IOError('Cannot use load() call because FileSteam is opened with for_write=True')
         if self._file is not None:
             while not utils.is_eof(self._file):
                 stream_item = pickle.load(self._file)
                 self.write(stream_item)
+        super(FileStream, self).load()
+

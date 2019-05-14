@@ -1,17 +1,14 @@
 from tensorwatch.stream import Stream
 
-class c1:
-    def m1(self,val):
-        print('m1', val)
 
-    def m2(self,val):
-        print('m2', val)
+s1 = Stream(stream_name='s1', console_debug=True)
+s2 = Stream(stream_name='s2', console_debug=True)
+s3 = Stream(stream_name='s3', console_debug=True)
 
-k = c1()
-p1 = Stream()
-p1.add_callback(k.m1)
-p1.add_callback(k.m2)
+s1.subscribe(s2)
+s2.subscribe(s3)
 
-p1.write('ha1')
-p1.write('ha2')
+s3.write('S3 wrote this')
+s2.write('S2 wrote this')
+s1.write('S1 wrote this')
 

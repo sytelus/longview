@@ -10,7 +10,7 @@ class FilteredStream(Stream):
         self.subscribe(source_stream)
         self.filter_expr = filter_expr
 
-    def write(self, val:Any):
+    def write(self, val:Any, from_stream:'Stream'=None):
         result, is_valid = self.filter_expr(val) \
             if self.filter_expr is not None \
             else (val, True)

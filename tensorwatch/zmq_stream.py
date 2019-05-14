@@ -36,7 +36,7 @@ class ZmqStream(Stream):
         utils.debug_log('Received subscription item', verbosity=5)
         self.write(val)
 
-    def write(self, val:Any, topic=None):
+    def write(self, val:Any, from_stream:'Stream'=None, topic=None):
         super(ZmqStream, self).write(val)
         if self.for_write:
             topic = topic or self.topic

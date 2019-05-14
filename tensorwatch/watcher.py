@@ -84,11 +84,12 @@ class Watcher:
         stream = Stream(stream_name=stream_name)
         for device_stream in device_streams:
             # each device may have multiple streams so let's filter it
-            device_stream = FilteredStream(source_stream=device_stream, 
+            filtered_stream = FilteredStream(source_stream=device_stream, 
                 filter_expr=((lambda steam_item: (steam_item, steam_item.stream_name == stream_name)) \
                     if stream_name is not None \
                     else None))
-            stream.subscribe(device_stream)
+            stream.subscribe(filtered_stream)
+            stream.held_refs.add(filtered_stream) # otherwise filtered stream will be destroyed by gc
         return stream
 
     def create_stream(self, stream_name:str=None, devices:Sequence[str]=None, event_name:str='',

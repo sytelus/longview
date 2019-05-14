@@ -46,9 +46,7 @@ class VisBase(Stream, metaclass=ABCMeta):
 
             self._post_add_subscription(stream_vis, **stream_vis_args)
 
-            write_fn = functools.partial(VisBase.write_stream_plot, self)
-            stream_vis.write_fn = MethodType(write_fn, stream_vis) # weakref doesn't allow unfound methods
-            stream.add_callback(stream_vis.write_fn)
+            super(VisBase, self).subscribe(stream)
 
             if show or (show is None and not self.is_shown):
                 return self.show()
@@ -64,12 +62,16 @@ class VisBase(Stream, metaclass=ABCMeta):
         else:
             return self._show_widget_native(blocking)
 
-    def write(self, val:Any):
+    def write(self, val:Any, from_stream:'Stream'=None):
         # let the base class know about new item, this will notify any subscribers
         super(VisBase, self).write(val)
 
-        # use first stream_vis as default
-        stream_vis = next(iter(self._stream_vises.values()))
+        stream_vis:StreamPlot = None
+        if not from_stream:
+            stream_vis = self._stream_vises.get(from_stream.stream_name, None)
+
+        if not stream_vis: # select the first one we have
+            stream_vis = next(iter(self._stream_vises.values()))
 
         VisBase.write_stream_plot(self, stream_vis, val)
 
