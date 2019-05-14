@@ -180,9 +180,9 @@ class ZmqWrapper:
             self.topic = topic.encode()
             self._socket = context.socket(zmq.SUB)
 
-            utils.debug_log("Subscriber connecting...", verbosity=1)
+            utils.debug_log("Subscriber connecting...", (host, port), verbosity=1)
             self._socket.connect("tcp://%s:%d" % (host, port))
-            utils.debug_log("Subscriber connected!", verbosity=1)
+            utils.debug_log("Subscriber connected!", (host, port), verbosity=1)
 
             # setup socket filtering
             if topic != "":

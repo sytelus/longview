@@ -45,7 +45,7 @@ def show_stream():
 def read_stream():
     cli = tw.RemoteWatcherClient()
 
-    with cli.create_stream(event_name="ev_i", expr='map(lambda v:math.sqrt(v.val), l)') as s1:
+    with cli.create_stream(event_name="ev_i", expr='map(lambda v:(v.x, math.sqrt(v.val)), l)') as s1:
         for stream_item in s1:
             print(stream_item.value)
     print('done')
@@ -53,7 +53,7 @@ def read_stream():
 
 def plotly_line_graph():
     cli = tw.RemoteWatcherClient()
-    s1 = cli.create_stream(event_name="ev_i", expr='map(lambda v:math.sqrt(v.val), l)')
+    s1 = cli.create_stream(event_name="ev_i", expr='map(lambda v:(v.x, math.sqrt(v.val)), l)')
 
     p = tw.plotly.LinePlot()
     p.subscribe(s1)

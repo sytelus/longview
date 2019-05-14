@@ -48,7 +48,7 @@ class StreamFactory:
 
         if stream_type == 'tcp':
             port_offset = int(stream_args or 0)
-            stream_name = '{}:{}'.format(stream_type, port_offset)
+            stream_name = '{}:{}:{}'.format(stream_type, port_offset, for_write)
             if stream_name not in self._streams:
                 self._streams[stream_name] = ZmqStream(for_write=for_write, 
                     port_offset=port_offset, stream_name=stream_name, block_until_connected=False)
@@ -66,7 +66,7 @@ class StreamFactory:
         if stream_type == 'file':
             if stream_args is None:
                 raise ValueError('File name must be specified for stream type "file"')
-            stream_name = '{}:{}'.format(stream_type, stream_args)
+            stream_name = '{}:{}:{}'.format(stream_type, stream_args, for_write)
             if stream_name not in self._streams:
                 self._streams[stream_name] = FileStream(for_write=for_write, 
                     file_name=stream_args, stream_name=stream_name)

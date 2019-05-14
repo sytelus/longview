@@ -6,7 +6,8 @@ from .lv_types import CliSrvReqTypes, ClientServerRequest
 from . import utils
 
 class ZmqMgmtStream(ZmqStream):
-    def __init__(self, clisrv:ZmqWrapper.ClientServer, for_write:bool, port_offset:int=0, topic=PublisherTopics.StreamItem, block_until_connected=True, 
+    # default topic is mgmt
+    def __init__(self, clisrv:ZmqWrapper.ClientServer, for_write:bool, port_offset:int=0, topic=PublisherTopics.ServerMgmt, block_until_connected=True, 
                  stream_name:str=None, console_debug:bool=False):
         super(ZmqMgmtStream, self).__init__(for_write=for_write, port_offset=port_offset, topic=topic, 
             block_until_connected=block_until_connected, stream_name=stream_name, console_debug=console_debug)

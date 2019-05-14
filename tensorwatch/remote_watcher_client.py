@@ -27,7 +27,7 @@ class RemoteWatcherClient(Watcher):
             is_server=False)
         # create subscription where we will receive server management events
         self._zmq_srvmgmt_sub = ZmqMgmtStream(clisrv=self._clisrv, for_write=False, port_offset=port_offset,
-            stream_name='zmq_sub:'+str(port_offset), topic=PublisherTopics.ServerMgmt)
+            stream_name='zmq_sub:'+str(port_offset))
     
     def close(self):
         if not self.closed:
@@ -36,7 +36,7 @@ class RemoteWatcherClient(Watcher):
             utils.debug_log("RemoteWatcherClient is closed", verbosity=1)
         super(RemoteWatcherClient, self).close()
 
-    # override to send request to server
+    # override to send request to server, instead of underlying Watcher base class
     def create_stream(self, stream_name:str=None, devices:Sequence[str]=['tcp'], event_name:str='',
         expr=None, throttle:float=1, vis_params:VisParams=None)->Stream:
 
@@ -51,6 +51,13 @@ class RemoteWatcherClient(Watcher):
         else: # we cannot return remote streams that are not backed by a device
             stream = None
         return stream
+
+    # override to set devices default to tcp
+    def open_stream(self, stream_name:str=None, devices:Sequence[str]=['tcp'], 
+                 event_name:str='')->Stream:
+        return super(RemoteWatcherClient, self).open_stream(stream_name=stream_name, devices=devices, 
+                 event_name=event_name)
+
 
     # override to send request to server
     def del_stream(self, stream_name:str) -> None:
