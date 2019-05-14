@@ -23,12 +23,12 @@ def image_class2tensor(image_path, class_index=None, image_convert_mode=None,
     
     raw_input = image_utils.open_image(os.path.abspath(image_path), convert_mode=image_convert_mode)
     if image_transform:
-        input_val = image_transform(raw_input)
+        input_x = image_transform(raw_input)
     else:
-        input_val = transforms.ToTensor()(raw_input)
-    input_val = input_val.unsqueeze(0) #convert to batch of 1
+        input_x = transforms.ToTensor()(raw_input)
+    input_x = input_x.unsqueeze(0) #convert to batch of 1
     target_class = int2tensor(class_index) if class_index is not None else None
-    return raw_input, input_val, target_class
+    return raw_input, input_x, target_class
 
 def batch_predict(model, inputs, input_transform=None, device=None):
     if input_transform:

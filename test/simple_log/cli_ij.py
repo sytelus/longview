@@ -42,14 +42,14 @@ def show_stream():
 
 # this no longer directly supported
 # TODO: create stream that allows enumeration from buffered values
-def read_stream():
-    cli = tw.RemoteWatcherClient()
+#def read_stream():
+#    cli = tw.RemoteWatcherClient()
 
-    with cli.create_stream(event_name="ev_i", expr='map(lambda v:(v.x, math.sqrt(v.val)), l)') as s1:
-        for stream_item in s1:
-            print(stream_item.value)
-    print('done')
-    utils.wait_key()
+#    with cli.create_stream(event_name="ev_i", expr='map(lambda v:(v.x, math.sqrt(v.val)), l)') as s1:
+#        for stream_item in s1:
+#            print(stream_item.value)
+#    print('done')
+#    utils.wait_key()
 
 def plotly_line_graph():
     cli = tw.RemoteWatcherClient()
@@ -70,8 +70,8 @@ def plotly_history_graph():
     utils.wait_key()
 
 
-#mpl_line_plot()
+mpl_line_plot()
 #mpl_history_plot()
-show_stream()
+#show_stream()
 #plotly_line_graph()
 #plotly_history_graph()

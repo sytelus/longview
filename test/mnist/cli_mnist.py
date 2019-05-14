@@ -22,7 +22,7 @@ def show_find_lr():
     plot = tw.mpl.LinePlot()
     
     train_batch_loss = cli_train.create_stream(event_name='batch', 
-        expr='map(lambda d:(d.tt.scheduler.get_lr()[0], d.metrics.batch_loss), l)')
+        expr='lambda d:(d.tt.scheduler.get_lr()[0], d.metrics.batch_loss)')
     plot.subscribe(train_batch_loss, xtitle='Epoch', ytitle='Loss')
     
     utils.wait_key()
@@ -30,7 +30,7 @@ def show_find_lr():
 def plot_grads():
     train_cli = tw.RemoteWatcherClient()
     grads = train_cli.create_stream(event_name='batch', 
-        expr='map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
+        expr='lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item())', throttle=1)
     p = tw.plotly.LinePlot('Demo')
     p.subscribe(grads, xtitle='Epoch', ytitle='Gradients', history_len=30, new_on_eval=True)
     utils.wait_key()
@@ -40,7 +40,7 @@ def plot_grads1():
     train_cli = tw.RemoteWatcherClient()
 
     grads = train_cli.create_stream(event_name='batch', 
-        expr='map(lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item()), l)', throttle=1)
+        expr='lambda d:agg_params(d.model, lambda p: p.grad.abs().mean().item())', throttle=1)
     grad_plot = tw.mpl.LinePlot()
     grad_plot.subscribe(grads, xtitle='Epoch', ytitle='Gradients', clear_after_each=1, history_len=40, dim_history=True)
     grad_plot.show()
@@ -51,7 +51,7 @@ def plot_weight():
     train_cli = tw.RemoteWatcherClient()
 
     params = train_cli.create_stream(event_name='batch', 
-        expr='map(lambda d:agg_params(d.model, lambda p: p.abs().mean().item()), l)', throttle=1)
+        expr='lambda d:agg_params(d.model, lambda p: p.abs().mean().item())', throttle=1)
     params_plot = tw.mpl.LinePlot()
     params_plot.subscribe(params, xtitle='Epoch', ytitle='avg |params|', clear_after_each=1, history_len=40, dim_history=True)
     params_plot.show()
@@ -79,12 +79,10 @@ def epoch_stats():
 def batch_stats():
     train_cli = tw.RemoteWatcherClient()
     stream = train_cli.create_stream(event_name="batch", 
-        expr='lambda v:(v.metrics.epochf, v.metrics.batch_loss)')
+        expr='lambda v:(v.metrics.epochf, v.metrics.batch_loss)', throttle=0.75)
 
-    plot = tw.mpl.LinePlot()
-    train_loss = tw.Visualizer(stream,
-                         event_name="batch", title='Batch Statistics', throttle=0.75,
-                         xtitle='Epoch', ytitle='Train Loss', clear_after_end=False, vis_type='mpl-line')
+    train_loss = tw.Visualizer(stream, clear_after_end=False, vis_type='mpl-line',
+        stream_vis_args={'xtitle':'Epoch', 'ytitle':'Train Loss', 'vis_type':'mpl-line'})
     
     #train_acc = tw.Visualizer('lambda v:(v.metrics.epochf, v.metrics.epoch_loss)', event_name="batch",
     #                     xtitle='Epoch', ytitle='Train Accuracy', clear_after_end=False, yrange=(0,1), 
@@ -98,16 +96,15 @@ def text_stats():
     stream = train_cli.create_stream(event_name="batch", 
         expr='lambda d:(d.x, d.metrics.batch_loss)')
 
-    trl = tw.Visualizer(stream, vis_type=None, 
-                  xtitle='Epoch', ytitle='Train Loss', clear_after_end=False)
+    trl = tw.Visualizer(stream, vis_type=None)
     trl.show()
     input('Paused...')
 
 
 
-epoch_stats()
+#epoch_stats()
 #plot_weight()
 #plot_grads1()
 #img_in_class()
 #text_stats()
-#batch_stats()
+batch_stats()
