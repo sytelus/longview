@@ -5,7 +5,7 @@ from tensorwatch import utils
 utils.set_debug_verbosity(4)
 
 def mpl_line_plot():
-    cli = tw.RemoteWatcherClient()
+    cli = tw.WatcherClient()
     p = tw.mpl.LinePlot(title='Demo')
     s1 = cli.create_stream(event_name='ev_i', expr='map(lambda v:math.sqrt(v.val)*2, l)')
     p.subscribe(s1, xtitle='Index', ytitle='sqrt(ev_i)')
@@ -13,7 +13,7 @@ def mpl_line_plot():
     tw.plt_loop()
 
 def mpl_history_plot():
-    cli = tw.RemoteWatcherClient()
+    cli = tw.WatcherClient()
     p2 = tw.mpl.LinePlot(title='History Demo')
     p2s1 = cli.create_stream(event_name='ev_j', expr='map(lambda v:(v.val, math.sqrt(v.val)*2), l)')
     p2.subscribe(p2s1, xtitle='Index', ytitle='sqrt(ev_j)', clear_after_end=True, history_len=15)
@@ -21,7 +21,7 @@ def mpl_history_plot():
     tw.plt_loop()
 
 def show_stream():
-    cli = tw.RemoteWatcherClient()
+    cli = tw.WatcherClient()
 
     print("Subscribing to event ev_i...")
     s1 = cli.create_stream(event_name="ev_i", expr='map(lambda v:math.sqrt(v.val), l)')
@@ -43,7 +43,7 @@ def show_stream():
 # this no longer directly supported
 # TODO: create stream that allows enumeration from buffered values
 #def read_stream():
-#    cli = tw.RemoteWatcherClient()
+#    cli = tw.WatcherClient()
 
 #    with cli.create_stream(event_name="ev_i", expr='map(lambda v:(v.x, math.sqrt(v.val)), l)') as s1:
 #        for stream_item in s1:
@@ -52,7 +52,7 @@ def show_stream():
 #    utils.wait_key()
 
 def plotly_line_graph():
-    cli = tw.RemoteWatcherClient()
+    cli = tw.WatcherClient()
     s1 = cli.create_stream(event_name="ev_i", expr='map(lambda v:(v.x, math.sqrt(v.val)), l)')
 
     p = tw.plotly.LinePlot()
@@ -62,7 +62,7 @@ def plotly_line_graph():
     utils.wait_key()
 
 def plotly_history_graph():
-    cli = tw.RemoteWatcherClient()
+    cli = tw.WatcherClient()
     p = tw.plotly.LinePlot(title='Demo')
     s2 = cli.create_stream(event_name='ev_j', expr='map(lambda v:(v.x, v.val), l)')
     p.subscribe(s2, ytitle='ev_j', history_len=15)

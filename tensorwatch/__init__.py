@@ -1,8 +1,8 @@
 from typing import Iterable, Sequence, Union
 
-from .remote_watcher_client import RemoteWatcherClient
-from .remote_watcher_server import RemoteWatcherServer
+from .watcher_client import WatcherClient
 from .watcher import Watcher
+from .watcher_base import WatcherBase
 
 from .text_vis import TextVis
 from . import plotly

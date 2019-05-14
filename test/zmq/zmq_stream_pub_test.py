@@ -1,9 +1,9 @@
-from tensorwatch.watcher import Watcher
+from tensorwatch.watcher_base import WatcherBase
 from tensorwatch.stream import Stream
 from tensorwatch.zmq_stream import ZmqStream
 
 def main():
-    watcher = Watcher()
+    watcher = WatcherBase()
     zmq_pub = ZmqStream(for_write=True, stream_name = 'ZmqPub', console_debug=True)
     zmq_sub = ZmqStream(for_write=False, stream_name = 'ZmqSub', console_debug=True)
 

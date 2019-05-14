@@ -5,7 +5,7 @@ from tensorwatch import utils
 
 utils.set_debug_verbosity(4)
 
-srv = tw.RemoteWatcherServer()
+srv = tw.Watcher()
 
 while(True):
     for i in range(1000):

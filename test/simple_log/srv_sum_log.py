@@ -1,10 +1,7 @@
 import time
 import tensorwatch as tw
-from tensorwatch import utils
 
-utils.set_debug_verbosity(5)
-
-srv = tw.RemoteWatcherServer()
+srv = tw.Watcher()
 
 sum = 0
 for i in range(10000):

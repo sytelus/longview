@@ -5,13 +5,13 @@ from .lv_types import VisParams, PublisherTopics, ServerMgmtMsg, StreamCreateReq
 from .stream import Stream
 from .zmq_mgmt_stream import ZmqMgmtStream
 from . import utils
-from .watcher import Watcher
+from .watcher_base import WatcherBase
 
-class RemoteWatcherClient(Watcher):
+class WatcherClient(WatcherBase):
     r"""Extends watcher to add methods so calls for create and delete stream can be sent to server.
     """
     def __init__(self, port_offset:int=0):
-        super(RemoteWatcherClient, self).__init__()
+        super(WatcherClient, self).__init__()
         self.port_offset = port_offset
         self._open(port_offset)
 
@@ -19,8 +19,8 @@ class RemoteWatcherClient(Watcher):
         self._zmq_srvmgmt_sub = None
         # client-server sockets allows to send create/del stream requests
         self._clisrv = None
-        utils.debug_log("RemoteWatcherClient reset", verbosity=1)
-        super(RemoteWatcherClient, self)._reset()
+        utils.debug_log("WatcherClient reset", verbosity=1)
+        super(WatcherClient, self)._reset()
 
     def _open(self, port_offset:int):
         self._clisrv = ZmqWrapper.ClientServer(port=DefaultPorts.CliSrv+port_offset, 
@@ -33,15 +33,15 @@ class RemoteWatcherClient(Watcher):
         if not self.closed:
             self._zmq_srvmgmt_sub.close()
             self._clisrv.close()
-            utils.debug_log("RemoteWatcherClient is closed", verbosity=1)
-        super(RemoteWatcherClient, self).close()
+            utils.debug_log("WatcherClient is closed", verbosity=1)
+        super(WatcherClient, self).close()
 
     def _attach_port(self, devices:Sequence[str])->Sequence[str]:
         if devices is not None:
             return [device+':'+str(self.port_offset) if device=='tcp' else device for device in devices]
         return devices
 
-    # override to send request to server, instead of underlying Watcher base class
+    # override to send request to server, instead of underlying WatcherBase base class
     def create_stream(self, stream_name:str=None, devices:Sequence[str]=['tcp'], event_name:str='',
         expr=None, throttle:float=1, vis_params:VisParams=None)->Stream:
 
@@ -64,7 +64,7 @@ class RemoteWatcherClient(Watcher):
                  event_name:str='')->Stream:
 
         devices = self._attach_port(devices)
-        return super(RemoteWatcherClient, self).open_stream(stream_name=stream_name, devices=devices, 
+        return super(WatcherClient, self).open_stream(stream_name=stream_name, devices=devices, 
                  event_name=event_name)
 
 

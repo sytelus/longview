@@ -9,7 +9,7 @@ utils.set_debug_verbosity(4)
 #r3=tw.Visualizer('map(lambda x:math.sqrt(x.sum), l)', renderer=r2)
 
 def show_mpl():
-    cli = tw.RemoteWatcherClient()
+    cli = tw.WatcherClient()
     p = tw.mpl.LinePlot(title='Demo')
     s1 = cli.create_stream(expr='lambda v:(v.i, v.sum)')
     p.subscribe(s1, xtitle='Index', ytitle='sqrt(ev_i)')
@@ -18,7 +18,7 @@ def show_mpl():
     tw.plt_loop()
 
 def show_text():
-    cli = tw.RemoteWatcherClient()
+    cli = tw.WatcherClient()
     s1 = cli.create_stream(expr='lambda v:(v.i, v.sum)')
     text = tw.Visualizer(s1)
     text.show()
