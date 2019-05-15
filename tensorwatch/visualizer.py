@@ -4,7 +4,7 @@ import ipywidgets as widgets
 
 class Visualizer:
     def __init__(self, stream:Stream, vis_type:str=None, host:'Visualizer'=None, 
-            cell:widgets.Box=None, title:str=None, 
+            cell:'Visualizer'=None, title:str=None, 
             clear_after_end=False, clear_after_each=False, history_len=1, dim_history=True, opacity=None,
 
             rows=2, cols=5, img_width=None, img_height=None, img_channels=None,
@@ -17,6 +17,8 @@ class Visualizer:
             xrange=None, yrange=None, zrange=None, draw_line=True, draw_marker=False,
 
             vis_args={}, stream_vis_args={})->None:
+
+        cell = cell._host_base.cell if cell is not None else None
 
         if host:
             self._host_base = host._host_base
@@ -38,7 +40,7 @@ class Visualizer:
         stream.load()
 
     def show(self):
-        self._host_base.show()
+        return self._host_base.show()
 
     def _get_vis_base(self, vis_type, cell:widgets.Box, title, hover_images=None, hover_image_reshape=None, cell_width=None, cell_height=None, **vis_args)->VisBase:
         if vis_type is None:
@@ -47,7 +49,7 @@ class Visualizer:
         if vis_type in ['text', 'summary']:
             from .text_vis import TextVis
             return TextVis(cell=cell, title=title, **vis_args)
-        if vis_type in ['line', 'plotly-line', 'scatter', 'plotly-scatter', 
+        if vis_type in ['plotly-line', 'scatter', 'plotly-scatter', 
                             'line3d', 'scatter3d', 'mesh3d']:
             from . import plotly
             return plotly.LinePlot(cell=cell, title=title, 
@@ -55,7 +57,7 @@ class Visualizer:
         if vis_type in ['image', 'mpl-image']:
             from . import mpl
             return mpl.ImagePlot(cell=cell, title=title, cell_width=cell_width, cell_height=cell_height, **vis_args)
-        if vis_type in ['mpl-line', 'mpl-scatter']:
+        if vis_type in ['line', 'mpl-line', 'mpl-scatter']:
             from . import mpl
             return mpl.LinePlot(cell=cell, title=title, **vis_args)
         if vis_type in ['tsne', 'embeddings', 'tsne2d', 'embeddings2d']:
