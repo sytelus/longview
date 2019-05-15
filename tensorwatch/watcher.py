@@ -1,4 +1,5 @@
 import uuid
+from typing import Sequence
 from .zmq_wrapper import ZmqWrapper
 from .watcher_base import WatcherBase
 from .lv_types import CliSrvReqTypes
@@ -44,7 +45,7 @@ class Watcher(WatcherBase):
         self._zmq_stream_pub.write(ServerMgmtMsg(event_name=ServerMgmtMsg.EventServerStart, 
             event_args=self.srv_name), topic=PublisherTopics.ServerMgmt)
 
-    def default_devices(self)->Sequence(str): # overriden
+    def default_devices(self)->Sequence[str]: # overriden
         devices = []
         if self.port is not None:
             devices.append('tcp:' + str(self.port))

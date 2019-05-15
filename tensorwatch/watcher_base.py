@@ -52,7 +52,7 @@ class WatcherBase:
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def default_devices(self)->Sequence(str):
+    def default_devices(self)->Sequence[str]:
         return None
 
     def open_stream(self, stream_name:str=None, devices:Sequence[str]=None, 

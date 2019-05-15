@@ -24,5 +24,5 @@ def show_text():
     text.show()
     input('Waiting')
 
-show_text()
-#show_mpl()
+#show_text()
+show_mpl()
