@@ -7,9 +7,9 @@ from . import utils
 
 class ZmqMgmtStream(ZmqStream):
     # default topic is mgmt
-    def __init__(self, clisrv:ZmqWrapper.ClientServer, for_write:bool, port_offset:int=0, topic=PublisherTopics.ServerMgmt, block_until_connected=True, 
+    def __init__(self, clisrv:ZmqWrapper.ClientServer, for_write:bool, port:int=0, topic=PublisherTopics.ServerMgmt, block_until_connected=True, 
                  stream_name:str=None, console_debug:bool=False):
-        super(ZmqMgmtStream, self).__init__(for_write=for_write, port_offset=port_offset, topic=topic, 
+        super(ZmqMgmtStream, self).__init__(for_write=for_write, port=port, topic=topic, 
             block_until_connected=block_until_connected, stream_name=stream_name, console_debug=console_debug)
 
         self._clisrv = clisrv

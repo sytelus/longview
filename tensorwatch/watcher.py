@@ -7,7 +7,7 @@ from . import utils
 import threading, time
 
 class Watcher(WatcherBase):
-    def __init__(self, port_offset:int=0, srv_name:str=None):
+    def __init__(self, port:int=0, srv_name:str=None):
         super(Watcher, self).__init__()
 
         # used to detect server restarts 
@@ -18,15 +18,15 @@ class Watcher(WatcherBase):
         self._zmq_stream_pub = None
         self._th = None
 
-        if port_offset is not None:
-            self._open(port_offset)
+        if port is not None:
+            self._open(port)
 
-    def _open(self, port_offset:int):
-        self._clisrv = ZmqWrapper.ClientServer(port=DefaultPorts.CliSrv+port_offset, 
+    def _open(self, port:int):
+        self._clisrv = ZmqWrapper.ClientServer(port=DefaultPorts.CliSrv+port, 
             is_server=True, callback=self._clisrv_callback)
 
         # notify existing listeners of our ID
-        self._zmq_stream_pub = self._stream_factory.get_streams(stream_types=['tcp:'+str(port_offset)], for_write=True)[0]
+        self._zmq_stream_pub = self._stream_factory.get_streams(stream_types=['tcp:'+str(port)], for_write=True)[0]
 
         # ZMQ quirk: we must wait a bit after opening port and before sending message
         # TODO: can we do better?

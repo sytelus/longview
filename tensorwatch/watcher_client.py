@@ -10,10 +10,10 @@ from .watcher_base import WatcherBase
 class WatcherClient(WatcherBase):
     r"""Extends watcher to add methods so calls for create and delete stream can be sent to server.
     """
-    def __init__(self, port_offset:int=0):
+    def __init__(self, port:int=0):
         super(WatcherClient, self).__init__()
-        self.port_offset = port_offset
-        self._open(port_offset)
+        self.port = port
+        self._open(port)
 
     def _reset(self):
         self._zmq_srvmgmt_sub = None
@@ -22,12 +22,12 @@ class WatcherClient(WatcherBase):
         utils.debug_log("WatcherClient reset", verbosity=1)
         super(WatcherClient, self)._reset()
 
-    def _open(self, port_offset:int):
-        self._clisrv = ZmqWrapper.ClientServer(port=DefaultPorts.CliSrv+port_offset, 
+    def _open(self, port:int):
+        self._clisrv = ZmqWrapper.ClientServer(port=DefaultPorts.CliSrv+port, 
             is_server=False)
         # create subscription where we will receive server management events
-        self._zmq_srvmgmt_sub = ZmqMgmtStream(clisrv=self._clisrv, for_write=False, port_offset=port_offset,
-            stream_name='zmq_sub:'+str(port_offset))
+        self._zmq_srvmgmt_sub = ZmqMgmtStream(clisrv=self._clisrv, for_write=False, port=port,
+            stream_name='zmq_sub:'+str(port))
     
     def close(self):
         if not self.closed:
@@ -38,7 +38,7 @@ class WatcherClient(WatcherBase):
 
     def _attach_port(self, devices:Sequence[str])->Sequence[str]:
         if devices is not None:
-            return [device+':'+str(self.port_offset) if device=='tcp' else device for device in devices]
+            return [device+':'+str(self.port) if device=='tcp' else device for device in devices]
         return devices
 
     # override to send request to server, instead of underlying WatcherBase base class

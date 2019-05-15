@@ -59,8 +59,8 @@ def plot_weight():
     tw.plt_loop()
 
 def epoch_stats():
-    train_cli = tw.WatcherClient(port_offset=0)
-    test_cli = tw.WatcherClient(port_offset=1)
+    train_cli = tw.WatcherClient(port=0)
+    test_cli = tw.WatcherClient(port=1)
 
     plot = tw.mpl.LinePlot()
 

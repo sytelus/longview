@@ -47,11 +47,11 @@ class StreamFactory:
         stream_args = parts[1] if len(parts) > 1 else None
 
         if stream_type == 'tcp':
-            port_offset = int(stream_args or 0)
-            stream_name = '{}:{}:{}'.format(stream_type, port_offset, for_write)
+            port = int(stream_args or 0)
+            stream_name = '{}:{}:{}'.format(stream_type, port, for_write)
             if stream_name not in self._streams:
                 self._streams[stream_name] = ZmqStream(for_write=for_write, 
-                    port_offset=port_offset, stream_name=stream_name, block_until_connected=False)
+                    port=port, stream_name=stream_name, block_until_connected=False)
             # else we already have this stream
             return self._streams[stream_name]
 

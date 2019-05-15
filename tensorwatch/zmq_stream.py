@@ -6,7 +6,7 @@ from . import utils
 
 # on writes send data on ZMQ transport
 class ZmqStream(Stream):
-    def __init__(self, for_write:bool, port_offset:int=0, topic=PublisherTopics.StreamItem, block_until_connected=True, 
+    def __init__(self, for_write:bool, port:int=0, topic=PublisherTopics.StreamItem, block_until_connected=True, 
                  stream_name:str=None, console_debug:bool=False):
         super(ZmqStream, self).__init__(stream_name=stream_name, console_debug=console_debug)
 
@@ -14,15 +14,15 @@ class ZmqStream(Stream):
         self._zmq = None
 
         self.topic = topic
-        self._open(for_write, port_offset, block_until_connected)
+        self._open(for_write, port, block_until_connected)
         utils.debug_log('ZmqStream started', verbosity=1)
 
-    def _open(self, for_write:bool, port_offset:int, block_until_connected:bool):
+    def _open(self, for_write:bool, port:int, block_until_connected:bool):
         if for_write:
-            self._zmq = ZmqWrapper.Publication(port=DefaultPorts.PubSub+port_offset,
+            self._zmq = ZmqWrapper.Publication(port=DefaultPorts.PubSub+port,
                 block_until_connected=block_until_connected)
         else:
-            self._zmq = ZmqWrapper.Subscription(port=DefaultPorts.PubSub+port_offset, 
+            self._zmq = ZmqWrapper.Subscription(port=DefaultPorts.PubSub+port, 
                 topic=self.topic, callback=self._on_subscription_item)
 
     def close(self):
