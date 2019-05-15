@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import Dict, Any, Sequence
 from .lv_types import EventVars, StreamItem, StreamCreateRequest, VisParams
 from .evaler import Evaler

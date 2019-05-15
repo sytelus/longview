@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import matplotlib.pyplot as plt
 from PIL import Image
 from torchvision import transforms

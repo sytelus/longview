@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import uuid
 from typing import Sequence
 from .zmq_wrapper import ZmqWrapper

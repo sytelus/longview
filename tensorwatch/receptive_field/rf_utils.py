@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 #from receptivefield.pytorch import PytorchReceptiveField
 ##from receptivefield.image import get_default_image
 #import numpy as np

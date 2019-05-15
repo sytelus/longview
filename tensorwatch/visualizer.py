@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from .stream import Stream
 from .vis_base import VisBase
 import ipywidgets as widgets

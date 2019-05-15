@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import Dict, Sequence
 from .zmq_stream import ZmqStream
 from .file_stream import FileStream

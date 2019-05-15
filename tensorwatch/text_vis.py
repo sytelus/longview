@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from . import utils
 import pandas as pd
 import ipywidgets as widgets

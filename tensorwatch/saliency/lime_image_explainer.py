@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from skimage.segmentation import mark_boundaries
 from torchvision import transforms
 import torch

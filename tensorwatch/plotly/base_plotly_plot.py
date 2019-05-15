@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import plotly 
 import plotly.graph_objs as go
 import ipywidgets as widgets

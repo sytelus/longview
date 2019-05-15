@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import Any, Dict, Sequence, List
 from .zmq_wrapper import ZmqWrapper
 from .lv_types import CliSrvReqTypes, ClientServerRequest, DefaultPorts

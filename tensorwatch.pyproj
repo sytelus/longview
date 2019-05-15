@@ -146,9 +146,17 @@
     <Content Include=".pylintrc">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="CONTRIBUTING.md">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="install_jupyterlab.bat" />
+    <Content Include="LICENSE.TXT">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="NOTICE.md">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="README.md" />
     <Content Include="tensorwatch\model_graph\hiddenlayer\README.md">
       <SubType>Code</SubType>
     </Content>
@@ -161,6 +169,7 @@
       <SubType>Code</SubType>
     </Content>
     <Content Include="TODO.md" />
+    <Content Include="update_package.bat" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

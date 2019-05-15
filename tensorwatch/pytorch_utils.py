@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from torchvision import models, transforms
 import torch
 import torch.nn.functional as F

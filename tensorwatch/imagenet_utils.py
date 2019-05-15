@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from torchvision import transforms
 from . import pytorch_utils
 import json

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from .base_mpl_plot import BaseMplPlot
 import matplotlib
 import matplotlib.pyplot as plt

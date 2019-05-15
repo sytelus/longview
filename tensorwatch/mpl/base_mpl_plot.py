@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 #from IPython import get_ipython, display
 #if get_ipython():
 #    get_ipython().magic('matplotlib notebook')

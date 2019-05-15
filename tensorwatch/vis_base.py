@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import sys, time, threading, queue, functools
 from typing import Any
 from types import MethodType

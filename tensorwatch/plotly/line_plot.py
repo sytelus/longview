@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import plotly.graph_objs as go
 from .base_plotly_plot import BasePlotlyPlot
 from ..lv_types import EventVars

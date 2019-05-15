@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import matplotlib.pyplot as plt
 from ipywidgets import Output #, Layout
 from IPython.display import display, clear_output

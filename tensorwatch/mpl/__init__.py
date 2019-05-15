@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 # import matplotlib before anything else
 # because of VS debugger issue for multiprocessing
 # https://github.com/Microsoft/ptvsd/issues/1041
