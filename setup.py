@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="tensorwatch",
-    version="0.3.2",
+    version="0.6.0",
     author="Shital Shah",
     author_email="shitals@microsoft.com",
     description="Interactive Realtime Debugging and Visualization for AI",
@@ -20,6 +20,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ),
     install_requires=[
-          'matplotlib', 'numpy', 'pyzmq', 'plotly', 'receptivefield', 'torchstat'
+          'matplotlib', 'numpy', 'pyzmq', 'plotly', 'torchstat' # , 'receptivefield'
     ]
 )

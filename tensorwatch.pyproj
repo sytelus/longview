@@ -146,6 +146,9 @@
     <Content Include=".pylintrc">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="NOTICE.md">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="tensorwatch\model_graph\hiddenlayer\README.md">
       <SubType>Code</SubType>
     </Content>
