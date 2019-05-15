@@ -24,9 +24,7 @@ class Visualizer:
             self._host_base = host._host_base
         else:
             self._host_base = self._get_vis_base(vis_type, cell, title, hover_images=hover_images, hover_image_reshape=hover_image_reshape, 
-                                   cell_width=cell_width, cell_height=cell_height, 
-                                   rows=rows, cols=cols, img_width=img_width, img_height=img_height, img_channels=img_channels,
-                                   colormap=colormap, viz_img_scale=viz_img_scale,
+                                   cell_width=cell_width, cell_height=cell_height,
                                    **vis_args)
 
         self._host_base.subscribe(stream, show=False, clear_after_end=clear_after_end, clear_after_each=clear_after_each,
@@ -35,7 +33,10 @@ class Visualizer:
             separate_yaxis=separate_yaxis, xtitle=xtitle, ytitle=ytitle, ztitle=ztitle, color=color,
             xrange=xrange, yrange=yrange, zrange=zrange, 
             draw_line=draw_line if vis_type is not None and 'scatter' in vis_type else True, 
-            draw_marker=draw_marker, **stream_vis_args)
+            draw_marker=draw_marker, 
+            rows=rows, cols=cols, img_width=img_width, img_height=img_height, img_channels=img_channels,
+            colormap=colormap, viz_img_scale=viz_img_scale,
+            **stream_vis_args)
 
         stream.load()
 

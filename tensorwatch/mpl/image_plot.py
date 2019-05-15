@@ -47,7 +47,7 @@ class ImagePlot(BaseMplPlot):
             # resize if requested
             if stream_vis.viz_img_scale is not None:
                 img_viz = skimage.transform.rescale(img_viz, 
-                    (stream_vis.viz_img_scale, stream_vis.viz_img_scale), mode='reflect', preserve_range=True)
+                    (stream_vis.viz_img_scale, stream_vis.viz_img_scale), mode='reflect', preserve_range=False)
 
             # create subplot if it doesn't exist
             ax = stream_vis.axs[row][col]
