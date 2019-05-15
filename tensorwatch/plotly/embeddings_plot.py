@@ -72,7 +72,7 @@ class EmbeddingsPlot(LinePlot):
 
         return super(EmbeddingsPlot, self)._create_trace(stream_vis)
 
-    def subscribe(self, stream):
+    def subscribe(self, stream, **stream_vis_args):
         super(EmbeddingsPlot, self).subscribe(stream)
         stream_vis = self._stream_vises[stream.stream_name]
         if stream_vis.index == 0 and self.hover_images is not None:
