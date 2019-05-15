@@ -10,24 +10,34 @@ from .watcher_base import WatcherBase
 class WatcherClient(WatcherBase):
     r"""Extends watcher to add methods so calls for create and delete stream can be sent to server.
     """
-    def __init__(self, port:int=0):
+    def __init__(self, filename:str=None, port:int=0):
         super(WatcherClient, self).__init__()
         self.port = port
-        self._open(port)
+        self.filename = filename
+
+        # define vars in __init__
+        self._clisrv = None # client-server sockets allows to send create/del stream requests
+        self._zmq_srvmgmt_sub = None
+        self._file = None
+
+        self._open()
 
     def _reset(self):
-        self._zmq_srvmgmt_sub = None
-        # client-server sockets allows to send create/del stream requests
         self._clisrv = None
+        self._zmq_srvmgmt_sub = None
+        self._file = None
         utils.debug_log("WatcherClient reset", verbosity=1)
         super(WatcherClient, self)._reset()
 
-    def _open(self, port:int):
-        self._clisrv = ZmqWrapper.ClientServer(port=DefaultPorts.CliSrv+port, 
-            is_server=False)
-        # create subscription where we will receive server management events
-        self._zmq_srvmgmt_sub = ZmqMgmtStream(clisrv=self._clisrv, for_write=False, port=port,
-            stream_name='zmq_sub:'+str(port))
+    def _open(self):
+        if self.port is not None:
+            self._clisrv = ZmqWrapper.ClientServer(port=DefaultPorts.CliSrv+self.port, 
+                is_server=False)
+            # create subscription where we will receive server management events
+            self._zmq_srvmgmt_sub = ZmqMgmtStream(clisrv=self._clisrv, for_write=False, port=self.port,
+                stream_name='zmq_srvmgmt_sub:'+str(self.port))+':'+str(for_write)
+        if self.filename is not None:
+            self._file = self._stream_factory.get_streams(stream_types=['file:'+self.filename], for_write=False)[0]
     
     def close(self):
         if not self.closed:
@@ -36,19 +46,20 @@ class WatcherClient(WatcherBase):
             utils.debug_log("WatcherClient is closed", verbosity=1)
         super(WatcherClient, self).close()
 
-    def _attach_port(self, devices:Sequence[str])->Sequence[str]:
-        if devices is not None:
-            return [device+':'+str(self.port) if device=='tcp' else device for device in devices]
+    def default_devices(self)->Sequence(str): # overriden
+        devices = []
+        if self.port is not None:
+            devices.append('tcp:' + str(self.port))
+        if self.filename is not None:
+            devices.append('file:' + self.filename)
         return devices
 
     # override to send request to server, instead of underlying WatcherBase base class
-    def create_stream(self, stream_name:str=None, devices:Sequence[str]=['tcp'], event_name:str='',
-        expr=None, throttle:float=1, vis_params:VisParams=None)->Stream:
+    def create_stream(self, stream_name:str=None, devices:Sequence[str]=None, event_name:str='',
+        expr=None, throttle:float=1, vis_params:VisParams=None)->Stream: # overriden
 
-        devices = self._attach_port(devices)
-
-        stream_req = StreamCreateRequest(stream_name=stream_name, devices=devices, event_name=event_name,
-            expr=expr, throttle=throttle, vis_params=vis_params)
+        stream_req = StreamCreateRequest(stream_name=stream_name, devices=devices or self.default_devices(),
+            event_name=event_name, expr=expr, throttle=throttle, vis_params=vis_params)
 
         self._zmq_srvmgmt_sub.add_stream_req(stream_req)
 
@@ -60,10 +71,9 @@ class WatcherClient(WatcherBase):
         return stream
 
     # override to set devices default to tcp
-    def open_stream(self, stream_name:str=None, devices:Sequence[str]=['tcp'], 
-                 event_name:str='')->Stream:
+    def open_stream(self, stream_name:str=None, devices:Sequence[str]=None, 
+                 event_name:str='')->Stream: # overriden
 
-        devices = self._attach_port(devices)
         return super(WatcherClient, self).open_stream(stream_name=stream_name, devices=devices, 
                  event_name=event_name)
 

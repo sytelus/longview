@@ -52,6 +52,9 @@ class WatcherBase:
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
+    def default_devices(self)->Sequence(str):
+        return None
+
     def open_stream(self, stream_name:str=None, devices:Sequence[str]=None, 
                  event_name:str='')->Stream:
         r"""Opens stream from specified devices or returns one by name if
@@ -60,6 +63,7 @@ class WatcherBase:
         # TODO: what if devices were specified AND stream exist in cache?
 
         # create devices is any
+        devices = devices or self.default_devices()
         device_streams = None
         if devices is not None:
             # we open devices in read-only mode
@@ -122,6 +126,7 @@ class WatcherBase:
         if not stream_info:
             utils.debug_log("Creating stream", stream_name)
             stream = Stream(stream_name=stream_name)
+            devices = devices or self.default_devices()
             if devices is not None:
                 # attached devices are opened in write-only mode
                 device_streams = self._stream_factory.get_streams(stream_types=devices, 

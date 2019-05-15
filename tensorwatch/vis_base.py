@@ -16,12 +16,12 @@ class VisBase(Stream, metaclass=ABCMeta):
 
         self.lock = threading.Lock()
         self._use_hbox = True
-        utils.set_default(vis_args, 'width', '100%')
+        utils.set_default(vis_args, 'cell_width', '100%')
 
         self.widget = widget
 
         self.cell = cell or widgets.HBox(layout=widgets.Layout(\
-            width=vis_args['width'])) if self._use_hbox else None
+            width=vis_args['cell_width'])) if self._use_hbox else None
         if self._use_hbox:
             self.cell.children += (self.widget,)
         self._stream_vises = {}

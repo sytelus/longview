@@ -82,7 +82,7 @@ def batch_stats():
         expr='lambda v:(v.metrics.epochf, v.metrics.batch_loss)', throttle=0.75)
 
     train_loss = tw.Visualizer(stream, clear_after_end=False, vis_type='mpl-line',
-        stream_vis_args={'xtitle':'Epoch', 'ytitle':'Train Loss', 'vis_type':'mpl-line'})
+        xtitle='Epoch', ytitle='Train Loss')
     
     #train_acc = tw.Visualizer('lambda v:(v.metrics.epochf, v.metrics.epoch_loss)', event_name="batch",
     #                     xtitle='Epoch', ytitle='Train Accuracy', clear_after_end=False, yrange=(0,1), 

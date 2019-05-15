@@ -7,8 +7,11 @@ from . import utils
 import threading, time
 
 class Watcher(WatcherBase):
-    def __init__(self, port:int=0, srv_name:str=None):
+    def __init__(self, filename:str=None, port:int=0, srv_name:str=None):
         super(Watcher, self).__init__()
+
+        self.port = port
+        self.filename = filename
 
         # used to detect server restarts 
         self.srv_name = srv_name or str(uuid.uuid4())
@@ -16,27 +19,38 @@ class Watcher(WatcherBase):
         # define vars in __init__
         self._clisrv = None
         self._zmq_stream_pub = None
+        self._file = None
         self._th = None
 
-        if port is not None:
-            self._open(port)
+        self._open_devices()
 
-    def _open(self, port:int):
-        self._clisrv = ZmqWrapper.ClientServer(port=DefaultPorts.CliSrv+port, 
-            is_server=True, callback=self._clisrv_callback)
+    def _open_devices(self):
+        if self.port is not None:
+            self._clisrv = ZmqWrapper.ClientServer(port=DefaultPorts.CliSrv+self.port, 
+                is_server=True, callback=self._clisrv_callback)
 
-        # notify existing listeners of our ID
-        self._zmq_stream_pub = self._stream_factory.get_streams(stream_types=['tcp:'+str(port)], for_write=True)[0]
+            # notify existing listeners of our ID
+            self._zmq_stream_pub = self._stream_factory.get_streams(stream_types=['tcp:'+str(self.port)], for_write=True)[0]
 
-        # ZMQ quirk: we must wait a bit after opening port and before sending message
-        # TODO: can we do better?
-        self._th = threading.Thread(target=self._send_server_start)
-        self._th.start()
+            # ZMQ quirk: we must wait a bit after opening port and before sending message
+            # TODO: can we do better?
+            self._th = threading.Thread(target=self._send_server_start)
+            self._th.start()
+        if self.filename is not None:
+            self._file = self._stream_factory.get_streams(stream_types=['file:'+self.filename], for_write=True)[0]
 
     def _send_server_start(self):
         time.sleep(2)
         self._zmq_stream_pub.write(ServerMgmtMsg(event_name=ServerMgmtMsg.EventServerStart, 
             event_args=self.srv_name), topic=PublisherTopics.ServerMgmt)
+
+    def default_devices(self)->Sequence(str): # overriden
+        devices = []
+        if self.port is not None:
+            devices.append('tcp:' + str(self.port))
+        if self.filename is not None:
+            devices.append('file:' + self.filename)
+        return devices
 
     def close(self):
         if not self.closed:
@@ -44,12 +58,15 @@ class Watcher(WatcherBase):
                 self._clisrv.close()
             if self._zmq_stream_pub is not None:
                 self._zmq_stream_pub.close()
+            if self._file is not None:
+                self._file.close()
             utils.debug_log("Watcher is closed", verbosity=1)
         super(Watcher, self).close()
 
     def _reset(self):
         self._clisrv = None
         self._zmq_stream_pub = None
+        self._file = None
         self._th = None
         utils.debug_log("Watcher reset", verbosity=1)
         super(Watcher, self)._reset()

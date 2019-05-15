@@ -12,8 +12,7 @@ images = [tw.ImagePlotItem(fruits_ds[i][0], title=str(i)) for i in range(5)] + \
 
 stream = tw.ArrayStream(images)
 
-img_plot = tw.Visualizer(stream, vis_type='image', 
-    vis_args={'rows':2, 'cols':5, 'viz_img_scale':3})
+img_plot = tw.Visualizer(stream, vis_type='image', viz_img_scale=3)
 img_plot.show()
 
 tw.image_utils.plt_loop()

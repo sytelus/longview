@@ -9,25 +9,25 @@ import ipywidgets as widgets
 
 class EmbeddingsPlot(LinePlot):
     def __init__(self, cell:widgets.Box=None, title=None, show_legend:bool=False, stream_name:str=None, console_debug:bool=False,
-                  is_3d:bool=True, images=None, images_reshape=None, **vis_args):
+                  is_3d:bool=True, hover_images=None, hover_image_reshape=None, **vis_args):
         utils.set_default(vis_args, 'height', '8in')
         super(EmbeddingsPlot, self).__init__(cell, title, show_legend, 
                                              stream_name=stream_name, console_debug=console_debug, is_3d=is_3d, **vis_args)
-        if images is not None:
+        if hover_images is not None:
             plt.ioff()
             self.image_output = Output()
             self.image_figure = plt.figure(figsize=(2,2))
             self.image_ax = self.image_figure.add_subplot(111)
             self.cell.children += (self.image_output,)
             plt.ion()
-        self.images, self.images_reshape = images, images_reshape
+        self.hover_images, self.hover_image_reshape = hover_images, hover_image_reshape
         self.last_ind, self.last_ind_time = -1, 0
 
     def hover_fn(self, trace, points, state): # pylint: disable=unused-argument
         if not points:
             return
         ind = points.point_inds[0]
-        if ind == self.last_ind or ind > len(self.images) or ind < 0:
+        if ind == self.last_ind or ind > len(self.hover_images) or ind < 0:
             return
 
         if self.last_ind == -1:
@@ -44,10 +44,10 @@ class EmbeddingsPlot(LinePlot):
         with self.image_output:
             plt.ioff()
 
-            if self.images_reshape:
-                img = np.reshape(self.images[ind], self.images_reshape)
+            if self.hover_image_reshape:
+                img = np.reshape(self.hover_images[ind], self.hover_image_reshape)
             else:
-                img = self.images[ind]
+                img = self.hover_images[ind]
             if img is not None:
                 clear_output(wait=True)    
                 self.image_ax.imshow(img)
@@ -75,5 +75,5 @@ class EmbeddingsPlot(LinePlot):
     def subscribe(self, stream):
         super(EmbeddingsPlot, self).subscribe(stream)
         stream_vis = self._stream_vises[stream.stream_name]
-        if stream_vis.index == 0 and self.images is not None:
+        if stream_vis.index == 0 and self.hover_images is not None:
             self.widget.data[stream_vis.trace_index].on_hover(self.hover_fn)
